@@ -198,6 +198,33 @@ A standalone analytical tool to track actual stock and option positions, combini
    - Profit target achievement rates
    - Risk/reward ratio trends over time
 
+## Data Model Architecture
+
+### Core Entity Design
+The application uses a **Position vs Trade separation architecture** to support both behavioral training and accurate financial tracking.
+
+**Position Entity:**
+- Contains the immutable trade plan (strategy intent, price targets, stop levels, thesis)
+- Represents the trader's original strategic decision and risk parameters
+- Stores planned quantities and per-share/per-contract price levels
+- Status automatically derived from trade activity (open/closed based on net quantity)
+- Dollar-based risk/reward amounts computed dynamically from actual trades
+
+**Trade Entity:**  
+- Individual execution records (buy/sell transactions) within a position
+- Each trade maintains its own cost basis, quantity, and timestamp
+- Supports both stock trades (symbol, quantity, price) and options trades (adding option_type, strike_price, expiration_date)
+- Enables accurate tracking of partial fills, scale-ins, and complex strategy execution
+
+### P&L Calculation Methodology
+- **Trade-level cost basis tracking** with FIFO (first-in-first-out) matching for exits
+- **Position P&L** calculated by summing all trade-level P&L within the position  
+- **Separate cost basis tracking** per instrument type (stock vs each unique option contract)
+- **Brokerage statement matching** through FIFO methodology alignment
+- **Plan vs execution analysis** enabled through position intent vs trade reality comparison
+
+This architecture scales from simple stock positions to complex multi-leg option strategies while maintaining behavioral training capabilities and accurate financial calculations.
+
 ## Technical Requirements
 
 ### Data Management & Price Updates
