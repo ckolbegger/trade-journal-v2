@@ -1,5 +1,22 @@
 # Trading Position Tracker & Journal App Specification
 
+## Product Vision & User Profile
+
+### Target Users
+- **Primary**: Retail traders with stock and options experience who have not yet achieved consistent profitability
+- **Secondary**: Experienced stock traders ready to explore options trading
+- **Tertiary**: Beginners seeking to learn systematic trading discipline
+
+### Core Vision
+A standalone analytical tool that combines trade tracking with behavioral training to help traders develop consistent profitability through systematic decision-making, disciplined execution, and enhanced self-awareness. The app emphasizes learning and habit formation over complex analytics, positioning itself as a holistic educational tool rather than competing with subscription-based platforms.
+
+### Key Principles
+- **Learning-focused**: Support traders progressing from simple to complex strategies
+- **Behavioral training**: Enforce discipline through immutable planning and mandatory journaling
+- **Self-awareness**: Help traders recognize and improve their decision-making patterns
+- **Privacy-first**: Completely personal tool with no external data sharing
+- **Free and accessible**: No subscription model, designed to complement rather than compete with paid tools
+
 ## Core Purpose
 A standalone analytical tool to track actual stock and option positions, combining trade execution tracking, scenario analysis, behavioral pattern recognition, and integrated journaling for swing trades (days/weeks) to long-term holdings (years).
 
@@ -7,6 +24,7 @@ A standalone analytical tool to track actual stock and option positions, combini
 
 ### 1. Trade Entry & Management
 - **Manual trade entry** with step-by-step strategy builder
+- **Mandatory trade journaling** - every trade entry requires an accompanying journal entry
 - **Incomplete position support** - track planned strategies as you leg in over time
 - **Trade plan documentation** - capture targets, stops, thesis, and time horizon
 - **Execution tracking** - compare actual vs. planned execution
@@ -17,18 +35,26 @@ A standalone analytical tool to track actual stock and option positions, combini
 - **Extrinsic value tracking** - separate intrinsic from extrinsic option value
 - **Historical extrinsic charts** - visualize how price movements affected option premiums over holding period
 
-### 3. Scenario Analysis Engine
+### 3. Daily Review Process
+- **Position prioritization algorithm** - automatically ranks open positions by urgency of attention needed
+- **Volatility-based sorting** - positions with highest daily movements weighted by position size get priority
+- **Guided review mode** - step-by-step review process for beginning traders
+- **Review habit tracking** - monitor consistency and patterns in daily review behavior
+- **Streamlined journaling integration** - easy journal entry opportunities during position reviews
+
+### 4. Scenario Analysis Engine
 - **Configurable stress testing** - model position behavior under various market moves
 - **Multi-level analysis** - up to 5 customizable percentage moves (up/down)
 - **Portfolio aggregation** - stack individual position scenarios for total portfolio impact
 - **Trade-specific parameters** - different defaults for swing vs. long-term positions
 
-### 4. Integrated Journaling System
+### 5. Integrated Journaling System
+- **Mandatory trade journaling** - every trade entry requires an accompanying journal entry
 - **Position-specific entries** - tie thoughts to specific trades chronologically
 - **Market event journaling** - capture reactions to broader market moves
 - **Behavioral pattern tracking** - identify decision-making patterns over time
 
-### 5. Performance Analytics
+### 6. Performance Analytics
 - **Strategy-based win/loss ratios** - performance by trade type
 - **Plan deviation analysis** - track when and why you deviated from original plans
 - **Risk/reward pattern recognition** - identify behavioral tendencies
@@ -52,9 +78,9 @@ A standalone analytical tool to track actual stock and option positions, combini
    - **Predetermined response:** "What specific action will you take when invalidation occurs?"
 
 3. **Trade Plan Commitment**
-   - **Immutable timestamp confirmation:** User must confirm "These are my actual targets and plans before any market movement"
-   - **Locked entry system:** All trade plan details become uneditable after confirmation, only amendable with dated notes
-   - **Digital signature equivalent:** Creates legally binding internal record of original intentions
+   - **Immutable confirmation system:** User confirms trade plan details before locking them in
+   - **Behavioral training focus:** All trade plan details become uneditable after confirmation to mirror real-world trading discipline
+   - **Amendment tracking:** Changes can only be made through dated notes, creating a complete decision history
 
 4. **Execution Tracking**
    - Record actual fill prices and timestamps
@@ -62,6 +88,28 @@ A standalone analytical tool to track actual stock and option positions, combini
    - Calculate slippage and execution quality
    - **Invalidation tracking:** Compare market conditions against predetermined invalidation criteria
    - **Action compliance monitoring:** Flag when predetermined invalidation response wasn't taken
+
+### Daily Review Process
+**Purpose:** Create a systematic habit of position evaluation and decision-making reflection.
+
+**Core Functionality:**
+- **Position prioritization algorithm:** Automatically ranks open positions by urgency of attention needed
+- **Volatility-based sorting:** Primary algorithm focuses on positions with highest daily price movements weighted by position size
+- **Alternative sorting approaches:** 
+  - Risk-weighted urgency (positions near stops/targets)
+  - Time-sensitive priority (short-dated options, overdue reviews)
+  - Behavioral nudge focus (positions likely to trigger emotional decisions)
+- **Guided review mode:** Step-by-step review process for beginning traders
+- **Flexible review options:** Advanced users can disable guidance and review individual positions
+- **Review habit tracking:** Timestamp tracking for review sessions and individual position reviews
+- **Behavioral insights:** Monitor review time patterns during market runups and drawdowns
+- **Streamlined journaling:** Easy journal entry opportunities during review process
+
+**Review Session Features:**
+- Review completion tracking for habit consistency
+- Position-by-position navigation with price update integration
+- Optional journal prompts and behavioral nudges
+- Review time correlation analysis for future pattern recognition
 
 ### Risk Management Dashboard
 1. **Current Position Summary**
@@ -109,17 +157,27 @@ A standalone analytical tool to track actual stock and option positions, combini
    - Risk concentration alerts
 
 ### Journaling Integration
-1. **Position-Specific Entries**
+1. **Mandatory Trade Journaling**
+   - Every trade entry requires an accompanying journal entry
+   - Future enhancement: LLM quality checking for journal entries
+   - Behavioral reinforcement through required reflection
+
+2. **Position-Specific Entries**
    - Chronological journal tied to each trade
    - Entry types: Trade rationale, market observations, emotional state
    - Link journal entries to specific price points or events
 
-2. **Market Event Logging**
+3. **Daily Review Integration**
+   - Optional but prominent journal entry opportunities during position reviews
+   - Streamlined interface for quick thoughts and observations
+   - Review session journaling for broader market reactions
+
+4. **Market Event Logging**
    - Capture broader market movements and personal reactions
    - Tag entries with market conditions (volatility, sector rotation, etc.)
    - Cross-reference with open positions at time of event
 
-3. **Pattern Recognition**
+5. **Pattern Recognition**
    - Behavioral tags: emotional decisions, plan deviations, market timing
    - Searchable and filterable journal entries
    - Trend analysis over time
