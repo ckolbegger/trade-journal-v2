@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AAPL Position - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .header-info {
+            flex: 1;
+        }
+        
+        .position-symbol {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .position-strategy {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .performance-section {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            padding: 20px;
+        }
+        
+        .performance-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .current-price {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .price-change {
+            text-align: right;
+        }
+        
+        .change-amount {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .change-percent {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .performance-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .content {
+            padding-bottom: 80px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 12px;
+        }
+        
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .section-action {
+            background: none;
+            border: none;
+            color: #3b82f6;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .section-content {
+            padding: 0 20px;
+        }
+        
+        .trade-plan-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .plan-immutable-notice {
+            display: flex;
+            align-items: center;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            font-size: 12px;
+            color: #991b1b;
+        }
+        
+        .lock-icon {
+            margin-right: 6px;
+        }
+        
+        .plan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .plan-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .plan-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+        
+        .plan-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .thesis-text {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.5;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .progress-bar-container {
+            margin-bottom: 16px;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #dc2626, #f59e0b, #16a34a);
+            width: 65%;
+            border-radius: 4px;
+        }
+        
+        .progress-current {
+            position: absolute;
+            top: -2px;
+            left: 65%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            background: #1f2937;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .trades-list {
+            background: white;
+        }
+        
+        .trade-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .trade-item:last-child {
+            border-bottom: none;
+        }
+        
+        .trade-info {
+            flex: 1;
+        }
+        
+        .trade-type {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .trade-details {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .trade-amount {
+            text-align: right;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .trade-buy {
+            color: #16a34a;
+        }
+        
+        .trade-sell {
+            color: #dc2626;
+        }
+        
+        .journal-entries {
+            background: white;
+        }
+        
+        .journal-entry {
+            padding: 16px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .journal-entry:last-child {
+            border-bottom: none;
+        }
+        
+        .journal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .journal-type {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .journal-date {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .journal-text {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.5;
+        }
+        
+        .price-update-card {
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .update-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .update-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #a16207;
+        }
+        
+        .update-time {
+            font-size: 12px;
+            color: #92400e;
+        }
+        
+        .price-input-group {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .price-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .update-button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .risk-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .risk-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .risk-label {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .risk-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .risk-positive {
+            color: #16a34a;
+        }
+        
+        .risk-negative {
+            color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="back-button" onclick="alert('Navigate back to Position Dashboard')">←</button>
+            <div class="header-info">
+                <div class="position-symbol">AAPL</div>
+                <div class="position-strategy">Long Stock • 100 shares</div>
+            </div>
+            <div class="header-actions">
+                <button class="header-button" onclick="alert('Update Price')">Update</button>
+                <button class="header-button" onclick="alert('More Options')">•••</button>
+            </div>
+        </header>
+        
+        <section class="performance-section">
+            <div class="performance-main">
+                <div class="current-price">$165.05</div>
+                <div class="price-change">
+                    <div class="change-amount">+$1,550</div>
+                    <div class="change-percent">+10.4%</div>
+                </div>
+            </div>
+            <div class="performance-stats">
+                <div class="stat-item">
+                    <div class="stat-label">Entry</div>
+                    <div class="stat-value">$149.50</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Target</div>
+                    <div class="stat-value">$165.00</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Stop</div>
+                    <div class="stat-value">$140.00</div>
+                </div>
+            </div>
+        </section>
+        
+        <main class="content">
+            <!-- Price Update Card -->
+            <section class="section">
+                <div class="section-content">
+                    <div class="price-update-card">
+                        <div class="update-header">
+                            <div class="update-title">Manual Price Update</div>
+                            <div class="update-time">Last: 2 min ago</div>
+                        </div>
+                        <div class="price-input-group">
+                            <input type="number" class="price-input" placeholder="165.05" value="165.05" step="0.01">
+                            <button class="update-button" onclick="alert('Price Updated')">Update</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Progress to Target -->
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-title">Progress to Target</div>
+                </div>
+                <div class="section-content">
+                    <div class="progress-bar-container">
+                        <div class="progress-labels">
+                            <span>Stop $140</span>
+                            <span>Current $165.05</span>
+                            <span>Target $165</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill"></div>
+                            <div class="progress-current"></div>
+                        </div>
+                    </div>
+                    <div class="risk-metrics">
+                        <div class="risk-item">
+                            <div class="risk-label">To Target</div>
+                            <div class="risk-value risk-positive">$0.05</div>
+                        </div>
+                        <div class="risk-item">
+                            <div class="risk-label">To Stop</div>
+                            <div class="risk-value risk-negative">-$25.05</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Trade Plan -->
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-title">Trade Plan</div>
+                    <button class="section-action" onclick="alert('View Full Plan')">View Full</button>
+                </div>
+                <div class="section-content">
+                    <div class="trade-plan-card">
+                        <div class="plan-immutable-notice">
+                            <span class="lock-icon">🔒</span>
+                            This trade plan is immutable and cannot be modified
+                        </div>
+                        <div class="plan-grid">
+                            <div class="plan-item">
+                                <div class="plan-label">Entry Target</div>
+                                <div class="plan-value">$149.50</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Quantity</div>
+                                <div class="plan-value">100 shares</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Profit Target</div>
+                                <div class="plan-value">$165.00</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Stop Loss</div>
+                                <div class="plan-value">$140.00</div>
+                            </div>
+                        </div>
+                        <div class="plan-item">
+                            <div class="plan-label">Trade Thesis</div>
+                            <div class="thesis-text">
+                                AAPL showing strong support at 149 level with positive earnings momentum. Technical setup shows potential breakout above 155 resistance. Risk management with tight stop at 140.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Trade History -->
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-title">Trade History</div>
+                    <button class="section-action" onclick="alert('Add Trade')">Add Trade</button>
+                </div>
+                <div class="section-content">
+                    <div class="trades-list">
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-buy">BUY</div>
+                                <div class="trade-details">100 shares @ $149.50 • Jan 15, 2024</div>
+                            </div>
+                            <div class="trade-amount trade-buy">$14,950</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Journal Entries -->
+            <section class="section">
+                <div class="section-header">
+                    <div class="section-title">Journal Entries</div>
+                    <button class="section-action" onclick="alert('Add Entry')">Add Entry</button>
+                </div>
+                <div class="section-content">
+                    <div class="journal-entries">
+                        <div class="journal-entry">
+                            <div class="journal-header">
+                                <div class="journal-type">Position Entry</div>
+                                <div class="journal-date">Jan 15, 2024</div>
+                            </div>
+                            <div class="journal-text">
+                                AAPL showing strong support at 149 level with positive earnings momentum. Technical setup shows potential breakout above 155 resistance. Risk management with tight stop at 140.
+                            </div>
+                        </div>
+                        <div class="journal-entry">
+                            <div class="journal-header">
+                                <div class="journal-type">Progress Update</div>
+                                <div class="journal-date">Jan 18, 2024</div>
+                            </div>
+                            <div class="journal-text">
+                                Position performing well, up 10.4%. Market showing continued strength in tech sector. Considering partial profit taking near target of $165.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <div class="bottom-actions">
+            <button class="btn btn-secondary" onclick="alert('Add Trade')">Add Trade</button>
+            <button class="btn btn-danger" onclick="alert('Close Position')">Close Position</button>
+        </div>
+    </div>
+
+    <script>
+        // Price update functionality
+        document.querySelector('.update-button').addEventListener('click', function() {
+            const priceInput = document.querySelector('.price-input');
+            const newPrice = parseFloat(priceInput.value);
+            
+            if (isNaN(newPrice) || newPrice <= 0) {
+                alert('Please enter a valid price');
+                return;
+            }
+            
+            // Update current price display
+            document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
+            
+            // Calculate new P&L
+            const entryPrice = 149.50;
+            const shares = 100;
+            const plAmount = (newPrice - entryPrice) * shares;
+            const plPercent = ((newPrice - entryPrice) / entryPrice) * 100;
+            
+            // Update P&L display
+            const changeAmount = document.querySelector('.change-amount');
+            const changePercent = document.querySelector('.change-percent');
+            
+            changeAmount.textContent = plAmount >= 0 ? `+$${plAmount.toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
+            changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
+            
+            // Update progress bar position
+            const stopPrice = 140.00;
+            const targetPrice = 165.00;
+            const progress = Math.min(Math.max((newPrice - stopPrice) / (targetPrice - stopPrice), 0), 1) * 100;
+            
+            document.querySelector('.progress-fill').style.width = `${progress}%`;
+            document.querySelector('.progress-current').style.left = `${progress}%`;
+            
+            // Update distance to target/stop
+            const toTarget = targetPrice - newPrice;
+            const toStop = newPrice - stopPrice;
+            
+            document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
+                toTarget >= 0 ? `$${toTarget.toFixed(2)}` : `+$${Math.abs(toTarget).toFixed(2)}`;
+            document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
+                `$${toStop.toFixed(2)}`;
+                
+            // Update timestamp
+            document.querySelector('.update-time').textContent = 'Last: Just now';
+            
+            // Visual feedback
+            priceInput.style.borderColor = '#16a34a';
+            setTimeout(() => {
+                priceInput.style.borderColor = '#d1d5db';
+            }, 1000);
+        });
+        
+        // Allow Enter key to update price
+        document.querySelector('.price-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.querySelector('.update-button').click();
+            }
+        });
+    </script>
+</body>
+</html>

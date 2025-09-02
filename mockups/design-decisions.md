@@ -118,6 +118,51 @@ This document tracks design decisions made during mockup creation to maintain co
 - Status indicators enable quick decision-making without deep drilling
 - Portfolio summary provides context and motivation
 
+### Mockup 4: Position Detail View
+
+**Key Decisions Made:**
+1. **Performance-First Layout**: Large current price and P&L prominently displayed in colored header
+2. **Manual Price Update**: Dedicated card at top for easy price entry with immediate P&L recalculation
+3. **Visual Progress Indicator**: Color-coded progress bar showing position relative to stop and target
+4. **Immutable Plan Display**: Trade plan shown with lock icon and warning to reinforce immutability
+5. **Comprehensive Trade History**: FIFO-ordered list of all executions with timestamps
+6. **Integrated Journaling**: Journal entries embedded in detail view for context and review
+7. **Dual Action Pattern**: Bottom action bar for primary actions (Add Trade, Close Position)
+8. **Real-Time Calculations**: JavaScript updates all dependent values when price changes
+
+**Information Hierarchy:**
+- **Level 1**: Current price, P&L, basic position info
+- **Level 2**: Price update controls, progress to targets
+- **Level 3**: Immutable trade plan details
+- **Level 4**: Trade history and journal entries
+
+**Interactive Elements:**
+- Price input with Enter key support and visual feedback
+- Real-time P&L calculation and progress bar updates
+- Expandable sections for detailed information
+- Quick action buttons for common tasks
+
+**Visual Design Patterns:**
+- Green gradient header for profitable positions (would be red for losses)
+- Color-coded progress bar (red to orange to green) showing risk/reward spectrum
+- Lock icon and red notice for immutable trade plan
+- Consistent card-based layout for content sections
+- Time-aware updates ("Last: 2 min ago")
+
+**Behavioral Psychology Elements:**
+- Large, prominent P&L display for immediate emotional feedback
+- Visual progress bar creates sense of achievement/goal orientation
+- Immutability warnings reinforce disciplined trading mindset
+- Journal integration encourages reflection and learning
+- Manual price updates maintain engagement with positions
+
+**Rationale:**
+- Detail view serves as command center for individual position management
+- Manual price updates maintain privacy while enabling real-time analysis
+- Visual progress indicators help traders understand position context quickly
+- Immutable plan display prevents emotional override of original strategy
+- Integrated journaling promotes continuous learning and reflection
+
 ---
 
 *This document will be updated as each mockup is completed.*
