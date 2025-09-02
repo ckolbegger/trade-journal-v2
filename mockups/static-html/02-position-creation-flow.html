@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Position - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .step-indicator {
+            background: #f3f4f6;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+        }
+        
+        .step-dot.active {
+            background: #3b82f6;
+        }
+        
+        .step-dot.completed {
+            background: #16a34a;
+        }
+        
+        .step-content {
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .step-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .risk-calculator {
+            background: #f3f4f6;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .risk-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .risk-item:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            padding-top: 8px;
+            border-top: 1px solid #d1d5db;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .warning-icon {
+            color: #f59e0b;
+            margin-right: 8px;
+        }
+        
+        .warning-text {
+            font-size: 14px;
+            color: #92400e;
+        }
+        
+        .confirmation-summary {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .summary-label {
+            color: #6b7280;
+        }
+        
+        .summary-value {
+            font-weight: 500;
+            text-align: right;
+            max-width: 60%;
+        }
+        
+        .immutable-checkbox {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+        }
+        
+        .checkbox-input {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+        
+        .checkbox-label {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #991b1b;
+        }
+        
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            min-width: 100px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .success-animation {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #dcfce7;
+            color: #16a34a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        
+        .success-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="back-button" onclick="goBack()">←</button>
+            <h1 id="headerTitle">Create Position</h1>
+        </header>
+        
+        <div class="step-indicator">
+            <div class="step-dots">
+                <div class="step-dot active" id="dot1"></div>
+                <div class="step-dot" id="dot2"></div>
+                <div class="step-dot" id="dot3"></div>
+                <div class="step-dot" id="dot4"></div>
+            </div>
+        </div>
+        
+        <main class="step-content">
+            <!-- Step 1: Trade Setup -->
+            <div class="step active" id="step1">
+                <h2 class="step-title">Trade Setup</h2>
+                <p class="step-description">Define your position strategy and targets. This information becomes immutable once confirmed.</p>
+                
+                <div class="form-group">
+                    <label class="form-label required">Symbol</label>
+                    <input type="text" class="form-input" placeholder="AAPL" value="AAPL" id="symbol">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Strategy</label>
+                    <select class="form-input" id="strategy">
+                        <option value="long_stock">Long Stock</option>
+                        <option value="covered_call">Covered Call</option>
+                        <option value="cash_secured_put">Cash Secured Put</option>
+                    </select>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label required">Entry Target</label>
+                        <input type="number" class="form-input" placeholder="150.00" value="149.50" step="0.01" id="entryTarget">
+                        <div class="form-hint">Price per share</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Quantity</label>
+                        <input type="number" class="form-input" placeholder="100" value="100" id="quantity">
+                        <div class="form-hint">Shares</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label required">Profit Target</label>
+                        <input type="number" class="form-input" placeholder="165.00" value="165.00" step="0.01" id="profitTarget">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label required">Stop Loss</label>
+                        <input type="number" class="form-input" placeholder="140.00" value="140.00" step="0.01" id="stopLoss">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Risk Assessment -->
+            <div class="step" id="step2">
+                <h2 class="step-title">Risk Assessment</h2>
+                <p class="step-description">Review your position sizing and risk metrics before proceeding.</p>
+                
+                <div class="risk-calculator">
+                    <div class="risk-item">
+                        <span>Position Size:</span>
+                        <span id="positionSize">$14,950</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Max Profit:</span>
+                        <span style="color: #16a34a;" id="maxProfit">+$1,550</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Max Loss:</span>
+                        <span style="color: #dc2626;" id="maxLoss">-$950</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Risk/Reward Ratio:</span>
+                        <span id="riskReward">1:1.63</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Portfolio Risk %</label>
+                    <input type="number" class="form-input" placeholder="2.5" value="1.9" step="0.1" id="portfolioRisk">
+                    <div class="form-hint">Percentage of total portfolio at risk</div>
+                </div>
+                
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <span class="warning-text">Ensure this position aligns with your risk management rules and portfolio allocation strategy.</span>
+                </div>
+            </div>
+            
+            <!-- Step 3: Trading Journal -->
+            <div class="step" id="step3">
+                <h2 class="step-title">Trading Journal</h2>
+                <p class="step-description">Document your reasoning. This journal entry is required and helps build trading discipline.</p>
+                
+                <div class="form-group">
+                    <label class="form-label required">Trade Thesis</label>
+                    <textarea class="form-input form-textarea" placeholder="Why are you entering this position? What's your market outlook?" id="thesis">AAPL showing strong support at 149 level with positive earnings momentum. Technical setup shows potential breakout above 155 resistance. Risk management with tight stop at 140.</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Market Conditions</label>
+                    <textarea class="form-input form-textarea" placeholder="Describe current market environment and how it affects this trade" id="marketConditions">Bullish market trend continues, tech sector showing strength. Fed pause expected to support growth stocks.</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Exit Strategy</label>
+                    <textarea class="form-input form-textarea" placeholder="When and why will you exit this position?" id="exitStrategy">Target: 165 (10% gain), Stop: 140 (6.4% loss). Will consider partial profits at 160 if momentum slows.</textarea>
+                </div>
+            </div>
+            
+            <!-- Step 4: Confirmation -->
+            <div class="step" id="step4">
+                <h2 class="step-title">Confirm Position</h2>
+                <p class="step-description">Review all details carefully. Once confirmed, this trade plan becomes immutable.</p>
+                
+                <div class="confirmation-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Symbol:</span>
+                        <span class="summary-value" id="confirmSymbol">AAPL</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Strategy:</span>
+                        <span class="summary-value" id="confirmStrategy">Long Stock</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Quantity:</span>
+                        <span class="summary-value" id="confirmQuantity">100 shares</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Entry Target:</span>
+                        <span class="summary-value" id="confirmEntry">$149.50</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Profit Target:</span>
+                        <span class="summary-value" id="confirmProfit">$165.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Stop Loss:</span>
+                        <span class="summary-value" id="confirmStop">$140.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Max Risk:</span>
+                        <span class="summary-value" style="color: #dc2626;" id="confirmRisk">$950</span>
+                    </div>
+                </div>
+                
+                <div class="immutable-checkbox">
+                    <input type="checkbox" class="checkbox-input" id="immutableConfirm">
+                    <label class="checkbox-label" for="immutableConfirm">
+                        I understand that this trade plan will be <strong>immutable</strong> once created. I have carefully reviewed all details and am ready to commit to this strategy.
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Step 5: Success -->
+            <div class="step" id="step5">
+                <div class="success-animation">
+                    <div class="success-icon">✓</div>
+                    <h2 class="success-title">Position Created!</h2>
+                    <p class="success-description">Your AAPL long position has been added to your portfolio. You can now track its progress and add trades.</p>
+                </div>
+            </div>
+        </main>
+        
+        <div class="bottom-actions">
+            <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">Back</button>
+            <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        
+        function updateStepUI() {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show current step
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update dots
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 === currentStep) {
+                    dot.classList.add('active');
+                } else if (index + 1 < currentStep) {
+                    dot.classList.add('completed');
+                }
+            });
+            
+            // Update buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            
+            if (currentStep === 4) {
+                nextBtn.textContent = 'Create Position';
+                nextBtn.disabled = !document.getElementById('immutableConfirm').checked;
+            } else if (currentStep === 5) {
+                nextBtn.textContent = 'View Position';
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.textContent = 'Continue';
+                nextBtn.disabled = false;
+            }
+            
+            // Update header
+            const titles = {
+                1: 'Create Position',
+                2: 'Risk Assessment',
+                3: 'Trading Journal',
+                4: 'Confirm Position',
+                5: 'Position Created'
+            };
+            document.getElementById('headerTitle').textContent = titles[currentStep];
+        }
+        
+        function nextStep() {
+            if (currentStep < 5) {
+                if (currentStep === 4) {
+                    // Validation for final step
+                    if (!document.getElementById('immutableConfirm').checked) {
+                        alert('Please confirm you understand the immutable nature of this trade plan.');
+                        return;
+                    }
+                }
+                currentStep++;
+                updateStepUI();
+            } else {
+                alert('Navigate to Position Detail View');
+            }
+        }
+        
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        }
+        
+        function goBack() {
+            if (currentStep === 1) {
+                alert('Navigate back to Positions Dashboard');
+            } else {
+                previousStep();
+            }
+        }
+        
+        // Enable/disable create button based on checkbox
+        document.getElementById('immutableConfirm').addEventListener('change', function() {
+            if (currentStep === 4) {
+                document.getElementById('nextBtn').disabled = !this.checked;
+            }
+        });
+        
+        // Initialize
+        updateStepUI();
+    </script>
+</body>
+</html>
