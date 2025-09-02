@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Close Position - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .step-indicator {
+            background: #f3f4f6;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+        }
+        
+        .step-dot.active {
+            background: #3b82f6;
+        }
+        
+        .step-dot.completed {
+            background: #16a34a;
+        }
+        
+        .step-content {
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .step-description {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        .position-summary {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .position-info h3 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .position-info p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .total-pl {
+            text-align: right;
+        }
+        
+        .pl-amount {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .pl-percent {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .performance-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .metric-item {
+            text-align: center;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-bottom: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .comparison-section {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .comparison-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #1f2937;
+        }
+        
+        .comparison-table {
+            width: 100%;
+        }
+        
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr auto auto auto;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 14px;
+        }
+        
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-header {
+            font-weight: 600;
+            color: #1f2937;
+            background: none;
+        }
+        
+        .comparison-label {
+            color: #6b7280;
+        }
+        
+        .planned-value {
+            color: #1f2937;
+            font-weight: 500;
+        }
+        
+        .actual-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+        
+        .variance {
+            font-weight: 600;
+        }
+        
+        .variance.positive {
+            color: #16a34a;
+        }
+        
+        .variance.negative {
+            color: #dc2626;
+        }
+        
+        .closing-details {
+            margin-bottom: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .closing-reason {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .closing-reason:hover {
+            border-color: #3b82f6;
+            background: #f8fafc;
+        }
+        
+        .closing-reason.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .reason-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #1f2937;
+        }
+        
+        .reason-description {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .lessons-section {
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .lessons-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #a16207;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .lessons-icon {
+            margin-right: 8px;
+        }
+        
+        .lesson-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #92400e;
+        }
+        
+        .lesson-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .lesson-bullet {
+            margin-right: 8px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        
+        .confirmation-summary {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .summary-item:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            font-weight: 600;
+        }
+        
+        .summary-label {
+            color: #6b7280;
+        }
+        
+        .summary-value {
+            font-weight: 500;
+            text-align: right;
+        }
+        
+        .final-confirmation {
+            display: flex;
+            align-items: flex-start;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .checkbox-input {
+            margin-right: 12px;
+            margin-top: 2px;
+        }
+        
+        .checkbox-label {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #991b1b;
+        }
+        
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            min-width: 100px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .success-animation {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #dcfce7;
+            color: #16a34a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 32px;
+        }
+        
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        
+        .success-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="back-button" onclick="goBack()">←</button>
+            <h1 id="headerTitle">Close Position</h1>
+        </header>
+        
+        <div class="step-indicator">
+            <div class="step-dots">
+                <div class="step-dot active" id="dot1"></div>
+                <div class="step-dot" id="dot2"></div>
+                <div class="step-dot" id="dot3"></div>
+                <div class="step-dot" id="dot4"></div>
+            </div>
+        </div>
+        
+        <main class="step-content">
+            <!-- Step 1: Closing Details -->
+            <div class="step active" id="step1">
+                <h2 class="step-title">Closing Details</h2>
+                <p class="step-description">Enter the details of how you're closing this position.</p>
+                
+                <div class="position-summary">
+                    <div class="summary-header">
+                        <div class="position-info">
+                            <h3>AAPL</h3>
+                            <p>Long Stock • 100 shares</p>
+                        </div>
+                        <div class="total-pl">
+                            <div class="pl-amount">+$1,550</div>
+                            <div class="pl-percent">+10.4%</div>
+                        </div>
+                    </div>
+                    <div class="performance-metrics">
+                        <div class="metric-item">
+                            <div class="metric-label">Entry Price</div>
+                            <div class="metric-value">$149.50</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Current Price</div>
+                            <div class="metric-value">$165.05</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Days Held</div>
+                            <div class="metric-value">12</div>
+                        </div>
+                        <div class="metric-item">
+                            <div class="metric-label">Target</div>
+                            <div class="metric-value">$165.00</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="closing-details">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label required">Exit Price</label>
+                            <input type="number" class="form-input" placeholder="165.00" value="165.00" step="0.01" id="exitPrice">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label required">Quantity</label>
+                            <input type="number" class="form-input" placeholder="100" value="100" id="exitQuantity">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Exit Date</label>
+                        <input type="date" class="form-input" value="2024-01-27" id="exitDate">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Closing Reason -->
+            <div class="step" id="step2">
+                <h2 class="step-title">Why Are You Closing?</h2>
+                <p class="step-description">Select the primary reason for closing this position. This helps with future analysis.</p>
+                
+                <div class="closing-reason selected" onclick="selectReason(this)">
+                    <div class="reason-title">🎯 Target Reached</div>
+                    <div class="reason-description">Position hit or exceeded profit target</div>
+                </div>
+                
+                <div class="closing-reason" onclick="selectReason(this)">
+                    <div class="reason-title">🛑 Stop Loss Hit</div>
+                    <div class="reason-description">Position hit predetermined stop loss level</div>
+                </div>
+                
+                <div class="closing-reason" onclick="selectReason(this)">
+                    <div class="reason-title">⏰ Time-Based Exit</div>
+                    <div class="reason-description">Closing based on time frame or schedule</div>
+                </div>
+                
+                <div class="closing-reason" onclick="selectReason(this)">
+                    <div class="reason-title">📊 Technical Signal</div>
+                    <div class="reason-description">New technical analysis suggests exit</div>
+                </div>
+                
+                <div class="closing-reason" onclick="selectReason(this)">
+                    <div class="reason-title">📰 Fundamental Change</div>
+                    <div class="reason-description">Company or market fundamentals changed</div>
+                </div>
+                
+                <div class="closing-reason" onclick="selectReason(this)">
+                    <div class="reason-title">🔄 Portfolio Rebalance</div>
+                    <div class="reason-description">Closing for portfolio management reasons</div>
+                </div>
+            </div>
+            
+            <!-- Step 3: Plan vs Execution -->
+            <div class="step" id="step3">
+                <h2 class="step-title">Plan vs Execution</h2>
+                <p class="step-description">Review how your actual performance compared to your original plan.</p>
+                
+                <div class="comparison-section">
+                    <div class="comparison-title">Performance Analysis</div>
+                    <div class="comparison-table">
+                        <div class="comparison-row comparison-header">
+                            <div>Metric</div>
+                            <div>Planned</div>
+                            <div>Actual</div>
+                            <div>Variance</div>
+                        </div>
+                        <div class="comparison-row">
+                            <div class="comparison-label">Exit Price</div>
+                            <div class="planned-value">$165.00</div>
+                            <div class="actual-value">$165.00</div>
+                            <div class="variance">$0.00</div>
+                        </div>
+                        <div class="comparison-row">
+                            <div class="comparison-label">Profit</div>
+                            <div class="planned-value">$1,550</div>
+                            <div class="actual-value">$1,550</div>
+                            <div class="variance">$0</div>
+                        </div>
+                        <div class="comparison-row">
+                            <div class="comparison-label">Return %</div>
+                            <div class="planned-value">10.4%</div>
+                            <div class="actual-value">10.4%</div>
+                            <div class="variance">+0%</div>
+                        </div>
+                        <div class="comparison-row">
+                            <div class="comparison-label">Time Held</div>
+                            <div class="planned-value">~14 days</div>
+                            <div class="actual-value">12 days</div>
+                            <div class="variance positive">-2 days</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="lessons-section">
+                    <div class="lessons-title">
+                        <span class="lessons-icon">💡</span>
+                        Key Lessons from This Trade
+                    </div>
+                    <div class="lesson-item">
+                        <span class="lesson-bullet">✓</span>
+                        <span>Plan executed perfectly - target hit exactly as anticipated</span>
+                    </div>
+                    <div class="lesson-item">
+                        <span class="lesson-bullet">✓</span>
+                        <span>Position closed 2 days earlier than expected due to momentum</span>
+                    </div>
+                    <div class="lesson-item">
+                        <span class="lesson-bullet">✓</span>
+                        <span>Risk management worked well with tight stop loss protection</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label required">Closing Journal Entry</label>
+                    <textarea class="form-input form-textarea" placeholder="Reflect on this trade: What worked well? What could be improved? What did you learn?" id="closingJournal">Target reached exactly as planned. AAPL performed well with strong earnings momentum. Position management was disciplined - no emotional interference with original plan. Good example of letting winners run to target.</textarea>
+                </div>
+            </div>
+            
+            <!-- Step 4: Confirmation -->
+            <div class="step" id="step4">
+                <h2 class="step-title">Confirm Position Close</h2>
+                <p class="step-description">Review all details before finalizing the position closure.</p>
+                
+                <div class="confirmation-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Position:</span>
+                        <span class="summary-value">AAPL Long Stock</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Quantity:</span>
+                        <span class="summary-value">100 shares</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Exit Price:</span>
+                        <span class="summary-value">$165.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Exit Date:</span>
+                        <span class="summary-value">Jan 27, 2024</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Closing Reason:</span>
+                        <span class="summary-value">Target Reached</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Total Profit:</span>
+                        <span class="summary-value" style="color: #16a34a;">+$1,550 (+10.4%)</span>
+                    </div>
+                </div>
+                
+                <div class="final-confirmation">
+                    <input type="checkbox" class="checkbox-input" id="finalConfirm">
+                    <label class="checkbox-label" for="finalConfirm">
+                        I confirm that I want to <strong>permanently close</strong> this position. This action cannot be undone, and the position will be moved to closed positions history.
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Step 5: Success -->
+            <div class="step" id="step5">
+                <div class="success-animation">
+                    <div class="success-icon">✓</div>
+                    <h2 class="success-title">Position Closed!</h2>
+                    <p class="success-description">Your AAPL position has been successfully closed with a profit of $1,550. The position has been moved to your trading history.</p>
+                </div>
+            </div>
+        </main>
+        
+        <div class="bottom-actions">
+            <button class="btn btn-secondary" onclick="previousStep()" id="prevBtn" style="display: none;">Back</button>
+            <button class="btn btn-primary" onclick="nextStep()" id="nextBtn">Continue</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let selectedReason = "Target Reached";
+        
+        function updateStepUI() {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(step => {
+                step.classList.remove('active');
+            });
+            
+            // Show current step
+            document.getElementById(`step${currentStep}`).classList.add('active');
+            
+            // Update dots
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 === currentStep) {
+                    dot.classList.add('active');
+                } else if (index + 1 < currentStep) {
+                    dot.classList.add('completed');
+                }
+            });
+            
+            // Update buttons
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
+            
+            if (currentStep === 4) {
+                nextBtn.textContent = 'Close Position';
+                nextBtn.className = 'btn btn-danger';
+                nextBtn.disabled = !document.getElementById('finalConfirm').checked;
+            } else if (currentStep === 5) {
+                nextBtn.textContent = 'View History';
+                nextBtn.className = 'btn btn-primary';
+                nextBtn.disabled = false;
+            } else {
+                nextBtn.textContent = 'Continue';
+                nextBtn.className = 'btn btn-primary';
+                nextBtn.disabled = false;
+            }
+            
+            // Update header
+            const titles = {
+                1: 'Close Position',
+                2: 'Closing Reason',
+                3: 'Plan vs Execution',
+                4: 'Confirm Close',
+                5: 'Position Closed'
+            };
+            document.getElementById('headerTitle').textContent = titles[currentStep];
+        }
+        
+        function nextStep() {
+            if (currentStep < 5) {
+                if (currentStep === 4) {
+                    // Validation for final step
+                    if (!document.getElementById('finalConfirm').checked) {
+                        alert('Please confirm you want to close this position.');
+                        return;
+                    }
+                }
+                currentStep++;
+                updateStepUI();
+            } else {
+                alert('Navigate to Trading History');
+            }
+        }
+        
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        }
+        
+        function goBack() {
+            if (currentStep === 1) {
+                alert('Navigate back to Position Detail');
+            } else {
+                previousStep();
+            }
+        }
+        
+        function selectReason(element) {
+            // Remove selected class from all reasons
+            document.querySelectorAll('.closing-reason').forEach(reason => {
+                reason.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked reason
+            element.classList.add('selected');
+            
+            // Store selected reason
+            selectedReason = element.querySelector('.reason-title').textContent.substring(2); // Remove emoji
+        }
+        
+        // Enable/disable close button based on checkbox
+        document.getElementById('finalConfirm').addEventListener('change', function() {
+            if (currentStep === 4) {
+                document.getElementById('nextBtn').disabled = !this.checked;
+            }
+        });
+        
+        // Initialize
+        updateStepUI();
+    </script>
+</body>
+</html>

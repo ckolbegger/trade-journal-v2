@@ -163,6 +163,52 @@ This document tracks design decisions made during mockup creation to maintain co
 - Immutable plan display prevents emotional override of original strategy
 - Integrated journaling promotes continuous learning and reflection
 
+### Mockup 5: Position Closing Flow
+
+**Key Decisions Made:**
+1. **4-Step Educational Process**: Closing details → Reason selection → Plan vs execution → Confirmation
+2. **Performance Summary Header**: Prominent display of final P&L and key metrics
+3. **Structured Reason Selection**: Pre-defined categories with descriptions to improve data quality
+4. **Plan vs Execution Comparison**: Side-by-side table showing planned vs actual results
+5. **Automated Lesson Generation**: System-suggested lessons based on performance analysis
+6. **Mandatory Closing Journal**: Required reflection entry for learning capture
+7. **Final Confirmation Gate**: Red warning and checkbox to prevent accidental closes
+8. **Educational Success State**: Celebratory completion with next steps guidance
+
+**Closing Reason Categories:**
+- Target Reached (profit target hit)
+- Stop Loss Hit (risk management triggered)
+- Time-Based Exit (schedule-driven)
+- Technical Signal (chart pattern change)
+- Fundamental Change (company news/earnings)
+- Portfolio Rebalance (asset allocation)
+
+**Plan vs Execution Analysis:**
+- **Quantitative Metrics**: Exit price, profit amount, return percentage, time held
+- **Variance Calculation**: Automatic comparison with color-coded results
+- **Qualitative Assessment**: Lessons learned section with bullet points
+- **Performance Context**: Shows whether plan was executed as intended
+
+**Learning Reinforcement Elements:**
+- Visual performance summary reinforces successful execution
+- Plan comparison highlights decision-making accuracy
+- Mandatory journaling ensures reflection occurs
+- Lesson extraction promotes pattern recognition
+- Success celebration builds positive trading habits
+
+**Flow Control Decisions:**
+- Back button allows revision of decisions before commitment
+- Progressive disclosure reduces cognitive load
+- Final confirmation prevents accidental position closure
+- Success state provides clear completion feedback
+
+**Rationale:**
+- Position closing is critical learning opportunity that must be captured
+- Structured reason selection improves trade analysis and pattern recognition
+- Plan vs execution comparison reinforces disciplined trading methodology
+- Mandatory journaling builds habit of post-trade reflection
+- Educational approach transforms position closing from administrative task to learning experience
+
 ---
 
 *This document will be updated as each mockup is completed.*
