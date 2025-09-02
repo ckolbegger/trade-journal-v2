@@ -63,14 +63,13 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 - Manual price entry system (dual pricing: closing prices stored, current prices temporary)
 
 ### Phase 1B: Daily Review Process
-**Deliverable Focus**: Habit-forming review workflow and behavioral training
+**Deliverable Focus**: Habit-forming review workflow and position monitoring
 
 **Core Features:**
-- **Daily Review System**
-  - Volatility-based "needs attention" position sorting
-    - Primary algorithm: Daily % move × position size
-    - Highest movement and largest dollar exposure prioritized
-  - Guided position-by-position review mode for beginners
+- **Daily Review Workflow**
+  - **Manual price update interface**: Update current prices during review sessions
+  - **Guided position-by-position review mode** for beginners
+  - **Position attention highlighting**: Visual cues for positions needing attention
   - Review session timestamp tracking
   - Review completion tracking for habit consistency
 
@@ -78,7 +77,7 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
   - Streamlined journal entry during review (optional but prominent)
   - Price update integration within review flow
   - Review time tracking (future correlation with market conditions)
-  - Position attention scoring and ordering
+  - Simple position prioritization (basic sorting when multiple positions exist)
 
 ### Phase 2: Stock Position Scaling
 **Features:**
@@ -118,7 +117,27 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 - **Behavioral Goal**: Build pattern of thinking through decisions before execution
 - **Partial Fills**: Treat as scale-in events, record actual vs planned execution
 
-### Journaling Integration
+### Daily Review Process
+**Purpose:** Create a systematic habit of position evaluation and decision-making reflection.
+
+**Core Functionality:**
+- **Position prioritization algorithm:** Automatically ranks open positions by urgency of attention needed
+- **Volatility-based sorting:** Primary algorithm focuses on positions with highest daily price movements weighted by position size
+- **Alternative sorting approaches:** 
+  - Risk-weighted urgency (positions near stops/targets)
+  - Time-sensitive priority (short-dated options, overdue reviews)
+  - Behavioral nudge focus (positions likely to trigger emotional decisions)
+- **Guided review mode:** Step-by-step review process for beginning traders
+- **Flexible review options:** Advanced users can disable guidance and review individual positions
+- **Review habit tracking:** Timestamp tracking for review sessions and individual position reviews
+- **Behavioral insights:** Monitor review time patterns during market runups and drawdowns
+- **Streamlined journaling:** Easy journal entry opportunities during review process
+
+**Review Session Features:**
+- Review completion tracking for habit consistency
+- Position-by-position navigation with price update integration
+- Optional journal prompts and behavioral nudges
+- Review time correlation analysis for future pattern recognition
 - **Trade Entry**: Forced journal entry for every new position
 - **Daily Review**: Optional but prominent journal opportunities
 - **Future Enhancement**: LLM quality checking for journal entries
