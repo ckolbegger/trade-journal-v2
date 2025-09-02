@@ -82,6 +82,42 @@ This document tracks design decisions made during mockup creation to maintain co
 - Mandatory journaling builds disciplined decision-making habits
 - Immutability warning ensures users understand the commitment they're making
 
+### Mockup 3: Position Dashboard
+
+**Key Decisions Made:**
+1. **Portfolio Summary Header**: Gradient header with 4 key metrics (Total P&L, Today's P&L, Win Rate, Open Positions)
+2. **Attention-Based Prioritization**: Visual hierarchy highlighting positions that need review
+3. **Color-Coded Position Cards**: Left border colors indicate status (green=profitable, red=losing, orange=attention)
+4. **Information Density**: Compact cards showing essential data without overwhelming mobile users
+5. **Filter Tabs**: Horizontal scrolling tabs for quick position segmentation
+6. **Dual Action Buttons**: Header add button + floating action button for position creation access
+7. **Real-Time Indicators**: "Updated X min ago" timestamps to show data freshness
+8. **Status Badges**: Contextual badges (Near Target, High Vol, Near Stop) for quick status recognition
+
+**Card Information Architecture:**
+- **Primary**: Symbol, Strategy, P&L (amount + percentage)
+- **Secondary**: Entry price, Current price, Target/Stop price
+- **Tertiary**: Last updated time, Status badge
+
+**Visual Status System:**
+- **Default**: Clean card with subtle border
+- **Profitable**: Green left border, positive P&L in green
+- **Losing**: Red left border, negative P&L in red
+- **Needs Attention**: Orange left border, yellow background tint, warning badges
+
+**Behavioral Psychology Elements:**
+- Portfolio summary creates positive reinforcement for good performance
+- "Needs attention" banner creates urgency without being overwhelming
+- Color coding enables instant visual triage of positions
+- Recent update timestamps build confidence in data reliability
+
+**Rationale:**
+- Dashboard serves as mission control for active traders
+- Visual hierarchy guides attention to positions requiring action
+- Compact design maximizes information density on mobile screens
+- Status indicators enable quick decision-making without deep drilling
+- Portfolio summary provides context and motivation
+
 ---
 
 *This document will be updated as each mockup is completed.*
