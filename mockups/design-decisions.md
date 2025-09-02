@@ -209,6 +209,68 @@ This document tracks design decisions made during mockup creation to maintain co
 - Mandatory journaling builds habit of post-trade reflection
 - Educational approach transforms position closing from administrative task to learning experience
 
+### Mockup 6: Journal History View
+
+**Key Decisions Made:**
+1. **Stats-First Design**: Header with journaling statistics to reinforce habit formation
+2. **Search and Filter System**: Real-time search with categorical filters for finding entries
+3. **Chronological Timeline**: Date-separated entries showing trading journey progression  
+4. **Performance Context Integration**: Each entry shows related position performance for context
+5. **Insights Dashboard**: AI-generated insights from journal patterns and behaviors
+6. **Multi-Type Entry Support**: Entry types (Position Entry, Progress Update, Position Closed)
+7. **Quick Actions**: View/Share buttons for easy entry management
+8. **Visual Entry Indicators**: Icons and badges showing entry type and performance
+
+**Information Architecture:**
+- **Global Stats**: Total entries, monthly frequency, consistency metrics
+- **Entry Categories**: All, Entry, Update, Close, Profitable, Learning
+- **Entry Structure**: Position context + entry type + content preview + performance
+- **Performance Badges**: Color-coded profit/loss indicators with amounts
+
+**Search and Discovery Features:**
+- Real-time text search across entry content, symbols, and types
+- Filter tabs for rapid category switching
+- Date separators for temporal navigation
+- Performance-based filtering (profitable positions)
+
+**Learning Enhancement Elements:**
+- Insights panel highlighting behavioral patterns and correlations
+- Win rate connections to journaling quality
+- Consistency tracking and habit reinforcement
+- Performance correlation analysis (emotional entries vs returns)
+
+**Entry Display Pattern:**
+- **Header**: Symbol, strategy, entry type, performance badge
+- **Content**: Truncated entry text with expand option
+- **Footer**: Timestamp with contextual icons, action buttons
+- **Context**: Position performance at time of entry
+
+**Behavioral Psychology Elements:**
+- Statistics header gamifies journaling consistency
+- Insights create feedback loop between writing quality and performance
+- Performance context reinforces connection between reflection and results
+- Chronological timeline shows growth and learning progression
+- Search functionality encourages review and pattern recognition
+
+**Rationale:**
+- Journal view serves as learning laboratory for trading development
+- Search and filtering enable pattern recognition across historical decisions
+- Performance context reinforces connection between planning and outcomes
+- Insights dashboard provides actionable feedback on journaling effectiveness
+- Timeline view shows evolution of trading thought process and decision-making
+- Statistics tracking builds habit formation and consistency motivation
+
 ---
 
-*This document will be updated as each mockup is completed.*
+## Summary
+
+These 6 mockups create a comprehensive trading journal application focused on behavioral training and habit formation. The design system emphasizes:
+
+- **Immutability** of trade plans to build discipline
+- **Forced journaling** to ensure reflection and learning
+- **Visual feedback** to reinforce positive trading behaviors
+- **Privacy-first** approach with manual data entry
+- **Mobile-first** design for accessibility and convenience
+- **Learning-oriented** UX that transforms trading from gambling to systematic skill development
+
+The mockups demonstrate a complete user journey from onboarding through position management to historical analysis, with consistent emphasis on building better trading habits through systematic documentation and reflection.
