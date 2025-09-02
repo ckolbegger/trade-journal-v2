@@ -85,6 +85,15 @@ The application uses a **Position vs Trade separation architecture** with **trad
 ### Testing Approach
 No specific testing framework has been established yet. Check for package.json or other config files to determine testing approach when implementing tests.
 
+### Mockups and Design
+- **All mockups must be stored in `/mockups` directory structure**
+- **Never create mockup files in `/src` directory** - they will be overwritten during development
+- Mockup directory structure:
+  - `/mockups/static-html` - Static HTML mockup files
+  - `/mockups/screenshots` - Screenshot images of mockups  
+  - `/mockups/wireframes` - Wireframe images and sketches
+- Mockups are immutable design references and should be preserved throughout development
+
 ## Business Context
 
 This is a **privacy-first, standalone tool** designed as a free alternative to complement rather than compete with paid trading platforms. The focus is on behavioral training and habit formation rather than complex analytics or social features.
