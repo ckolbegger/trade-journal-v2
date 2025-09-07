@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Position - Trading Journal</title>
+    <title>AAPL Covered Call - Trading Journal</title>
     <style>
         * {
             box-sizing: border-box;
@@ -128,6 +128,42 @@
             font-weight: 600;
         }
         
+        .pricing-breakdown {
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 16px;
+        }
+        
+        .pricing-section-title {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .pricing-item {
+            text-align: center;
+        }
+        
+        .pricing-label {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-bottom: 2px;
+        }
+        
+        .pricing-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
         .content {
             padding-bottom: 80px;
         }
@@ -242,15 +278,15 @@
         
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #dc2626, #f59e0b, #16a34a);
-            width: 65%;
+            background: linear-gradient(90deg, #16a34a, #f59e0b, #dc2626);
+            width: 73%;
             border-radius: 4px;
         }
         
         .progress-current {
             position: absolute;
             top: -2px;
-            left: 65%;
+            left: 73%;
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
@@ -369,18 +405,30 @@
             color: #92400e;
         }
         
-        .price-input-group {
+        .price-input-row {
             display: flex;
             gap: 12px;
-            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .price-input-row:last-of-type {
+            margin-bottom: 0;
         }
         
         .price-input {
             flex: 1;
-            padding: 12px;
+            padding: 8px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
+        }
+        
+        .price-input-label {
+            flex: 0 0 60px;
+            font-size: 12px;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
         }
         
         .update-button {
@@ -392,6 +440,8 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
         }
         
         .bottom-actions {
@@ -469,6 +519,30 @@
         .risk-negative {
             color: #dc2626;
         }
+        
+        .option-leg {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 3px solid #3b82f6;
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+        }
+        
+        .option-details {
+            font-size: 12px;
+            color: #3b82f6;
+            font-weight: 500;
+        }
+        
+        .dte-badge {
+            background: #f59e0b;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -476,8 +550,8 @@
         <header class="header">
             <button class="back-button" onclick="window.location.href='03-position-dashboard.html'">←</button>
             <div class="header-info">
-                <div class="position-symbol">TSLA</div>
-                <div class="position-strategy">Long Stock • 100 shares</div>
+                <div class="position-symbol">AAPL Covered Call</div>
+                <div class="position-strategy">100 shares + Short 1x $170C Sep 27 <span class="dte-badge">20 DTE</span></div>
             </div>
             <div class="header-actions">
                 <button class="header-button" onclick="alert('Update Price')">Update</button>
@@ -485,26 +559,39 @@
             </div>
         </header>
         
-        <section class="performance-section" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <section class="performance-section">
             <div class="performance-main">
-                <div class="current-price">$217.25</div>
+                <div class="current-price">+$285</div>
                 <div class="price-change">
-                    <div class="change-amount">-$1,890</div>
-                    <div class="change-percent">-12.4%</div>
+                    <div class="change-amount">+$285</div>
+                    <div class="change-percent">+4.2%</div>
                 </div>
             </div>
             <div class="performance-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Avg Cost</div>
-                    <div class="stat-value">$248.50</div>
+                    <div class="stat-label">Stock Cost</div>
+                    <div class="stat-value">$165.50</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Current</div>
-                    <div class="stat-value">$217.25</div>
+                    <div class="stat-label">Call Strike</div>
+                    <div class="stat-value">$170.00</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Stop</div>
-                    <div class="stat-value">$210.00</div>
+                    <div class="stat-label">Net Credit</div>
+                    <div class="stat-value">$2.15</div>
+                </div>
+            </div>
+            <div class="pricing-breakdown">
+                <div class="pricing-section-title">Current Pricing Breakdown</div>
+                <div class="pricing-grid">
+                    <div class="pricing-item">
+                        <div class="pricing-label">Stock Price</div>
+                        <div class="pricing-value">$168.25</div>
+                    </div>
+                    <div class="pricing-item">
+                        <div class="pricing-label">Call Value</div>
+                        <div class="pricing-value">$0.85</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -518,25 +605,30 @@
                             <div class="update-title">Manual Price Update</div>
                             <div class="update-time">Last: 2 min ago</div>
                         </div>
-                        <div class="price-input-group">
-                            <input type="number" class="price-input" placeholder="217.25" value="217.25" step="0.01">
-                            <button class="update-button" onclick="alert('Price Updated')">Update</button>
+                        <div class="price-input-row">
+                            <div class="price-input-label">Stock:</div>
+                            <input type="number" class="price-input" id="stock-price" placeholder="168.25" value="168.25" step="0.01">
                         </div>
+                        <div class="price-input-row">
+                            <div class="price-input-label">Call:</div>
+                            <input type="number" class="price-input" id="call-price" placeholder="0.85" value="0.85" step="0.01">
+                        </div>
+                        <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
                 </div>
             </section>
             
-            <!-- Progress to Target -->
+            <!-- Progress to Strike -->
             <section class="section">
                 <div class="section-header">
-                    <div class="section-title">Progress to Target</div>
+                    <div class="section-title">Proximity to Call Strike</div>
                 </div>
                 <div class="section-content">
                     <div class="progress-bar-container">
                         <div class="progress-labels">
-                            <span>Stop $210</span>
-                            <span>Current $217.25</span>
-                            <span>Near Stop</span>
+                            <span>Cost $165.50</span>
+                            <span>Current $168.25</span>
+                            <span>Strike $170</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill"></div>
@@ -545,12 +637,12 @@
                     </div>
                     <div class="risk-metrics">
                         <div class="risk-item">
-                            <div class="risk-label">To Stop</div>
-                            <div class="risk-value risk-negative">-$7.25</div>
+                            <div class="risk-label">To Strike</div>
+                            <div class="risk-value risk-positive">$1.75</div>
                         </div>
                         <div class="risk-item">
-                            <div class="risk-label">Risk Amount</div>
-                            <div class="risk-value risk-negative">-$435</div>
+                            <div class="risk-label">Time Decay</div>
+                            <div class="risk-value risk-positive">+$1.30</div>
                         </div>
                     </div>
                 </div>
@@ -570,26 +662,29 @@
                         </div>
                         <div class="plan-grid">
                             <div class="plan-item">
-                                <div class="plan-label">Target Entry Price</div>
-                                <div class="plan-value">$248.50</div>
+                                <div class="plan-label">Stock Entry Target</div>
+                                <div class="plan-value">$165.50</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Target Quantity</div>
-                                <div class="plan-value">60 shares</div>
+                                <div class="plan-label">Stock Quantity</div>
+                                <div class="plan-value">100 shares</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Profit Target</div>
-                                <div class="plan-value">$285.00</div>
+                                <div class="plan-label">Call Strike/Expiry</div>
+                                <div class="plan-value">$170 Sep 27</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Stop Loss</div>
-                                <div class="plan-value">$210.00</div>
+                                <div class="plan-label">Call Premium Target</div>
+                                <div class="plan-value">$2.15</div>
                             </div>
+                        </div>
+                        <div class="option-leg">
+                            <div class="option-details">Short 1x AAPL Sep 27 '24 $170C</div>
                         </div>
                         <div class="plan-item">
                             <div class="plan-label">Position Thesis</div>
                             <div class="thesis-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                AAPL showing strong support around $165 with modest upside potential. Covered call strategy allows income generation while maintaining stock position. Strike at $170 provides 2.7% upside capture plus premium income. Plan to roll call if approaching assignment.
                             </div>
                         </div>
                     </div>
@@ -606,10 +701,17 @@
                     <div class="trades-list">
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-buy">BUY</div>
-                                <div class="trade-details">60 shares @ $248.50 • Sep 5, 2024</div>
+                                <div class="trade-type trade-buy">BUY STOCK</div>
+                                <div class="trade-details">100 shares @ $165.50 • Jan 15, 2024</div>
                             </div>
-                            <div class="trade-amount trade-buy">$14,910</div>
+                            <div class="trade-amount trade-buy">$16,550</div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-sell">SELL CALL</div>
+                                <div class="trade-details">1x $170C Sep 27 @ $2.15 • Jan 15, 2024</div>
+                            </div>
+                            <div class="trade-amount trade-sell">+$215</div>
                         </div>
                     </div>
                 </div>
@@ -626,19 +728,19 @@
                         <div class="journal-entry">
                             <div class="journal-header">
                                 <div class="journal-type">Position Plan</div>
-                                <div class="journal-date">Sep 5, 2024</div>
+                                <div class="journal-date">Jan 15, 2024</div>
                             </div>
                             <div class="journal-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                Implementing covered call on AAPL position to generate income while maintaining upside to $170. Stock showing consolidation pattern around $165 support. Sep 27 expiry provides ~20 DTE for time decay benefit. Strike selection allows 2.7% upside capture plus $2.15 premium.
                             </div>
                         </div>
                         <div class="journal-entry">
                             <div class="journal-header">
-                                <div class="journal-type">Position Update</div>
-                                <div class="journal-date">Sep 7, 2024</div>
+                                <div class="journal-type">Progress Update</div>
+                                <div class="journal-date">Jan 18, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Position down -12.4% and approaching stop loss at $210. Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.
+                                Position performing well with stock appreciating to $168.25. Call option losing value due to time decay ($0.85 vs $2.15 entry). Still $1.75 cushion to strike. Strategy working as planned - benefiting from time decay while maintaining most upside potential.
                             </div>
                         </div>
                     </div>
@@ -653,63 +755,77 @@
     </div>
 
     <script>
-        // Price update functionality
-        document.querySelector('.update-button').addEventListener('click', function() {
-            const priceInput = document.querySelector('.price-input');
-            const newPrice = parseFloat(priceInput.value);
+        function updatePrices() {
+            const stockPrice = parseFloat(document.getElementById('stock-price').value);
+            const callPrice = parseFloat(document.getElementById('call-price').value);
             
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Please enter a valid price');
+            if (isNaN(stockPrice) || isNaN(callPrice) || stockPrice <= 0 || callPrice < 0) {
+                alert('Please enter valid prices');
                 return;
             }
             
-            // Update current price display
-            document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
+            // Update current pricing breakdown
+            document.querySelector('.pricing-grid .pricing-item:first-child .pricing-value').textContent = `$${stockPrice.toFixed(2)}`;
+            document.querySelector('.pricing-grid .pricing-item:last-child .pricing-value').textContent = `$${callPrice.toFixed(2)}`;
             
-            // Calculate new P&L
-            const entryPrice = 149.50;
+            // Calculate P&L
+            const stockCostBasis = 165.50;
+            const callPremiumReceived = 2.15;
             const shares = 100;
-            const plAmount = (newPrice - entryPrice) * shares;
-            const plPercent = ((newPrice - entryPrice) / entryPrice) * 100;
             
-            // Update P&L display
-            const changeAmount = document.querySelector('.change-amount');
-            const changePercent = document.querySelector('.change-percent');
+            const stockPL = (stockPrice - stockCostBasis) * shares;
+            const callPL = (callPremiumReceived - callPrice) * shares;
+            const totalPL = stockPL + callPL;
+            const totalCostBasis = (stockCostBasis * shares) - (callPremiumReceived * shares);
+            const plPercent = (totalPL / totalCostBasis) * 100;
             
-            changeAmount.textContent = plAmount >= 0 ? `+$${plAmount.toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
-            changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
+            // Update main P&L display
+            document.querySelector('.current-price').textContent = totalPL >= 0 ? `+$${totalPL.toFixed(0)}` : `-$${Math.abs(totalPL).toFixed(0)}`;
+            document.querySelector('.change-amount').textContent = totalPL >= 0 ? `+$${totalPL.toFixed(0)}` : `-$${Math.abs(totalPL).toFixed(0)}`;
+            document.querySelector('.change-percent').textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
             
-            // Update progress bar position
-            const stopPrice = 140.00;
-            const targetPrice = 165.00;
-            const progress = Math.min(Math.max((newPrice - stopPrice) / (targetPrice - stopPrice), 0), 1) * 100;
+            // Update progress bar (stock position relative to strike)
+            const costBasis = 165.50;
+            const strikePrice = 170.00;
+            const progress = Math.min(Math.max((stockPrice - costBasis) / (strikePrice - costBasis), 0), 1) * 100;
             
             document.querySelector('.progress-fill').style.width = `${progress}%`;
             document.querySelector('.progress-current').style.left = `${progress}%`;
             
-            // Update distance to target/stop
-            const toTarget = targetPrice - newPrice;
-            const toStop = newPrice - stopPrice;
+            // Update distance metrics
+            const toStrike = strikePrice - stockPrice;
+            const timeDecayBenefit = callPremiumReceived - callPrice;
             
             document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
-                toTarget >= 0 ? `$${toTarget.toFixed(2)}` : `+$${Math.abs(toTarget).toFixed(2)}`;
+                toStrike >= 0 ? `$${toStrike.toFixed(2)}` : `+$${Math.abs(toStrike).toFixed(2)}`;
             document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
-                `$${toStop.toFixed(2)}`;
+                `+$${(timeDecayBenefit * shares).toFixed(0)}`;
                 
+            // Update current price in progress labels
+            document.querySelector('.progress-labels span:nth-child(2)').textContent = `Current $${stockPrice.toFixed(2)}`;
+            
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            priceInput.style.borderColor = '#16a34a';
+            document.getElementById('stock-price').style.borderColor = '#16a34a';
+            document.getElementById('call-price').style.borderColor = '#16a34a';
             setTimeout(() => {
-                priceInput.style.borderColor = '#d1d5db';
+                document.getElementById('stock-price').style.borderColor = '#d1d5db';
+                document.getElementById('call-price').style.borderColor = '#d1d5db';
             }, 1000);
+        }
+        
+        // Allow Enter key to update prices
+        document.getElementById('stock-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
         });
         
-        // Allow Enter key to update price
-        document.querySelector('.price-input').addEventListener('keypress', function(e) {
+        document.getElementById('call-price').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                document.querySelector('.update-button').click();
+                updatePrices();
             }
         });
     </script>

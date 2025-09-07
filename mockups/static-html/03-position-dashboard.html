@@ -441,7 +441,7 @@
             </div>
             
             <!-- Position 1: Tesla Long Stock (Needs Attention - Near Stop) -->
-            <div class="position-card needs-attention" onclick="alert('Navigate to TSLA Position Detail')">
+            <div class="position-card needs-attention" onclick="window.location.href='04-position-detail-view.html'">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">TSLA</div>
@@ -473,7 +473,7 @@
             </div>
             
             <!-- Position 2: Apple Covered Call (Profitable) -->
-            <div class="position-card profitable" onclick="alert('Navigate to AAPL Covered Call Detail')">
+            <div class="position-card profitable" onclick="window.location.href='04a-covered-call-detail-view.html'">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">AAPL</div>
@@ -485,7 +485,7 @@
                     </div>
                 </div>
                 <div class="options-details">
-                    100 shares @ $165.50 • Short 1 Call $170 Sep 27
+                    100 shares + Short 1x $170C Sep 27
                 </div>
                 <div class="options-legs">
                     <div class="leg-item long">Long Stock</div>
@@ -508,7 +508,7 @@
             </div>
             
             <!-- Position 3: Microsoft Bull Put Spread (Losing) -->
-            <div class="position-card losing" onclick="alert('Navigate to MSFT Bull Put Spread Detail')">
+            <div class="position-card losing" onclick="window.location.href='04b-bull-put-spread-detail-view.html'">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">MSFT</div>
@@ -520,7 +520,7 @@
                     </div>
                 </div>
                 <div class="options-details">
-                    Short $400P / Long $395P Sep 19 • 2 contracts
+                    Short 2x $400P / Long 2x $395P Sep 19
                 </div>
                 <div class="options-legs">
                     <div class="leg-item short">Short $400P</div>
@@ -543,7 +543,7 @@
             </div>
             
             <!-- Position 4: Google Long Call Butterfly (Break Even) -->
-            <div class="position-card" onclick="alert('Navigate to GOOGL Butterfly Detail')">
+            <div class="position-card" onclick="window.location.href='04c-long-call-butterfly-detail-view.html'">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">GOOGL</div>
@@ -555,7 +555,7 @@
                     </div>
                 </div>
                 <div class="options-details">
-                    Long $135C / Short 2x $140C / Long $145C Oct 11
+                    Long 1x $135C / Short 2x $140C / Long 1x $145C Oct 11
                 </div>
                 <div class="options-legs">
                     <div class="leg-item long">$135C</div>
@@ -579,7 +579,7 @@
             </div>
             
             <!-- Position 5: NVDA Calendar Spread (Profitable) -->
-            <div class="position-card profitable" onclick="alert('Navigate to NVDA Calendar Spread Detail')">
+            <div class="position-card profitable" onclick="window.location.href='04d-call-calendar-spread-detail-view.html'">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">NVDA</div>
@@ -591,7 +591,7 @@
                     </div>
                 </div>
                 <div class="options-details">
-                    Short $820C Sep 13 / Long $820C Oct 18
+                    Short 1x $820C Sep 13 / Long 1x $820C Oct 18
                 </div>
                 <div class="options-legs">
                     <div class="leg-item short">Short $820C 9/13</div>
@@ -641,10 +641,80 @@
                 // Add active class to clicked tab
                 this.classList.add('active');
                 
-                // In a real app, this would filter the positions
-                console.log('Filter by:', this.textContent);
+                // Filter positions based on selected tab
+                const filterType = this.textContent.toLowerCase();
+                const positionCards = document.querySelectorAll('.position-card');
+                const needsAttentionBanner = document.querySelector('.needs-attention-banner');
+                let visibleCount = 0;
+                
+                positionCards.forEach(card => {
+                    let shouldShow = false;
+                    
+                    if (filterType === 'all') {
+                        shouldShow = true;
+                    } else if (filterType === 'open') {
+                        // All positions in our mockup are open
+                        shouldShow = true;
+                    } else if (filterType === 'winning') {
+                        // Show only profitable positions (green left border)
+                        shouldShow = card.classList.contains('profitable');
+                    } else if (filterType === 'losing') {
+                        // Show only losing positions (red left border)
+                        shouldShow = card.classList.contains('losing') || card.classList.contains('needs-attention');
+                    } else if (filterType === 'attention') {
+                        // Show only positions that need attention (orange left border)
+                        shouldShow = card.classList.contains('needs-attention');
+                    }
+                    
+                    if (shouldShow) {
+                        card.style.display = 'block';
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Show/hide the attention banner based on filter
+                if (filterType === 'attention' && visibleCount > 0) {
+                    needsAttentionBanner.style.display = 'block';
+                } else if (filterType === 'all' || filterType === 'open') {
+                    needsAttentionBanner.style.display = 'block';
+                } else {
+                    needsAttentionBanner.style.display = 'none';
+                }
+                
+                // Update portfolio stats to reflect filtered positions
+                updatePortfolioStats(filterType);
             });
         });
+        
+        // Function to update portfolio stats based on filter
+        function updatePortfolioStats(filterType) {
+            const visibleCards = Array.from(document.querySelectorAll('.position-card')).filter(card => 
+                card.style.display !== 'none'
+            );
+            
+            // Update open positions count
+            document.querySelector('.stat-item:last-child .stat-value').textContent = visibleCards.length;
+            
+            // Calculate filtered P&L
+            let totalPL = 0;
+            visibleCards.forEach(card => {
+                const plText = card.querySelector('.pl-amount').textContent;
+                const plValue = parseFloat(plText.replace(/[$+,]/g, ''));
+                totalPL += plValue;
+            });
+            
+            // Update total P&L display
+            const totalPLElement = document.querySelector('.stat-item:first-child .stat-value');
+            totalPLElement.textContent = totalPL >= 0 ? `+$${totalPL.toLocaleString()}` : `-$${Math.abs(totalPL).toLocaleString()}`;
+            
+            // Update filter context in header
+            if (filterType !== 'all' && filterType !== 'open') {
+                const filterTitle = filterType.charAt(0).toUpperCase() + filterType.slice(1) + ' Positions';
+                // Could add a subtitle here if desired
+            }
+        }
         
         // Simulate real-time price updates
         function updatePrices() {

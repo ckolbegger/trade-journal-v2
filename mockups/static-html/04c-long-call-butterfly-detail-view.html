@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Position - Trading Journal</title>
+    <title>GOOGL Long Call Butterfly - Trading Journal</title>
     <style>
         * {
             box-sizing: border-box;
@@ -74,7 +74,7 @@
         }
         
         .performance-section {
-            background: linear-gradient(135deg, #16a34a, #15803d);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: white;
             padding: 20px;
         }
@@ -209,6 +209,51 @@
             color: #1f2937;
         }
         
+        .butterfly-legs {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .butterfly-legs-title {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .butterfly-leg {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        
+        .butterfly-leg:not(:last-child) {
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .leg-type {
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .leg-long {
+            color: #16a34a;
+        }
+        
+        .leg-short {
+            color: #dc2626;
+        }
+        
+        .leg-strike {
+            color: #6b7280;
+        }
+        
         .thesis-text {
             font-size: 14px;
             color: #374151;
@@ -231,6 +276,13 @@
             margin-bottom: 4px;
         }
         
+        .butterfly-range {
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
         .progress-bar {
             width: 100%;
             height: 8px;
@@ -243,14 +295,14 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #dc2626, #f59e0b, #16a34a);
-            width: 65%;
+            width: 79%;
             border-radius: 4px;
         }
         
         .progress-current {
             position: absolute;
             top: -2px;
-            left: 65%;
+            left: 79%;
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
@@ -303,6 +355,12 @@
         
         .trade-sell {
             color: #dc2626;
+        }
+        
+        .option-details {
+            font-size: 11px;
+            color: #9ca3af;
+            margin-top: 2px;
         }
         
         .journal-entries {
@@ -369,18 +427,30 @@
             color: #92400e;
         }
         
-        .price-input-group {
+        .price-input-row {
             display: flex;
-            gap: 12px;
+            gap: 8px;
             align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .price-input-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .price-label {
+            flex: 0 0 80px;
+            font-size: 12px;
+            color: #92400e;
+            font-weight: 500;
         }
         
         .price-input {
             flex: 1;
-            padding: 12px;
+            padding: 8px;
             border: 1px solid #d1d5db;
-            border-radius: 6px;
-            font-size: 16px;
+            border-radius: 4px;
+            font-size: 14px;
         }
         
         .update-button {
@@ -392,6 +462,8 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            margin-top: 8px;
+            width: 100%;
         }
         
         .bottom-actions {
@@ -476,8 +548,8 @@
         <header class="header">
             <button class="back-button" onclick="window.location.href='03-position-dashboard.html'">←</button>
             <div class="header-info">
-                <div class="position-symbol">TSLA</div>
-                <div class="position-strategy">Long Stock • 100 shares</div>
+                <div class="position-symbol">GOOGL Long Call Butterfly</div>
+                <div class="position-strategy">Long 1x $135C / Short 2x $140C / Long 1x $145C Oct 11</div>
             </div>
             <div class="header-actions">
                 <button class="header-button" onclick="alert('Update Price')">Update</button>
@@ -485,26 +557,26 @@
             </div>
         </header>
         
-        <section class="performance-section" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <section class="performance-section">
             <div class="performance-main">
-                <div class="current-price">$217.25</div>
+                <div class="current-price">$3.85</div>
                 <div class="price-change">
-                    <div class="change-amount">-$1,890</div>
-                    <div class="change-percent">-12.4%</div>
+                    <div class="change-amount">-$15</div>
+                    <div class="change-percent">-3.8%</div>
                 </div>
             </div>
             <div class="performance-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Avg Cost</div>
-                    <div class="stat-value">$248.50</div>
+                    <div class="stat-label">Stock Price</div>
+                    <div class="stat-value">$139.85</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Current</div>
-                    <div class="stat-value">$217.25</div>
+                    <div class="stat-label">DTE</div>
+                    <div class="stat-value">35</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Stop</div>
-                    <div class="stat-value">$210.00</div>
+                    <div class="stat-label">Center Strike</div>
+                    <div class="stat-value">$140.00</div>
                 </div>
             </div>
         </section>
@@ -516,27 +588,35 @@
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
-                            <div class="update-time">Last: 2 min ago</div>
+                            <div class="update-time">Last: 5 min ago</div>
                         </div>
-                        <div class="price-input-group">
-                            <input type="number" class="price-input" placeholder="217.25" value="217.25" step="0.01">
-                            <button class="update-button" onclick="alert('Price Updated')">Update</button>
+                        <div class="price-input-row">
+                            <div class="price-label">Stock:</div>
+                            <input type="number" class="price-input" id="stock-price" placeholder="139.85" value="139.85" step="0.01">
                         </div>
+                        <div class="price-input-row">
+                            <div class="price-label">Butterfly:</div>
+                            <input type="number" class="price-input" id="butterfly-value" placeholder="3.85" value="3.85" step="0.01">
+                        </div>
+                        <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
                 </div>
             </section>
             
-            <!-- Progress to Target -->
+            <!-- Progress to Max Profit -->
             <section class="section">
                 <div class="section-header">
-                    <div class="section-title">Progress to Target</div>
+                    <div class="section-title">Butterfly Profit Zone</div>
                 </div>
                 <div class="section-content">
                     <div class="progress-bar-container">
+                        <div class="butterfly-range">
+                            Max Profit at Center Strike ($140)
+                        </div>
                         <div class="progress-labels">
-                            <span>Stop $210</span>
-                            <span>Current $217.25</span>
-                            <span>Near Stop</span>
+                            <span>Lower BE $135</span>
+                            <span>Current $139.85</span>
+                            <span>Upper BE $145</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill"></div>
@@ -545,12 +625,12 @@
                     </div>
                     <div class="risk-metrics">
                         <div class="risk-item">
-                            <div class="risk-label">To Stop</div>
-                            <div class="risk-value risk-negative">-$7.25</div>
+                            <div class="risk-label">To Max Profit</div>
+                            <div class="risk-value risk-positive">$0.15</div>
                         </div>
                         <div class="risk-item">
-                            <div class="risk-label">Risk Amount</div>
-                            <div class="risk-value risk-negative">-$435</div>
+                            <div class="risk-label">Max Profit Zone</div>
+                            <div class="risk-value">$135-$145</div>
                         </div>
                     </div>
                 </div>
@@ -568,28 +648,43 @@
                             <span class="lock-icon">🔒</span>
                             This trade plan is immutable and cannot be modified
                         </div>
+                        <div class="butterfly-legs">
+                            <div class="butterfly-legs-title">Butterfly Structure</div>
+                            <div class="butterfly-leg">
+                                <div class="leg-type leg-long">Long 1x Call</div>
+                                <div class="leg-strike">$135 Strike • Oct 11</div>
+                            </div>
+                            <div class="butterfly-leg">
+                                <div class="leg-type leg-short">Short 2x Calls</div>
+                                <div class="leg-strike">$140 Strike • Oct 11</div>
+                            </div>
+                            <div class="butterfly-leg">
+                                <div class="leg-type leg-long">Long 1x Call</div>
+                                <div class="leg-strike">$145 Strike • Oct 11</div>
+                            </div>
+                        </div>
                         <div class="plan-grid">
                             <div class="plan-item">
-                                <div class="plan-label">Target Entry Price</div>
-                                <div class="plan-value">$248.50</div>
+                                <div class="plan-label">Target Entry Cost</div>
+                                <div class="plan-value">$4.00</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Target Quantity</div>
-                                <div class="plan-value">60 shares</div>
+                                <div class="plan-label">Max Profit</div>
+                                <div class="plan-value">$1.00 @ $140</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Profit Target</div>
-                                <div class="plan-value">$285.00</div>
+                                <div class="plan-label">Breakeven Points</div>
+                                <div class="plan-value">$135 / $145</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Stop Loss</div>
-                                <div class="plan-value">$210.00</div>
+                                <div class="plan-label">Max Loss</div>
+                                <div class="plan-value">$4.00</div>
                             </div>
                         </div>
                         <div class="plan-item">
                             <div class="plan-label">Position Thesis</div>
                             <div class="thesis-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                GOOGL showing low implied volatility and trading range between 135-145. Expecting minimal movement over next 35 days with price settling near $140 by expiration. Butterfly captures premium decay while limiting risk. Perfect neutral volatility play.
                             </div>
                         </div>
                     </div>
@@ -606,10 +701,27 @@
                     <div class="trades-list">
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-buy">BUY</div>
-                                <div class="trade-details">60 shares @ $248.50 • Sep 5, 2024</div>
+                                <div class="trade-type trade-buy">BUY TO OPEN</div>
+                                <div class="trade-details">1 contract @ $2.15 • Sep 5, 2024</div>
+                                <div class="option-details">GOOGL Oct 11 $135 Call</div>
                             </div>
-                            <div class="trade-amount trade-buy">$14,910</div>
+                            <div class="trade-amount trade-buy">$215</div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-sell">SELL TO OPEN</div>
+                                <div class="trade-details">2 contracts @ $4.25 • Sep 5, 2024</div>
+                                <div class="option-details">GOOGL Oct 11 $140 Call</div>
+                            </div>
+                            <div class="trade-amount trade-sell">$850</div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-buy">BUY TO OPEN</div>
+                                <div class="trade-details">1 contract @ $2.35 • Sep 5, 2024</div>
+                                <div class="option-details">GOOGL Oct 11 $145 Call</div>
+                            </div>
+                            <div class="trade-amount trade-buy">$235</div>
                         </div>
                     </div>
                 </div>
@@ -629,16 +741,16 @@
                                 <div class="journal-date">Sep 5, 2024</div>
                             </div>
                             <div class="journal-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                GOOGL showing low implied volatility (IV rank 15th percentile) and consolidated trading pattern. Expecting continued range-bound movement with minimal volatility expansion. Butterfly spread captures time decay while limiting directional risk. Target is price stability near $140 through expiration.
                             </div>
                         </div>
                         <div class="journal-entry">
                             <div class="journal-header">
-                                <div class="journal-type">Position Update</div>
-                                <div class="journal-date">Sep 7, 2024</div>
+                                <div class="journal-type">Progress Update</div>
+                                <div class="journal-date">Sep 10, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Position down -12.4% and approaching stop loss at $210. Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.
+                                Stock trading exactly where anticipated, hovering around $140 center strike. Theta decay working in our favor. Position down slightly due to normal butterfly behavior - will see max profit closer to expiration if stock stays in range.
                             </div>
                         </div>
                     </div>
@@ -653,24 +765,25 @@
     </div>
 
     <script>
-        // Price update functionality
-        document.querySelector('.update-button').addEventListener('click', function() {
-            const priceInput = document.querySelector('.price-input');
-            const newPrice = parseFloat(priceInput.value);
+        function updatePrices() {
+            const stockPrice = parseFloat(document.getElementById('stock-price').value);
+            const butterflyValue = parseFloat(document.getElementById('butterfly-value').value);
             
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Please enter a valid price');
+            if (isNaN(stockPrice) || isNaN(butterflyValue) || stockPrice <= 0 || butterflyValue <= 0) {
+                alert('Please enter valid prices');
                 return;
             }
             
-            // Update current price display
-            document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
+            // Update current butterfly value display
+            document.querySelector('.current-price').textContent = `$${butterflyValue.toFixed(2)}`;
             
-            // Calculate new P&L
-            const entryPrice = 149.50;
-            const shares = 100;
-            const plAmount = (newPrice - entryPrice) * shares;
-            const plPercent = ((newPrice - entryPrice) / entryPrice) * 100;
+            // Update stock price in stats
+            document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${stockPrice.toFixed(2)}`;
+            
+            // Calculate P&L (entry was $400 total - $215 + $235 - $850 = $400 debit)
+            const entryCost = 4.00;
+            const plAmount = (butterflyValue - entryCost) * 100; // multiply by 100 for contract
+            const plPercent = ((butterflyValue - entryCost) / entryCost) * 100;
             
             // Update P&L display
             const changeAmount = document.querySelector('.change-amount');
@@ -679,38 +792,43 @@
             changeAmount.textContent = plAmount >= 0 ? `+$${plAmount.toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
             changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
             
-            // Update progress bar position
-            const stopPrice = 140.00;
-            const targetPrice = 165.00;
-            const progress = Math.min(Math.max((newPrice - stopPrice) / (targetPrice - stopPrice), 0), 1) * 100;
+            // Update progress bar position (135 to 145 range, with 140 being center)
+            const lowerBE = 135.00;
+            const upperBE = 145.00;
+            const progress = Math.min(Math.max((stockPrice - lowerBE) / (upperBE - lowerBE), 0), 1) * 100;
             
             document.querySelector('.progress-fill').style.width = `${progress}%`;
             document.querySelector('.progress-current').style.left = `${progress}%`;
             
-            // Update distance to target/stop
-            const toTarget = targetPrice - newPrice;
-            const toStop = newPrice - stopPrice;
+            // Update distance to max profit (at $140)
+            const centerStrike = 140.00;
+            const toCenter = Math.abs(stockPrice - centerStrike);
             
-            document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
-                toTarget >= 0 ? `$${toTarget.toFixed(2)}` : `+$${Math.abs(toTarget).toFixed(2)}`;
-            document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
-                `$${toStop.toFixed(2)}`;
-                
+            document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = `$${toCenter.toFixed(2)}`;
+            
+            // Update progress labels
+            document.querySelector('.progress-labels span:nth-child(2)').textContent = `Current $${stockPrice.toFixed(2)}`;
+            
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            priceInput.style.borderColor = '#16a34a';
-            setTimeout(() => {
-                priceInput.style.borderColor = '#d1d5db';
-            }, 1000);
-        });
+            const inputs = document.querySelectorAll('.price-input');
+            inputs.forEach(input => {
+                input.style.borderColor = '#16a34a';
+                setTimeout(() => {
+                    input.style.borderColor = '#d1d5db';
+                }, 1000);
+            });
+        }
         
-        // Allow Enter key to update price
-        document.querySelector('.price-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.querySelector('.update-button').click();
-            }
+        // Allow Enter key to update prices
+        document.querySelectorAll('.price-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    updatePrices();
+                }
+            });
         });
     </script>
 </body>
