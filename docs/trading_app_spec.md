@@ -32,6 +32,10 @@ A standalone analytical tool to track actual stock and option positions, combini
 ### 2. Position Analysis & Risk Management
 - **Real-time P&L calculation** based on current market prices
 - **Risk/Reward visualization** - current risk vs. remaining profit potential
+- **Strategy-specific position detail views** - adaptive UI for different options strategies
+- **Manual price update system** - real-time pricing interface for all position views
+- **Multi-leg position visualization** - clear display of complex options strategies
+- **Progress tracking indicators** - visual progress bars showing position relative to targets
 - **Extrinsic value tracking** - separate intrinsic from extrinsic option value
 - **Historical extrinsic charts** - visualize how price movements affected option premiums over holding period
 
@@ -58,6 +62,107 @@ A standalone analytical tool to track actual stock and option positions, combini
 - **Strategy-based win/loss ratios** - performance by trade type
 - **Plan deviation analysis** - track when and why you deviated from original plans
 - **Risk/reward pattern recognition** - identify behavioral tendencies
+
+## Detailed Feature Specifications
+
+### Options Strategy Detail Architecture
+
+**Purpose:** Provide strategy-specific position management interfaces that adapt to the complexity and requirements of different options strategies.
+
+**Core Requirements:**
+1. **Strategy-Adaptive UI Components**
+   - Position detail views that automatically adapt based on strategy type
+   - Flexible leg display components supporting 1-4 option legs
+   - Strategy-specific risk metrics and progress indicators
+   - Educational context integration for each strategy type
+
+2. **Multi-Leg Position Visualization**
+   - **Long Stock**: Simple dual-input pricing (stock price only)
+   - **Covered Call**: Dual pricing model with stock and option value inputs
+   - **Bull Put Spread**: Single spread value with dual breakeven visualization
+   - **Long Call Butterfly**: Range-based progress with optimal profit zone display
+   - **Calendar Spread**: Time-based visualization with DTE indicators
+
+3. **Strategy-Specific Risk Metrics**
+   - **Directional Strategies**: Distance to stop loss, current risk amount
+   - **Spread Strategies**: Multiple breakeven points, max profit/loss zones
+   - **Range Strategies**: Distance to optimal zone, non-linear payoff visualization
+   - **Time-Sensitive Strategies**: Differential time decay rates, expiration awareness
+
+4. **Visual Hierarchy Adaptation**
+   - Color coding varies by strategy (directional vs zone-based)
+   - Progress indicators adapt to strategy-optimal scenarios
+   - Status indicators explain strategy-specific conditions
+   - Risk metrics framed around strategy-specific considerations
+
+### Manual Price Update System
+
+**Purpose:** Enable real-time position analysis through manual price entry while maintaining privacy and behavioral engagement.
+
+**Core Functionality:**
+1. **Universal Price Update Interface**
+   - Dedicated price update card/header on all position views
+   - Immediate P&L recalculation upon price entry
+   - Visual feedback system for successful updates
+   - Last update timestamp tracking
+
+2. **Strategy-Specific Pricing Models**
+   - **Simple Strategies**: Single underlying price input
+   - **Multi-Leg Strategies**: Separate inputs for underlying and spread/option values
+   - **Complex Strategies**: Multiple pricing inputs with dependency calculations
+   - **Time-Sensitive Strategies**: Price inputs with time decay considerations
+
+3. **Real-Time Calculation Engine**
+   - Instant P&L updates across all position metrics
+   - Dynamic progress bar recalculation
+   - Strategy-specific risk metric updates
+   - Portfolio-level impact calculation
+
+4. **Price Data Management**
+   - Current prices used for real-time calculations
+   - Historical closing prices maintained for analysis
+   - Automatic fallback to most recent closing price
+   - Price update history for position timeline
+
+### Enhanced User Interface Specifications
+
+**Purpose:** Define comprehensive UI standards that support behavioral training and habit formation through consistent, mobile-first design.
+
+**Design System Standards:**
+1. **Color Palette & Semantic Usage**
+   - **Primary Blue (#3b82f6)**: CTA buttons, active states, progress completion
+   - **Success Green (#16a34a)**: Profitable positions, positive outcomes, completion states
+   - **Alert Red (#dc2626)**: Losing positions, warnings, immutability notices
+   - **Attention Orange (#f59e0b)**: Positions needing review, proximity alerts
+   - **Neutral Grays**: Background (#f8fafc), text hierarchy, inactive states
+
+2. **Typography & Information Hierarchy**
+   - **Header Text (18px)**: Mobile app bar, navigation headers
+   - **Title Text (24px)**: Main page titles, section headers
+   - **Body Text (16px)**: Primary content, form labels, descriptions
+   - **Secondary Text (14px)**: Metadata, timestamps, auxiliary information
+   - **Micro Text (12px)**: Navigation labels, fine print, technical details
+
+3. **Layout & Spacing Standards**
+   - **Mobile Container**: 414px max width (iPhone Pro Max reference)
+   - **Content Padding**: 20px horizontal, 16px vertical for main areas
+   - **Card Internal Padding**: 16px for content cards
+   - **Button Padding**: 16px vertical, 32px horizontal for primary actions
+   - **Border Radius**: 8px for buttons and cards, 6px for small elements
+
+4. **Interactive Element Patterns**
+   - **Performance Headers**: Gradient backgrounds reflecting profit/loss status
+   - **Progress Indicators**: Color-coded bars showing position relative to targets
+   - **Status Badges**: Contextual indicators for position conditions
+   - **Action Buttons**: Bottom-anchored primary actions, header secondary actions
+   - **Form Controls**: Consistent input styling with validation states
+
+5. **Behavioral Psychology Elements**
+   - **Attention System**: Yellow backgrounds + orange borders for review-needed positions
+   - **Immutability Warnings**: Red backgrounds with lock icons for unchangeable elements
+   - **Progress Visualization**: Color-coded advancement toward goals
+   - **Success Reinforcement**: Positive visual feedback for completed actions
+   - **Information Prioritization**: Visual hierarchy directing attention to critical data
 
 ## Detailed Feature Specifications
 
@@ -201,11 +306,14 @@ A standalone analytical tool to track actual stock and option positions, combini
 ## Data Model Architecture
 
 ### Core Entity Design
-The application uses a **Position vs Trade separation architecture** to support both behavioral training and accurate financial tracking.
+The application uses a **Position vs Trade separation architecture** with **strategy-aware data models** to support both behavioral training and accurate financial tracking across simple stock positions to complex multi-leg option strategies.
 
 **Position Entity:**
 - Contains the immutable trade plan (strategy intent, price targets, stop levels, thesis)
 - Represents the trader's original strategic decision and risk parameters
+- **Strategy-specific metadata**: Stores strategy type and configuration for UI adaptation
+- **Multi-leg support**: Accommodates 1-4 leg structures with individual leg specifications
+- **Strategy classification**: Enables strategy-specific calculations and UI rendering
 - Stores planned quantities and per-share/per-contract price levels
 - Status automatically derived from trade activity (open/closed based on net quantity)
 - Dollar-based risk/reward amounts computed dynamically from actual trades
@@ -213,17 +321,35 @@ The application uses a **Position vs Trade separation architecture** to support 
 **Trade Entity:**  
 - Individual execution records (buy/sell transactions) within a position
 - Each trade maintains its own cost basis, quantity, and timestamp
-- Supports both stock trades (symbol, quantity, price) and options trades (adding option_type, strike_price, expiration_date)
+- **Enhanced options support**: option_type, strike_price, expiration_date for each leg
+- **Multi-expiration tracking**: Supports strategies with different expiration dates per leg
+- **Leg identification**: Associates each trade with specific strategy leg for complex positions
 - Enables accurate tracking of partial fills, scale-ins, and complex strategy execution
 
+**Strategy Configuration Entity:**
+- **Strategy templates**: Pre-defined configurations for common strategies (covered calls, spreads, etc.)
+- **Leg definitions**: Specifications for each leg including option type, direction, and relationships
+- **Risk calculations**: Strategy-specific formulas for breakeven points, max profit/loss
+- **UI metadata**: Information for adaptive user interface rendering
+- **Educational content**: Strategy-specific help text and guidance
+
 ### P&L Calculation Methodology
+- **Strategy-aware calculations**: P&L formulas adapt to position structure and strategy type
 - **Trade-level cost basis tracking** with FIFO (first-in-first-out) matching for exits
 - **Position P&L** calculated by summing all trade-level P&L within the position  
+- **Multi-leg coordination**: Complex strategies calculate P&L across all legs simultaneously
 - **Separate cost basis tracking** per instrument type (stock vs each unique option contract)
+- **Time-based calculations**: Support for strategies with multiple expiration dates
 - **Brokerage statement matching** through FIFO methodology alignment
 - **Plan vs execution analysis** enabled through position intent vs trade reality comparison
 
-This architecture scales from simple stock positions to complex multi-leg option strategies while maintaining behavioral training capabilities and accurate financial calculations.
+### Component Architecture Requirements
+- **Flexible leg display components** that can handle 1-4 legs with different configurations
+- **Strategy-aware calculation engines** for different payoff structures and risk metrics
+- **Adaptive UI components** that render based on strategy type and complexity
+- **Educational content system** that provides strategy-specific guidance and help text
+
+This architecture scales from simple stock positions to complex multi-leg option strategies while maintaining behavioral training capabilities and accurate financial calculations. The strategy-aware design ensures that both data storage and user interface adapt appropriately to the complexity and requirements of each position type.
 
 ## Technical Requirements
 
