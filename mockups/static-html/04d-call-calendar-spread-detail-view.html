@@ -484,6 +484,60 @@
             font-size: 14px;
         }
         
+        .price-input-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            margin-bottom: 8px;
+        }
+        
+        .price-input-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .spread-pricing-header {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            text-align: center;
+        }
+        
+        .leg-pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .leg-pricing-row:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .leg-details {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .leg-price-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
         .update-button {
             background: #3b82f6;
             color: white;
@@ -582,7 +636,7 @@
                 <div class="position-strategy">Short 1x $820C Sep 13 / Long 1x $820C Oct 18</div>
             </div>
             <div class="header-actions">
-                <button class="header-button" onclick="alert('Update Price')">Update</button>
+                <button class="header-button" onclick="togglePriceUpdate()">Edit Price</button>
                 <button class="header-button" onclick="alert('More Options')">•••</button>
             </div>
         </header>
@@ -613,24 +667,33 @@
         
         <main class="content">
             <!-- Price Update Card -->
-            <section class="section">
+            <section class="section" id="price-update-section" style="display: none;">
                 <div class="section-content">
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
                             <div class="update-time">Last: 5 min ago</div>
                         </div>
-                        <div class="price-inputs-grid">
-                            <div class="price-input-group">
-                                <div class="input-label">Stock Price</div>
-                                <input type="number" class="price-input" id="stock-price" placeholder="818.50" value="818.50" step="0.01">
-                            </div>
-                            <div class="price-input-group">
-                                <div class="input-label">Calendar Value</div>
-                                <input type="number" class="price-input" id="calendar-value" placeholder="7.45" value="7.45" step="0.01">
-                            </div>
+                        <div class="price-input-row">
+                            <div class="price-input-label">Stock:</div>
+                            <input type="number" class="price-input" id="stock-price" placeholder="818.50" value="818.50" step="0.01">
                         </div>
-                        <button class="update-button" onclick="updateCalendarPrices()">Update Prices</button>
+                        <div class="spread-pricing-header">Option Leg Pricing</div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Short Call</div>
+                                <div class="leg-details">$820C • Sep 13</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="short-call-price" placeholder="8.50" value="8.50" step="0.01">
+                        </div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Long Call</div>
+                                <div class="leg-details">$820C • Oct 18</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="long-call-price" placeholder="15.95" value="15.95" step="0.01">
+                        </div>
+                        <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
                 </div>
             </section>
@@ -794,18 +857,33 @@
     </div>
 
     <script>
+        // Toggle price update section
+        function togglePriceUpdate() {
+            const priceUpdateSection = document.getElementById('price-update-section');
+            if (priceUpdateSection.style.display === 'none' || priceUpdateSection.style.display === '') {
+                priceUpdateSection.style.display = 'block';
+            } else {
+                priceUpdateSection.style.display = 'none';
+            }
+        }
+        
         // Calendar spread price update functionality
-        function updateCalendarPrices() {
+        function updatePrices() {
             const stockPriceInput = document.getElementById('stock-price');
-            const calendarValueInput = document.getElementById('calendar-value');
+            const shortCallPriceInput = document.getElementById('short-call-price');
+            const longCallPriceInput = document.getElementById('long-call-price');
             
             const stockPrice = parseFloat(stockPriceInput.value);
-            const calendarValue = parseFloat(calendarValueInput.value);
+            const shortCallPrice = parseFloat(shortCallPriceInput.value);
+            const longCallPrice = parseFloat(longCallPriceInput.value);
             
-            if (isNaN(stockPrice) || stockPrice <= 0 || isNaN(calendarValue) || calendarValue <= 0) {
+            if (isNaN(stockPrice) || stockPrice <= 0 || isNaN(shortCallPrice) || shortCallPrice < 0 || isNaN(longCallPrice) || longCallPrice < 0) {
                 alert('Please enter valid prices');
                 return;
             }
+            
+            // Calculate net calendar value (long call price - short call price)
+            const calendarValue = longCallPrice - shortCallPrice;
             
             // Update current calendar value display
             document.querySelector('.current-price').textContent = `$${calendarValue.toFixed(2)}`;
@@ -867,24 +945,37 @@
             
             // Visual feedback
             stockPriceInput.style.borderColor = '#16a34a';
-            calendarValueInput.style.borderColor = '#16a34a';
+            shortCallPriceInput.style.borderColor = '#16a34a';
+            longCallPriceInput.style.borderColor = '#16a34a';
             setTimeout(() => {
                 stockPriceInput.style.borderColor = '#d1d5db';
-                calendarValueInput.style.borderColor = '#d1d5db';
+                shortCallPriceInput.style.borderColor = '#d1d5db';
+                longCallPriceInput.style.borderColor = '#d1d5db';
             }, 1000);
+            
+            // Hide the price update section after updating
+            document.getElementById('price-update-section').style.display = 'none';
         }
         
         // Allow Enter key to update prices
-        document.getElementById('stock-price').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                updateCalendarPrices();
-            }
-        });
-        
-        document.getElementById('calendar-value').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                updateCalendarPrices();
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('stock-price').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    updatePrices();
+                }
+            });
+            
+            document.getElementById('short-call-price').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    updatePrices();
+                }
+            });
+            
+            document.getElementById('long-call-price').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    updatePrices();
+                }
+            });
         });
     </script>
 </body>

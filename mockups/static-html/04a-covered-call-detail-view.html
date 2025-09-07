@@ -128,42 +128,6 @@
             font-weight: 600;
         }
         
-        .pricing-breakdown {
-            background: rgba(255,255,255,0.1);
-            border-radius: 8px;
-            padding: 12px;
-            margin-top: 16px;
-        }
-        
-        .pricing-section-title {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        
-        .pricing-item {
-            text-align: center;
-        }
-        
-        .pricing-label {
-            font-size: 11px;
-            opacity: 0.7;
-            margin-bottom: 2px;
-        }
-        
-        .pricing-value {
-            font-size: 16px;
-            font-weight: 600;
-        }
-        
         .content {
             padding-bottom: 80px;
         }
@@ -245,6 +209,73 @@
             color: #1f2937;
         }
         
+        .covered-call-legs {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .covered-call-leg {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .covered-call-leg:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-stock {
+            background: #f0f9ff;
+        }
+        
+        .leg-short-call {
+            background: #fef2f2;
+        }
+        
+        .leg-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .leg-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .leg-stock .leg-type {
+            color: #2563eb;
+        }
+        
+        .leg-short-call .leg-type {
+            color: #dc2626;
+        }
+        
+        .leg-details {
+            font-size: 14px;
+            color: #374151;
+            margin-top: 2px;
+        }
+        
+        .leg-premium {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .leg-stock .leg-premium {
+            color: #2563eb;
+        }
+        
+        .leg-short-call .leg-premium {
+            color: #dc2626;
+        }
+        
         .thesis-text {
             font-size: 14px;
             color: #374151;
@@ -279,14 +310,14 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #16a34a, #f59e0b, #dc2626);
-            width: 73%;
+            width: 75%;
             border-radius: 4px;
         }
         
         .progress-current {
             position: absolute;
             top: -2px;
-            left: 73%;
+            left: 75%;
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
@@ -405,30 +436,64 @@
             color: #92400e;
         }
         
-        .price-input-row {
+        .price-input-group {
             display: flex;
             gap: 12px;
-            margin-bottom: 8px;
-        }
-        
-        .price-input-row:last-of-type {
-            margin-bottom: 0;
+            align-items: center;
         }
         
         .price-input {
             flex: 1;
-            padding: 8px;
+            padding: 12px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
-            font-size: 14px;
+            font-size: 16px;
+        }
+        
+        .price-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .price-input-row:last-child {
+            margin-bottom: 0;
         }
         
         .price-input-label {
-            flex: 0 0 60px;
-            font-size: 12px;
+            font-size: 14px;
             color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .covered-call-pricing-header {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            text-align: center;
+        }
+        
+        .leg-pricing-row {
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .leg-pricing-row:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-price-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
         }
         
         .update-button {
@@ -440,8 +505,6 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
-            margin-top: 12px;
-            width: 100%;
         }
         
         .bottom-actions {
@@ -519,30 +582,6 @@
         .risk-negative {
             color: #dc2626;
         }
-        
-        .option-leg {
-            background: rgba(59, 130, 246, 0.05);
-            border-left: 3px solid #3b82f6;
-            padding: 8px 12px;
-            margin: 8px 0;
-            border-radius: 4px;
-        }
-        
-        .option-details {
-            font-size: 12px;
-            color: #3b82f6;
-            font-weight: 500;
-        }
-        
-        .dte-badge {
-            background: #f59e0b;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 10px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
     </style>
 </head>
 <body>
@@ -551,17 +590,17 @@
             <button class="back-button" onclick="window.location.href='03-position-dashboard.html'">←</button>
             <div class="header-info">
                 <div class="position-symbol">AAPL Covered Call</div>
-                <div class="position-strategy">100 shares + Short 1x $170C Sep 27 <span class="dte-badge">20 DTE</span></div>
+                <div class="position-strategy">100 shares + Short 1x $170C Sep 27 • 20 DTE</div>
             </div>
             <div class="header-actions">
-                <button class="header-button" onclick="alert('Update Price')">Update</button>
+                <button class="header-button" onclick="togglePriceUpdate()">Edit Price</button>
                 <button class="header-button" onclick="alert('More Options')">•••</button>
             </div>
         </header>
         
         <section class="performance-section">
             <div class="performance-main">
-                <div class="current-price">+$285</div>
+                <div class="current-price">$168.25</div>
                 <div class="price-change">
                     <div class="change-amount">+$285</div>
                     <div class="change-percent">+4.2%</div>
@@ -569,49 +608,40 @@
             </div>
             <div class="performance-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Stock Cost</div>
-                    <div class="stat-value">$165.50</div>
+                    <div class="stat-label">Stock Value</div>
+                    <div class="stat-value">$16,825</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Call Strike</div>
-                    <div class="stat-value">$170.00</div>
+                    <div class="stat-label">Call Value</div>
+                    <div class="stat-value">$0.85</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Net Credit</div>
-                    <div class="stat-value">$2.15</div>
-                </div>
-            </div>
-            <div class="pricing-breakdown">
-                <div class="pricing-section-title">Current Pricing Breakdown</div>
-                <div class="pricing-grid">
-                    <div class="pricing-item">
-                        <div class="pricing-label">Stock Price</div>
-                        <div class="pricing-value">$168.25</div>
-                    </div>
-                    <div class="pricing-item">
-                        <div class="pricing-label">Call Value</div>
-                        <div class="pricing-value">$0.85</div>
-                    </div>
+                    <div class="stat-label">Premium</div>
+                    <div class="stat-value">$2.50</div>
                 </div>
             </div>
         </section>
         
         <main class="content">
             <!-- Price Update Card -->
-            <section class="section">
+            <section class="section" id="price-update-section" style="display: none;">
                 <div class="section-content">
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
-                            <div class="update-time">Last: 2 min ago</div>
+                            <div class="update-time">Last: 1 min ago</div>
                         </div>
                         <div class="price-input-row">
                             <div class="price-input-label">Stock:</div>
                             <input type="number" class="price-input" id="stock-price" placeholder="168.25" value="168.25" step="0.01">
                         </div>
-                        <div class="price-input-row">
-                            <div class="price-input-label">Call:</div>
-                            <input type="number" class="price-input" id="call-price" placeholder="0.85" value="0.85" step="0.01">
+                        <div class="covered-call-pricing-header">Option Leg Pricing</div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Short Call</div>
+                                <div class="leg-details">$170C • Sep 27</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="short-call-price" placeholder="0.85" value="0.85" step="0.01">
                         </div>
                         <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
@@ -621,12 +651,12 @@
             <!-- Progress to Strike -->
             <section class="section">
                 <div class="section-header">
-                    <div class="section-title">Proximity to Call Strike</div>
+                    <div class="section-title">Progress to Strike</div>
                 </div>
                 <div class="section-content">
                     <div class="progress-bar-container">
                         <div class="progress-labels">
-                            <span>Cost $165.50</span>
+                            <span>Cost $165</span>
                             <span>Current $168.25</span>
                             <span>Strike $170</span>
                         </div>
@@ -638,11 +668,11 @@
                     <div class="risk-metrics">
                         <div class="risk-item">
                             <div class="risk-label">To Strike</div>
-                            <div class="risk-value risk-positive">$1.75</div>
+                            <div class="risk-value risk-positive">+$1.75</div>
                         </div>
                         <div class="risk-item">
-                            <div class="risk-label">Time Decay</div>
-                            <div class="risk-value risk-positive">+$1.30</div>
+                            <div class="risk-label">Max Profit</div>
+                            <div class="risk-value risk-positive">+$750</div>
                         </div>
                     </div>
                 </div>
@@ -660,31 +690,46 @@
                             <span class="lock-icon">🔒</span>
                             This trade plan is immutable and cannot be modified
                         </div>
-                        <div class="plan-grid">
-                            <div class="plan-item">
-                                <div class="plan-label">Stock Entry Target</div>
-                                <div class="plan-value">$165.50</div>
+                        
+                        <div class="covered-call-legs">
+                            <div class="covered-call-leg leg-stock">
+                                <div class="leg-info">
+                                    <div class="leg-type">Long Stock</div>
+                                    <div class="leg-details">100 shares @ $165.00</div>
+                                </div>
+                                <div class="leg-premium">-$16,500</div>
                             </div>
-                            <div class="plan-item">
-                                <div class="plan-label">Stock Quantity</div>
-                                <div class="plan-value">100 shares</div>
-                            </div>
-                            <div class="plan-item">
-                                <div class="plan-label">Call Strike/Expiry</div>
-                                <div class="plan-value">$170 Sep 27</div>
-                            </div>
-                            <div class="plan-item">
-                                <div class="plan-label">Call Premium Target</div>
-                                <div class="plan-value">$2.15</div>
+                            <div class="covered-call-leg leg-short-call">
+                                <div class="leg-info">
+                                    <div class="leg-type">Short Call</div>
+                                    <div class="leg-details">1x $170C • Sep 27</div>
+                                </div>
+                                <div class="leg-premium">+$2.50</div>
                             </div>
                         </div>
-                        <div class="option-leg">
-                            <div class="option-details">Short 1x AAPL Sep 27 '24 $170C</div>
+                        
+                        <div class="plan-grid">
+                            <div class="plan-item">
+                                <div class="plan-label">Net Cost</div>
+                                <div class="plan-value">$16,250 ($162.50/share)</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Max Profit</div>
+                                <div class="plan-value">$750 (4.6%)</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Breakeven</div>
+                                <div class="plan-value">$162.50</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Assignment Risk</div>
+                                <div class="plan-value">Above $170</div>
+                            </div>
                         </div>
                         <div class="plan-item">
                             <div class="plan-label">Position Thesis</div>
                             <div class="thesis-text">
-                                AAPL showing strong support around $165 with modest upside potential. Covered call strategy allows income generation while maintaining stock position. Strike at $170 provides 2.7% upside capture plus premium income. Plan to roll call if approaching assignment.
+                                AAPL showing consolidation around $165 with strong support. Selling $170 call to generate income while maintaining upside to strike. Expecting sideways to modest upward movement through Sep expiry, targeting 50% premium decay.
                             </div>
                         </div>
                     </div>
@@ -701,17 +746,17 @@
                     <div class="trades-list">
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-buy">BUY STOCK</div>
-                                <div class="trade-details">100 shares @ $165.50 • Jan 15, 2024</div>
+                                <div class="trade-type trade-buy">BUY</div>
+                                <div class="trade-details">100 AAPL @ $165.00 • Sep 5, 2024</div>
                             </div>
-                            <div class="trade-amount trade-buy">$16,550</div>
+                            <div class="trade-amount trade-buy">-$16,500</div>
                         </div>
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-sell">SELL CALL</div>
-                                <div class="trade-details">1x $170C Sep 27 @ $2.15 • Jan 15, 2024</div>
+                                <div class="trade-type trade-sell">SELL TO OPEN</div>
+                                <div class="trade-details">1 AAPL Sep27 $170C @ $2.50 • Sep 5, 2024</div>
                             </div>
-                            <div class="trade-amount trade-sell">+$215</div>
+                            <div class="trade-amount trade-sell">+$250</div>
                         </div>
                     </div>
                 </div>
@@ -728,19 +773,19 @@
                         <div class="journal-entry">
                             <div class="journal-header">
                                 <div class="journal-type">Position Plan</div>
-                                <div class="journal-date">Jan 15, 2024</div>
+                                <div class="journal-date">Sep 5, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Implementing covered call on AAPL position to generate income while maintaining upside to $170. Stock showing consolidation pattern around $165 support. Sep 27 expiry provides ~20 DTE for time decay benefit. Strike selection allows 2.7% upside capture plus $2.15 premium.
+                                Opening AAPL covered call position. Bought 100 shares @ $165 and sold $170 call for $2.50 premium. Strategy provides income generation with upside to $170. Comfortable owning AAPL long-term if assigned, targeting 50% premium decay over 3 weeks.
                             </div>
                         </div>
                         <div class="journal-entry">
                             <div class="journal-header">
-                                <div class="journal-type">Progress Update</div>
-                                <div class="journal-date">Jan 18, 2024</div>
+                                <div class="journal-type">Position Update</div>
+                                <div class="journal-date">Sep 7, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Position performing well with stock appreciating to $168.25. Call option losing value due to time decay ($0.85 vs $2.15 entry). Still $1.75 cushion to strike. Strategy working as planned - benefiting from time decay while maintaining most upside potential.
+                                AAPL trading at $168.25, up from entry. Position profitable on both stock appreciation and premium decay. Call now worth $0.85 vs $2.50 sold. Well positioned for continued income generation with 20 DTE remaining.
                             </div>
                         </div>
                     </div>
@@ -755,65 +800,98 @@
     </div>
 
     <script>
+        // Toggle price update section
+        function togglePriceUpdate() {
+            const priceUpdateSection = document.getElementById('price-update-section');
+            if (priceUpdateSection.style.display === 'none') {
+                priceUpdateSection.style.display = 'block';
+            } else {
+                priceUpdateSection.style.display = 'none';
+            }
+        }
+        
+        // Price update functionality for covered call
         function updatePrices() {
-            const stockPrice = parseFloat(document.getElementById('stock-price').value);
-            const callPrice = parseFloat(document.getElementById('call-price').value);
+            const stockPriceInput = document.getElementById('stock-price');
+            const shortCallPriceInput = document.getElementById('short-call-price');
             
-            if (isNaN(stockPrice) || isNaN(callPrice) || stockPrice <= 0 || callPrice < 0) {
+            const stockPrice = parseFloat(stockPriceInput.value);
+            const shortCallPrice = parseFloat(shortCallPriceInput.value);
+            
+            if (isNaN(stockPrice) || stockPrice <= 0 || isNaN(shortCallPrice) || shortCallPrice < 0) {
                 alert('Please enter valid prices');
                 return;
             }
             
-            // Update current pricing breakdown
-            document.querySelector('.pricing-grid .pricing-item:first-child .pricing-value').textContent = `$${stockPrice.toFixed(2)}`;
-            document.querySelector('.pricing-grid .pricing-item:last-child .pricing-value').textContent = `$${callPrice.toFixed(2)}`;
+            // Update current price display
+            document.querySelector('.current-price').textContent = `$${stockPrice.toFixed(2)}`;
             
-            // Calculate P&L
-            const stockCostBasis = 165.50;
-            const callPremiumReceived = 2.15;
+            // Calculate covered call P&L
             const shares = 100;
+            const stockCost = 165.00;
+            const callStrike = 170.00;
+            const premiumReceived = 2.50;
             
-            const stockPL = (stockPrice - stockCostBasis) * shares;
-            const callPL = (callPremiumReceived - callPrice) * shares;
+            // Calculate stock P&L
+            const stockPL = (stockPrice - stockCost) * shares;
+            
+            // Calculate call P&L (we sold it, so we profit when it goes down in value)
+            const callPL = (premiumReceived - shortCallPrice) * 100; // $100 per contract
+            
+            // Total P&L
             const totalPL = stockPL + callPL;
-            const totalCostBasis = (stockCostBasis * shares) - (callPremiumReceived * shares);
-            const plPercent = (totalPL / totalCostBasis) * 100;
+            const netCost = (stockCost * shares) - (premiumReceived * 100);
+            const plPercent = (totalPL / netCost) * 100;
             
-            // Update main P&L display
-            document.querySelector('.current-price').textContent = totalPL >= 0 ? `+$${totalPL.toFixed(0)}` : `-$${Math.abs(totalPL).toFixed(0)}`;
-            document.querySelector('.change-amount').textContent = totalPL >= 0 ? `+$${totalPL.toFixed(0)}` : `-$${Math.abs(totalPL).toFixed(0)}`;
-            document.querySelector('.change-percent').textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
+            // Update P&L display
+            const changeAmount = document.querySelector('.change-amount');
+            const changePercent = document.querySelector('.change-percent');
             
-            // Update progress bar (stock position relative to strike)
-            const costBasis = 165.50;
-            const strikePrice = 170.00;
-            const progress = Math.min(Math.max((stockPrice - costBasis) / (strikePrice - costBasis), 0), 1) * 100;
+            changeAmount.textContent = totalPL >= 0 ? `+$${totalPL.toFixed(0)}` : `-$${Math.abs(totalPL).toFixed(0)}`;
+            changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
+            
+            // Update performance stats
+            document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${(stockPrice * shares).toLocaleString()}`;
+            document.querySelector('.performance-stats .stat-item:nth-child(2) .stat-value').textContent = `$${shortCallPrice.toFixed(2)}`;
+            
+            // Update progress bar position (between cost and strike)
+            const costBasis = stockCost;
+            const strike = callStrike;
+            const progress = Math.min(Math.max((stockPrice - costBasis) / (strike - costBasis), 0), 1) * 100;
             
             document.querySelector('.progress-fill').style.width = `${progress}%`;
             document.querySelector('.progress-current').style.left = `${progress}%`;
             
-            // Update distance metrics
-            const toStrike = strikePrice - stockPrice;
-            const timeDecayBenefit = callPremiumReceived - callPrice;
+            // Update distance to strike
+            const toStrike = strike - stockPrice;
+            const maxProfit = (strike - stockCost) * shares + (premiumReceived * 100);
             
             document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
-                toStrike >= 0 ? `$${toStrike.toFixed(2)}` : `+$${Math.abs(toStrike).toFixed(2)}`;
+                toStrike >= 0 ? `+$${toStrike.toFixed(2)}` : `-$${Math.abs(toStrike).toFixed(2)}`;
             document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
-                `+$${(timeDecayBenefit * shares).toFixed(0)}`;
+                `+$${maxProfit.toFixed(0)}`;
                 
-            // Update current price in progress labels
-            document.querySelector('.progress-labels span:nth-child(2)').textContent = `Current $${stockPrice.toFixed(2)}`;
-            
+            // Update color classes based on position
+            const performanceSection = document.querySelector('.performance-section');
+            if (totalPL >= 0) {
+                performanceSection.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+            } else {
+                performanceSection.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            }
+                
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            document.getElementById('stock-price').style.borderColor = '#16a34a';
-            document.getElementById('call-price').style.borderColor = '#16a34a';
+            stockPriceInput.style.borderColor = '#16a34a';
+            shortCallPriceInput.style.borderColor = '#16a34a';
             setTimeout(() => {
-                document.getElementById('stock-price').style.borderColor = '#d1d5db';
-                document.getElementById('call-price').style.borderColor = '#d1d5db';
+                stockPriceInput.style.borderColor = '#d1d5db';
+                shortCallPriceInput.style.borderColor = '#d1d5db';
             }, 1000);
+            
+            // Hide the price update section after updating
+            document.getElementById('price-update-section').style.display = 'none';
         }
         
         // Allow Enter key to update prices
@@ -823,7 +901,7 @@
             }
         });
         
-        document.getElementById('call-price').addEventListener('keypress', function(e) {
+        document.getElementById('short-call-price').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 updatePrices();
             }

@@ -429,20 +429,48 @@
         
         .price-input-row {
             display: flex;
-            gap: 8px;
+            gap: 12px;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
         }
         
         .price-input-row:last-child {
             margin-bottom: 0;
         }
         
-        .price-label {
-            flex: 0 0 80px;
-            font-size: 12px;
-            color: #92400e;
+        .price-input-label {
+            font-size: 14px;
+            color: #6b7280;
             font-weight: 500;
+        }
+        
+        .spread-pricing-header {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            text-align: center;
+        }
+        
+        .leg-pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .leg-pricing-row:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-price-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
         }
         
         .price-input {
@@ -552,7 +580,7 @@
                 <div class="position-strategy">Long 1x $135C / Short 2x $140C / Long 1x $145C Oct 11</div>
             </div>
             <div class="header-actions">
-                <button class="header-button" onclick="alert('Update Price')">Update</button>
+                <button class="header-button" onclick="togglePriceUpdate()">Edit Price</button>
                 <button class="header-button" onclick="alert('More Options')">•••</button>
             </div>
         </header>
@@ -583,7 +611,7 @@
         
         <main class="content">
             <!-- Price Update Card -->
-            <section class="section">
+            <section class="section" id="price-update-section" style="display: none;">
                 <div class="section-content">
                     <div class="price-update-card">
                         <div class="update-header">
@@ -591,12 +619,30 @@
                             <div class="update-time">Last: 5 min ago</div>
                         </div>
                         <div class="price-input-row">
-                            <div class="price-label">Stock:</div>
+                            <div class="price-input-label">Stock:</div>
                             <input type="number" class="price-input" id="stock-price" placeholder="139.85" value="139.85" step="0.01">
                         </div>
-                        <div class="price-input-row">
-                            <div class="price-label">Butterfly:</div>
-                            <input type="number" class="price-input" id="butterfly-value" placeholder="3.85" value="3.85" step="0.01">
+                        <div class="spread-pricing-header">Option Leg Pricing</div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Long Call</div>
+                                <div class="leg-details">$135C • Oct 11</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="long-135-call-price" placeholder="6.80" value="6.80" step="0.01">
+                        </div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Short Call</div>
+                                <div class="leg-details">$140C • Oct 11</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="short-140-call-price" placeholder="2.15" value="2.15" step="0.01">
+                        </div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Long Call</div>
+                                <div class="leg-details">$145C • Oct 11</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="long-145-call-price" placeholder="0.80" value="0.80" step="0.01">
                         </div>
                         <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
@@ -765,14 +811,38 @@
     </div>
 
     <script>
+        // Toggle price update section
+        function togglePriceUpdate() {
+            const priceUpdateSection = document.getElementById('price-update-section');
+            if (priceUpdateSection.style.display === 'none') {
+                priceUpdateSection.style.display = 'block';
+            } else {
+                priceUpdateSection.style.display = 'none';
+            }
+        }
+        
         function updatePrices() {
-            const stockPrice = parseFloat(document.getElementById('stock-price').value);
-            const butterflyValue = parseFloat(document.getElementById('butterfly-value').value);
+            const stockPriceInput = document.getElementById('stock-price');
+            const long135CallPriceInput = document.getElementById('long-135-call-price');
+            const short140CallPriceInput = document.getElementById('short-140-call-price');
+            const long145CallPriceInput = document.getElementById('long-145-call-price');
             
-            if (isNaN(stockPrice) || isNaN(butterflyValue) || stockPrice <= 0 || butterflyValue <= 0) {
+            const stockPrice = parseFloat(stockPriceInput.value);
+            const long135CallPrice = parseFloat(long135CallPriceInput.value);
+            const short140CallPrice = parseFloat(short140CallPriceInput.value);
+            const long145CallPrice = parseFloat(long145CallPriceInput.value);
+            
+            if (isNaN(stockPrice) || stockPrice <= 0 || 
+                isNaN(long135CallPrice) || long135CallPrice < 0 || 
+                isNaN(short140CallPrice) || short140CallPrice < 0 || 
+                isNaN(long145CallPrice) || long145CallPrice < 0) {
                 alert('Please enter valid prices');
                 return;
             }
+            
+            // Calculate butterfly value from individual legs
+            // Long 1x $135C - Short 2x $140C + Long 1x $145C
+            const butterflyValue = long135CallPrice - (2 * short140CallPrice) + long145CallPrice;
             
             // Update current butterfly value display
             document.querySelector('.current-price').textContent = `$${butterflyValue.toFixed(2)}`;
@@ -780,7 +850,7 @@
             // Update stock price in stats
             document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${stockPrice.toFixed(2)}`;
             
-            // Calculate P&L (entry was $400 total - $215 + $235 - $850 = $400 debit)
+            // Calculate P&L (entry cost was $4.00 debit based on original trade)
             const entryCost = 4.00;
             const plAmount = (butterflyValue - entryCost) * 100; // multiply by 100 for contract
             const plPercent = ((butterflyValue - entryCost) / entryCost) * 100;
@@ -809,26 +879,56 @@
             // Update progress labels
             document.querySelector('.progress-labels span:nth-child(2)').textContent = `Current $${stockPrice.toFixed(2)}`;
             
+            // Update performance section color based on P&L
+            const performanceSection = document.querySelector('.performance-section');
+            if (plAmount >= 0) {
+                performanceSection.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+            } else {
+                performanceSection.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            }
+            
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            const inputs = document.querySelectorAll('.price-input');
-            inputs.forEach(input => {
-                input.style.borderColor = '#16a34a';
-                setTimeout(() => {
-                    input.style.borderColor = '#d1d5db';
-                }, 1000);
-            });
+            stockPriceInput.style.borderColor = '#16a34a';
+            long135CallPriceInput.style.borderColor = '#16a34a';
+            short140CallPriceInput.style.borderColor = '#16a34a';
+            long145CallPriceInput.style.borderColor = '#16a34a';
+            setTimeout(() => {
+                stockPriceInput.style.borderColor = '#d1d5db';
+                long135CallPriceInput.style.borderColor = '#d1d5db';
+                short140CallPriceInput.style.borderColor = '#d1d5db';
+                long145CallPriceInput.style.borderColor = '#d1d5db';
+            }, 1000);
+            
+            // Hide the price update section after updating
+            document.getElementById('price-update-section').style.display = 'none';
         }
         
         // Allow Enter key to update prices
-        document.querySelectorAll('.price-input').forEach(input => {
-            input.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    updatePrices();
-                }
-            });
+        document.getElementById('stock-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
+        });
+        
+        document.getElementById('long-135-call-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
+        });
+        
+        document.getElementById('short-140-call-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
+        });
+        
+        document.getElementById('long-145-call-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
         });
     </script>
 </body>
