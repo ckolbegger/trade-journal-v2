@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Position - Trading Journal</title>
+    <title>MSFT Bull Put Spread - Trading Journal</title>
     <style>
         * {
             box-sizing: border-box;
@@ -74,7 +74,7 @@
         }
         
         .performance-section {
-            background: linear-gradient(135deg, #16a34a, #15803d);
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: white;
             padding: 20px;
         }
@@ -209,6 +209,73 @@
             color: #1f2937;
         }
         
+        .spread-legs {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+        
+        .spread-leg {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .spread-leg:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-short {
+            background: #fef2f2;
+        }
+        
+        .leg-long {
+            background: #f0f9ff;
+        }
+        
+        .leg-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .leg-type {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .leg-short .leg-type {
+            color: #dc2626;
+        }
+        
+        .leg-long .leg-type {
+            color: #2563eb;
+        }
+        
+        .leg-details {
+            font-size: 14px;
+            color: #374151;
+            margin-top: 2px;
+        }
+        
+        .leg-premium {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .leg-short .leg-premium {
+            color: #dc2626;
+        }
+        
+        .leg-long .leg-premium {
+            color: #2563eb;
+        }
+        
         .thesis-text {
             font-size: 14px;
             color: #374151;
@@ -243,14 +310,14 @@
         .progress-fill {
             height: 100%;
             background: linear-gradient(90deg, #dc2626, #f59e0b, #16a34a);
-            width: 65%;
+            width: 25%;
             border-radius: 4px;
         }
         
         .progress-current {
             position: absolute;
             top: -2px;
-            left: 65%;
+            left: 25%;
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
@@ -476,8 +543,8 @@
         <header class="header">
             <button class="back-button" onclick="window.location.href='03-position-dashboard.html'">←</button>
             <div class="header-info">
-                <div class="position-symbol">TSLA</div>
-                <div class="position-strategy">Long Stock • 100 shares</div>
+                <div class="position-symbol">MSFT Bull Put Spread</div>
+                <div class="position-strategy">Short 2x $400P / Long 2x $395P Sep 19 • 12 DTE</div>
             </div>
             <div class="header-actions">
                 <button class="header-button" onclick="alert('Update Price')">Update</button>
@@ -485,26 +552,26 @@
             </div>
         </header>
         
-        <section class="performance-section" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <section class="performance-section">
             <div class="performance-main">
-                <div class="current-price">$217.25</div>
+                <div class="current-price">$397.50</div>
                 <div class="price-change">
-                    <div class="change-amount">-$1,890</div>
-                    <div class="change-percent">-12.4%</div>
+                    <div class="change-amount">-$340</div>
+                    <div class="change-percent">-45.3%</div>
                 </div>
             </div>
             <div class="performance-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Avg Cost</div>
-                    <div class="stat-value">$248.50</div>
+                    <div class="stat-label">Spread Value</div>
+                    <div class="stat-value">$4.20</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Current</div>
-                    <div class="stat-value">$217.25</div>
+                    <div class="stat-label">Breakeven</div>
+                    <div class="stat-value">$396.25</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Stop</div>
-                    <div class="stat-value">$210.00</div>
+                    <div class="stat-label">Max Loss</div>
+                    <div class="stat-value">$1,000</div>
                 </div>
             </div>
         </section>
@@ -516,27 +583,27 @@
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
-                            <div class="update-time">Last: 2 min ago</div>
+                            <div class="update-time">Last: 5 min ago</div>
                         </div>
                         <div class="price-input-group">
-                            <input type="number" class="price-input" placeholder="217.25" value="217.25" step="0.01">
+                            <input type="number" class="price-input" placeholder="397.50" value="397.50" step="0.01">
                             <button class="update-button" onclick="alert('Price Updated')">Update</button>
                         </div>
                     </div>
                 </div>
             </section>
             
-            <!-- Progress to Target -->
+            <!-- Progress to Breakeven -->
             <section class="section">
                 <div class="section-header">
-                    <div class="section-title">Progress to Target</div>
+                    <div class="section-title">Progress to Breakeven</div>
                 </div>
                 <div class="section-content">
                     <div class="progress-bar-container">
                         <div class="progress-labels">
-                            <span>Stop $210</span>
-                            <span>Current $217.25</span>
-                            <span>Near Stop</span>
+                            <span>Long $395</span>
+                            <span>Current $397.50</span>
+                            <span>Short $400</span>
                         </div>
                         <div class="progress-bar">
                             <div class="progress-fill"></div>
@@ -545,12 +612,12 @@
                     </div>
                     <div class="risk-metrics">
                         <div class="risk-item">
-                            <div class="risk-label">To Stop</div>
-                            <div class="risk-value risk-negative">-$7.25</div>
+                            <div class="risk-label">To Short Strike</div>
+                            <div class="risk-value risk-negative">-$2.50</div>
                         </div>
                         <div class="risk-item">
-                            <div class="risk-label">Risk Amount</div>
-                            <div class="risk-value risk-negative">-$435</div>
+                            <div class="risk-label">To Breakeven</div>
+                            <div class="risk-value risk-positive">+$1.25</div>
                         </div>
                     </div>
                 </div>
@@ -568,28 +635,46 @@
                             <span class="lock-icon">🔒</span>
                             This trade plan is immutable and cannot be modified
                         </div>
+                        
+                        <div class="spread-legs">
+                            <div class="spread-leg leg-short">
+                                <div class="leg-info">
+                                    <div class="leg-type">Short Put</div>
+                                    <div class="leg-details">2x $400P • Sep 19</div>
+                                </div>
+                                <div class="leg-premium">+$3.75</div>
+                            </div>
+                            <div class="spread-leg leg-long">
+                                <div class="leg-info">
+                                    <div class="leg-type">Long Put</div>
+                                    <div class="leg-details">2x $395P • Sep 19</div>
+                                </div>
+                                <div class="leg-premium">-$1.00</div>
+                            </div>
+                        </div>
+                        
                         <div class="plan-grid">
                             <div class="plan-item">
-                                <div class="plan-label">Target Entry Price</div>
-                                <div class="plan-value">$248.50</div>
+                                <div class="plan-label">Net Credit</div>
+                                <div class="plan-value">$2.75 ($550 total)</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Target Quantity</div>
-                                <div class="plan-value">60 shares</div>
+                                <div class="plan-label">Max Profit</div>
+                                <div class="plan-value">$550 (100%)</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Profit Target</div>
-                                <div class="plan-value">$285.00</div>
+                                <div class="plan-label">Max Loss</div>
+                                <div class="plan-value">$450 (82%)</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Stop Loss</div>
-                                <div class="plan-value">$210.00</div>
+                                <div class="plan-label">Breakeven</div>
+                                <div class="plan-value">$396.25</div>
                             </div>
                         </div>
                         <div class="plan-item">
                             <div class="plan-label">Position Thesis</div>
                             <div class="thesis-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                MSFT showing strong support above $395 with earnings beat and cloud growth. Expecting consolidation above $400 through Sep expiry. Bull put spread provides income with defined risk, targeting 50% max profit in 2 weeks.
                             </div>
                         </div>
                     </div>
@@ -606,10 +691,17 @@
                     <div class="trades-list">
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-buy">BUY</div>
-                                <div class="trade-details">60 shares @ $248.50 • Sep 5, 2024</div>
+                                <div class="trade-type trade-sell">SELL TO OPEN</div>
+                                <div class="trade-details">2 MSFT Sep19 $400P @ $3.75 • Sep 7, 2024</div>
                             </div>
-                            <div class="trade-amount trade-buy">$14,910</div>
+                            <div class="trade-amount trade-sell">+$750</div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-buy">BUY TO OPEN</div>
+                                <div class="trade-details">2 MSFT Sep19 $395P @ $1.00 • Sep 7, 2024</div>
+                            </div>
+                            <div class="trade-amount trade-buy">-$200</div>
                         </div>
                     </div>
                 </div>
@@ -626,10 +718,10 @@
                         <div class="journal-entry">
                             <div class="journal-header">
                                 <div class="journal-type">Position Plan</div>
-                                <div class="journal-date">Sep 5, 2024</div>
+                                <div class="journal-date">Sep 7, 2024</div>
                             </div>
                             <div class="journal-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                Opening MSFT bull put spread after strong earnings. Stock at $402, selling $400P and buying $395P for net credit of $2.75. Thesis: MSFT consolidates above $400 through Sep expiry. Max profit if MSFT stays above $400, breakeven at $397.25.
                             </div>
                         </div>
                         <div class="journal-entry">
@@ -638,7 +730,7 @@
                                 <div class="journal-date">Sep 7, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Position down -12.4% and approaching stop loss at $210. Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.
+                                MSFT dropped to $397.50 on broader market weakness. Position now underwater with stock below short strike. Need to monitor closely - may need to manage if drop continues toward $395 long strike. Still 12 DTE for recovery.
                             </div>
                         </div>
                     </div>
@@ -653,7 +745,7 @@
     </div>
 
     <script>
-        // Price update functionality
+        // Price update functionality for options spread
         document.querySelector('.update-button').addEventListener('click', function() {
             const priceInput = document.querySelector('.price-input');
             const newPrice = parseFloat(priceInput.value);
@@ -666,11 +758,22 @@
             // Update current price display
             document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
             
-            // Calculate new P&L
-            const entryPrice = 149.50;
-            const shares = 100;
-            const plAmount = (newPrice - entryPrice) * shares;
-            const plPercent = ((newPrice - entryPrice) / entryPrice) * 100;
+            // Calculate spread value and P&L for bull put spread
+            const shortStrike = 400;
+            const longStrike = 395;
+            const creditReceived = 2.75; // Net credit per contract
+            const contracts = 2;
+            
+            // Calculate intrinsic values
+            const shortPutValue = Math.max(0, shortStrike - newPrice);
+            const longPutValue = Math.max(0, longStrike - newPrice);
+            const spreadValue = shortPutValue - longPutValue;
+            
+            // P&L calculation: Credit received - Current spread value
+            const totalCredit = creditReceived * contracts * 100;
+            const currentSpreadCost = spreadValue * contracts * 100;
+            const plAmount = totalCredit - currentSpreadCost;
+            const plPercent = (plAmount / totalCredit) * 100;
             
             // Update P&L display
             const changeAmount = document.querySelector('.change-amount');
@@ -679,22 +782,32 @@
             changeAmount.textContent = plAmount >= 0 ? `+$${plAmount.toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
             changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
             
-            // Update progress bar position
-            const stopPrice = 140.00;
-            const targetPrice = 165.00;
-            const progress = Math.min(Math.max((newPrice - stopPrice) / (targetPrice - stopPrice), 0), 1) * 100;
+            // Update spread value in performance stats
+            document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${spreadValue.toFixed(2)}`;
+            
+            // Update progress bar position (between long and short strikes)
+            const progress = Math.min(Math.max((newPrice - longStrike) / (shortStrike - longStrike), 0), 1) * 100;
             
             document.querySelector('.progress-fill').style.width = `${progress}%`;
             document.querySelector('.progress-current').style.left = `${progress}%`;
             
-            // Update distance to target/stop
-            const toTarget = targetPrice - newPrice;
-            const toStop = newPrice - stopPrice;
+            // Update distance to strikes
+            const toShortStrike = newPrice - shortStrike;
+            const breakeven = shortStrike - creditReceived; // $397.25
+            const toBreakeven = newPrice - breakeven;
             
             document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
-                toTarget >= 0 ? `$${toTarget.toFixed(2)}` : `+$${Math.abs(toTarget).toFixed(2)}`;
+                toShortStrike >= 0 ? `+$${toShortStrike.toFixed(2)}` : `-$${Math.abs(toShortStrike).toFixed(2)}`;
             document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
-                `$${toStop.toFixed(2)}`;
+                toBreakeven >= 0 ? `+$${toBreakeven.toFixed(2)}` : `-$${Math.abs(toBreakeven).toFixed(2)}`;
+                
+            // Update color classes based on position
+            const performanceSection = document.querySelector('.performance-section');
+            if (plAmount >= 0) {
+                performanceSection.style.background = 'linear-gradient(135deg, #16a34a, #15803d)';
+            } else {
+                performanceSection.style.background = 'linear-gradient(135deg, #dc2626, #b91c1c)';
+            }
                 
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';

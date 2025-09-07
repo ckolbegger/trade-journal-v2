@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TSLA Position - Trading Journal</title>
+    <title>NVDA Call Calendar Spread - Trading Journal</title>
     <style>
         * {
             box-sizing: border-box;
@@ -56,6 +56,7 @@
         .position-strategy {
             font-size: 12px;
             opacity: 0.8;
+            line-height: 1.3;
         }
         
         .header-actions {
@@ -209,6 +210,56 @@
             color: #1f2937;
         }
         
+        .calendar-legs {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+        
+        .calendar-leg {
+            padding: 12px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .calendar-leg:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        
+        .leg-type {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        
+        .leg-short {
+            background: #fef2f2;
+            color: #991b1b;
+        }
+        
+        .leg-long {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        
+        .leg-dte {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .leg-details {
+            font-size: 13px;
+            color: #374151;
+        }
+        
         .thesis-text {
             font-size: 14px;
             color: #374151;
@@ -219,11 +270,45 @@
             border: 1px solid #e5e7eb;
         }
         
-        .progress-bar-container {
+        .calendar-progress-container {
             margin-bottom: 16px;
         }
         
-        .progress-labels {
+        .calendar-status {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .status-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #166534;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-value {
+            font-size: 12px;
+            color: #166534;
+        }
+        
+        .status-description {
+            font-size: 13px;
+            color: #15803d;
+            line-height: 1.4;
+        }
+        
+        .price-levels {
             display: flex;
             justify-content: space-between;
             font-size: 12px;
@@ -231,7 +316,7 @@
             margin-bottom: 4px;
         }
         
-        .progress-bar {
+        .strike-indicator {
             width: 100%;
             height: 8px;
             background: #f3f4f6;
@@ -240,21 +325,24 @@
             position: relative;
         }
         
-        .progress-fill {
+        .strike-zone {
+            position: absolute;
+            top: 0;
             height: 100%;
-            background: linear-gradient(90deg, #dc2626, #f59e0b, #16a34a);
-            width: 65%;
-            border-radius: 4px;
+            background: #16a34a;
+            opacity: 0.3;
+            left: 46%;
+            width: 8%;
         }
         
-        .progress-current {
+        .current-price-marker {
             position: absolute;
             top: -2px;
-            left: 65%;
+            left: 47.5%;
             transform: translateX(-50%);
             width: 12px;
             height: 12px;
-            background: #1f2937;
+            background: #16a34a;
             border: 2px solid white;
             border-radius: 50%;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -289,6 +377,7 @@
         .trade-details {
             font-size: 12px;
             color: #6b7280;
+            line-height: 1.3;
         }
         
         .trade-amount {
@@ -369,18 +458,30 @@
             color: #92400e;
         }
         
+        .price-inputs-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
         .price-input-group {
             display: flex;
-            gap: 12px;
-            align-items: center;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .input-label {
+            font-size: 12px;
+            color: #a16207;
+            font-weight: 500;
         }
         
         .price-input {
-            flex: 1;
-            padding: 12px;
+            padding: 10px;
             border: 1px solid #d1d5db;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .update-button {
@@ -392,6 +493,7 @@
             font-size: 14px;
             font-weight: 500;
             cursor: pointer;
+            width: 100%;
         }
         
         .bottom-actions {
@@ -476,8 +578,8 @@
         <header class="header">
             <button class="back-button" onclick="window.location.href='03-position-dashboard.html'">←</button>
             <div class="header-info">
-                <div class="position-symbol">TSLA</div>
-                <div class="position-strategy">Long Stock • 100 shares</div>
+                <div class="position-symbol">NVDA Call Calendar Spread</div>
+                <div class="position-strategy">Short 1x $820C Sep 13 / Long 1x $820C Oct 18</div>
             </div>
             <div class="header-actions">
                 <button class="header-button" onclick="alert('Update Price')">Update</button>
@@ -485,26 +587,26 @@
             </div>
         </header>
         
-        <section class="performance-section" style="background: linear-gradient(135deg, #dc2626, #b91c1c);">
+        <section class="performance-section">
             <div class="performance-main">
-                <div class="current-price">$217.25</div>
+                <div class="current-price">$7.45</div>
                 <div class="price-change">
-                    <div class="change-amount">-$1,890</div>
-                    <div class="change-percent">-12.4%</div>
+                    <div class="change-amount">+$145</div>
+                    <div class="change-percent">+24.2%</div>
                 </div>
             </div>
             <div class="performance-stats">
                 <div class="stat-item">
-                    <div class="stat-label">Avg Cost</div>
-                    <div class="stat-value">$248.50</div>
+                    <div class="stat-label">Stock Price</div>
+                    <div class="stat-value">$818.50</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Current</div>
-                    <div class="stat-value">$217.25</div>
+                    <div class="stat-label">DTE</div>
+                    <div class="stat-value">6/41</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-label">Stop</div>
-                    <div class="stat-value">$210.00</div>
+                    <div class="stat-label">Strike</div>
+                    <div class="stat-value">$820</div>
                 </div>
             </div>
         </section>
@@ -516,41 +618,57 @@
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
-                            <div class="update-time">Last: 2 min ago</div>
+                            <div class="update-time">Last: 5 min ago</div>
                         </div>
-                        <div class="price-input-group">
-                            <input type="number" class="price-input" placeholder="217.25" value="217.25" step="0.01">
-                            <button class="update-button" onclick="alert('Price Updated')">Update</button>
+                        <div class="price-inputs-grid">
+                            <div class="price-input-group">
+                                <div class="input-label">Stock Price</div>
+                                <input type="number" class="price-input" id="stock-price" placeholder="818.50" value="818.50" step="0.01">
+                            </div>
+                            <div class="price-input-group">
+                                <div class="input-label">Calendar Value</div>
+                                <input type="number" class="price-input" id="calendar-value" placeholder="7.45" value="7.45" step="0.01">
+                            </div>
                         </div>
+                        <button class="update-button" onclick="updateCalendarPrices()">Update Prices</button>
                     </div>
                 </div>
             </section>
             
-            <!-- Progress to Target -->
+            <!-- Calendar Position Status -->
             <section class="section">
                 <div class="section-header">
-                    <div class="section-title">Progress to Target</div>
+                    <div class="section-title">Calendar Position Status</div>
                 </div>
                 <div class="section-content">
-                    <div class="progress-bar-container">
-                        <div class="progress-labels">
-                            <span>Stop $210</span>
-                            <span>Current $217.25</span>
-                            <span>Near Stop</span>
+                    <div class="calendar-status">
+                        <div class="status-header">
+                            <div class="status-title">Optimal Zone</div>
+                            <div class="status-value">Stock @ Strike</div>
                         </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill"></div>
-                            <div class="progress-current"></div>
+                        <div class="status-description">
+                            Stock price is very close to the $820 strike. This is the ideal scenario for calendar spreads as near-term decay accelerates while long-term option retains value.
+                        </div>
+                    </div>
+                    <div class="calendar-progress-container">
+                        <div class="price-levels">
+                            <span>$800</span>
+                            <span>Current: $818.50</span>
+                            <span>$840</span>
+                        </div>
+                        <div class="strike-indicator">
+                            <div class="strike-zone"></div>
+                            <div class="current-price-marker"></div>
                         </div>
                     </div>
                     <div class="risk-metrics">
                         <div class="risk-item">
-                            <div class="risk-label">To Stop</div>
-                            <div class="risk-value risk-negative">-$7.25</div>
+                            <div class="risk-label">Time Decay</div>
+                            <div class="risk-value risk-positive">Favorable</div>
                         </div>
                         <div class="risk-item">
-                            <div class="risk-label">Risk Amount</div>
-                            <div class="risk-value risk-negative">-$435</div>
+                            <div class="risk-label">Max Profit</div>
+                            <div class="risk-value risk-positive">$820 Strike</div>
                         </div>
                     </div>
                 </div>
@@ -568,28 +686,44 @@
                             <span class="lock-icon">🔒</span>
                             This trade plan is immutable and cannot be modified
                         </div>
+                        <div class="calendar-legs">
+                            <div class="calendar-leg">
+                                <div class="leg-header">
+                                    <span class="leg-type leg-short">SHORT</span>
+                                    <span class="leg-dte">6 DTE</span>
+                                </div>
+                                <div class="leg-details">1x $820 Call • Sep 13, 2024</div>
+                            </div>
+                            <div class="calendar-leg">
+                                <div class="leg-header">
+                                    <span class="leg-type leg-long">LONG</span>
+                                    <span class="leg-dte">41 DTE</span>
+                                </div>
+                                <div class="leg-details">1x $820 Call • Oct 18, 2024</div>
+                            </div>
+                        </div>
                         <div class="plan-grid">
                             <div class="plan-item">
-                                <div class="plan-label">Target Entry Price</div>
-                                <div class="plan-value">$248.50</div>
+                                <div class="plan-label">Net Debit</div>
+                                <div class="plan-value">$6.00</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Target Quantity</div>
-                                <div class="plan-value">60 shares</div>
+                                <div class="plan-label">Target Stock Price</div>
+                                <div class="plan-value">$820</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Profit Target</div>
-                                <div class="plan-value">$285.00</div>
+                                <div class="plan-label">Max Profit</div>
+                                <div class="plan-value">At $820 strike</div>
                             </div>
                             <div class="plan-item">
-                                <div class="plan-label">Stop Loss</div>
-                                <div class="plan-value">$210.00</div>
+                                <div class="plan-label">Time Decay Edge</div>
+                                <div class="plan-value">30 days</div>
                             </div>
                         </div>
                         <div class="plan-item">
                             <div class="plan-label">Position Thesis</div>
                             <div class="thesis-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                NVDA trading near $820 with high implied volatility. Calendar spread will benefit from time decay of near-term option while maintaining upside exposure through long-term option. Expect stock to remain near strike through Sep expiration, then potentially move higher into earnings season.
                             </div>
                         </div>
                     </div>
@@ -606,10 +740,17 @@
                     <div class="trades-list">
                         <div class="trade-item">
                             <div class="trade-info">
-                                <div class="trade-type trade-buy">BUY</div>
-                                <div class="trade-details">60 shares @ $248.50 • Sep 5, 2024</div>
+                                <div class="trade-type trade-sell">SELL TO OPEN</div>
+                                <div class="trade-details">1x NVDA $820C Sep 13 @ $8.50<br>Aug 20, 2024</div>
                             </div>
-                            <div class="trade-amount trade-buy">$14,910</div>
+                            <div class="trade-amount trade-sell">+$850</div>
+                        </div>
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-buy">BUY TO OPEN</div>
+                                <div class="trade-details">1x NVDA $820C Oct 18 @ $14.50<br>Aug 20, 2024</div>
+                            </div>
+                            <div class="trade-amount trade-buy">-$1,450</div>
                         </div>
                     </div>
                 </div>
@@ -626,19 +767,19 @@
                         <div class="journal-entry">
                             <div class="journal-header">
                                 <div class="journal-type">Position Plan</div>
-                                <div class="journal-date">Sep 5, 2024</div>
+                                <div class="journal-date">Aug 20, 2024</div>
                             </div>
                             <div class="journal-text">
-                                TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.
+                                NVDA showing consolidation around $820 after recent rally. High IV provides good premium collection opportunity. Calendar spread allows me to collect near-term decay while maintaining upside participation through Oct expiration. Targeting stock to stay near $820 through Sep expiration for maximum profit.
                             </div>
                         </div>
                         <div class="journal-entry">
                             <div class="journal-header">
-                                <div class="journal-type">Position Update</div>
+                                <div class="journal-type">Progress Update</div>
                                 <div class="journal-date">Sep 7, 2024</div>
                             </div>
                             <div class="journal-text">
-                                Position down -12.4% and approaching stop loss at $210. Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.
+                                Perfect execution so far. Stock sitting right at strike with 6 days to Sep expiration. Time decay accelerating on short leg while long Oct option holding value well. Up 24% on the position. Considering taking profit at 30% or letting Sep expire worthless and keeping long Oct call.
                             </div>
                         </div>
                     </div>
@@ -653,63 +794,96 @@
     </div>
 
     <script>
-        // Price update functionality
-        document.querySelector('.update-button').addEventListener('click', function() {
-            const priceInput = document.querySelector('.price-input');
-            const newPrice = parseFloat(priceInput.value);
+        // Calendar spread price update functionality
+        function updateCalendarPrices() {
+            const stockPriceInput = document.getElementById('stock-price');
+            const calendarValueInput = document.getElementById('calendar-value');
             
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Please enter a valid price');
+            const stockPrice = parseFloat(stockPriceInput.value);
+            const calendarValue = parseFloat(calendarValueInput.value);
+            
+            if (isNaN(stockPrice) || stockPrice <= 0 || isNaN(calendarValue) || calendarValue <= 0) {
+                alert('Please enter valid prices');
                 return;
             }
             
-            // Update current price display
-            document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
+            // Update current calendar value display
+            document.querySelector('.current-price').textContent = `$${calendarValue.toFixed(2)}`;
             
-            // Calculate new P&L
-            const entryPrice = 149.50;
-            const shares = 100;
-            const plAmount = (newPrice - entryPrice) * shares;
-            const plPercent = ((newPrice - entryPrice) / entryPrice) * 100;
+            // Update stock price in stats
+            document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${stockPrice.toFixed(2)}`;
+            
+            // Calculate P&L from initial net debit of $6.00
+            const initialCost = 6.00;
+            const plAmount = (calendarValue - initialCost) * 100; // x100 for contract multiplier
+            const plPercent = ((calendarValue - initialCost) / initialCost) * 100;
             
             // Update P&L display
             const changeAmount = document.querySelector('.change-amount');
             const changePercent = document.querySelector('.change-percent');
             
-            changeAmount.textContent = plAmount >= 0 ? `+$${plAmount.toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
-            changePercent.textContent = plPercent >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
+            changeAmount.textContent = plAmount >= 0 ? `+$${Math.abs(plAmount).toFixed(0)}` : `-$${Math.abs(plAmount).toFixed(0)}`;
+            changePercent.textContent = plAmount >= 0 ? `+${plPercent.toFixed(1)}%` : `${plPercent.toFixed(1)}%`;
             
-            // Update progress bar position
-            const stopPrice = 140.00;
-            const targetPrice = 165.00;
-            const progress = Math.min(Math.max((newPrice - stopPrice) / (targetPrice - stopPrice), 0), 1) * 100;
+            // Update strike position indicator
+            const strikePrice = 820.00;
+            const range = 40; // $20 on each side of strike
+            const position = Math.min(Math.max((stockPrice - (strikePrice - range/2)) / range, 0), 1) * 100;
             
-            document.querySelector('.progress-fill').style.width = `${progress}%`;
-            document.querySelector('.progress-current').style.left = `${progress}%`;
+            document.querySelector('.current-price-marker').style.left = `${position}%`;
             
-            // Update distance to target/stop
-            const toTarget = targetPrice - newPrice;
-            const toStop = newPrice - stopPrice;
+            // Update optimal zone status based on proximity to strike
+            const distanceFromStrike = Math.abs(stockPrice - strikePrice);
+            const statusTitle = document.querySelector('.status-title');
+            const statusValue = document.querySelector('.status-value');
+            const statusDescription = document.querySelector('.status-description');
+            const calendarStatus = document.querySelector('.calendar-status');
             
-            document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
-                toTarget >= 0 ? `$${toTarget.toFixed(2)}` : `+$${Math.abs(toTarget).toFixed(2)}`;
-            document.querySelector('.risk-metrics .risk-item:last-child .risk-value').textContent = 
-                `$${toStop.toFixed(2)}`;
+            if (distanceFromStrike <= 5) {
+                statusTitle.textContent = 'Optimal Zone';
+                statusValue.textContent = 'Stock @ Strike';
+                statusDescription.textContent = 'Stock price is very close to the $820 strike. This is the ideal scenario for calendar spreads as near-term decay accelerates while long-term option retains value.';
+                calendarStatus.style.background = '#f0fdf4';
+                calendarStatus.style.borderColor = '#bbf7d0';
+            } else if (distanceFromStrike <= 15) {
+                statusTitle.textContent = 'Good Zone';
+                statusValue.textContent = 'Near Strike';
+                statusDescription.textContent = 'Stock price is reasonably close to the $820 strike. Calendar spread should still benefit from time decay differential, though not as much as at-the-money.';
+                calendarStatus.style.background = '#fffbeb';
+                calendarStatus.style.borderColor = '#fcd34d';
+            } else {
+                statusTitle.textContent = 'Suboptimal';
+                statusValue.textContent = 'Away from Strike';
+                statusDescription.textContent = 'Stock price is significantly away from the $820 strike. Calendar spread effectiveness is reduced when stock moves away from the strike price.';
+                calendarStatus.style.background = '#fef2f2';
+                calendarStatus.style.borderColor = '#fecaca';
+            }
+            
+            // Update current price label
+            document.querySelector('.price-levels span:nth-child(2)').textContent = `Current: $${stockPrice.toFixed(2)}`;
                 
             // Update timestamp
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            priceInput.style.borderColor = '#16a34a';
+            stockPriceInput.style.borderColor = '#16a34a';
+            calendarValueInput.style.borderColor = '#16a34a';
             setTimeout(() => {
-                priceInput.style.borderColor = '#d1d5db';
+                stockPriceInput.style.borderColor = '#d1d5db';
+                calendarValueInput.style.borderColor = '#d1d5db';
             }, 1000);
+        }
+        
+        // Allow Enter key to update prices
+        document.getElementById('stock-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updateCalendarPrices();
+            }
         });
         
-        // Allow Enter key to update price
-        document.querySelector('.price-input').addEventListener('keypress', function(e) {
+        document.getElementById('calendar-value').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                document.querySelector('.update-button').click();
+                updateCalendarPrices();
             }
         });
     </script>
