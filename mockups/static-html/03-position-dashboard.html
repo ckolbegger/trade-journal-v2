@@ -221,6 +221,43 @@
             margin-bottom: 12px;
         }
         
+        .position-metrics.options {
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .options-details {
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .options-legs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .leg-item {
+            background: #f3f4f6;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .leg-item.long {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .leg-item.short {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
         .metric-item {
             text-align: center;
         }
@@ -399,11 +436,11 @@
             <div class="needs-attention-banner">
                 <div class="banner-text">
                     <span class="banner-icon">⚠️</span>
-                    2 positions need your attention based on volatility and performance
+                    1 position needs your attention based on volatility and performance
                 </div>
             </div>
             
-            <!-- Position 1: Needs Attention (High Vol) -->
+            <!-- Position 1: Tesla Long Stock (Needs Attention - Near Stop) -->
             <div class="position-card needs-attention" onclick="alert('Navigate to TSLA Position Detail')">
                 <div class="position-header">
                     <div>
@@ -425,141 +462,154 @@
                         <div class="metric-value">$217.25</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-label">Target</div>
-                        <div class="metric-value">$285.00</div>
-                    </div>
-                </div>
-                <div class="position-footer">
-                    <span class="last-updated">Updated 5 min ago</span>
-                    <span class="status-badge status-alert">High Vol</span>
-                </div>
-            </div>
-            
-            <!-- Position 2: Needs Attention (Near Stop) -->
-            <div class="position-card needs-attention" onclick="alert('Navigate to NVDA Position Detail')">
-                <div class="position-header">
-                    <div>
-                        <div class="position-symbol">NVDA</div>
-                        <div class="position-strategy">Long Stock</div>
-                    </div>
-                    <div class="position-pl">
-                        <div class="pl-amount negative">-$680</div>
-                        <div class="pl-percent">-7.8%</div>
-                    </div>
-                </div>
-                <div class="position-metrics">
-                    <div class="metric-item">
-                        <div class="metric-label">Avg Cost</div>
-                        <div class="metric-value">$875.00</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Current</div>
-                        <div class="metric-value">$806.50</div>
-                    </div>
-                    <div class="metric-item">
                         <div class="metric-label">Stop</div>
-                        <div class="metric-value">$787.50</div>
-                    </div>
-                </div>
-                <div class="position-footer">
-                    <span class="last-updated">Updated 1 min ago</span>
-                    <span class="status-badge status-alert">Near Stop</span>
-                </div>
-            </div>
-            
-            <!-- Position 3: Profitable -->
-            <div class="position-card profitable" onclick="alert('Navigate to AAPL Position Detail')">
-                <div class="position-header">
-                    <div>
-                        <div class="position-symbol">AAPL</div>
-                        <div class="position-strategy">Long Stock</div>
-                    </div>
-                    <div class="position-pl">
-                        <div class="pl-amount positive">+$1,550</div>
-                        <div class="pl-percent">+10.4%</div>
-                    </div>
-                </div>
-                <div class="position-metrics">
-                    <div class="metric-item">
-                        <div class="metric-label">Avg Cost</div>
-                        <div class="metric-value">$149.50</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Current</div>
-                        <div class="metric-value">$165.05</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Target</div>
-                        <div class="metric-value">$165.00</div>
+                        <div class="metric-value">$210.00</div>
                     </div>
                 </div>
                 <div class="position-footer">
                     <span class="last-updated">Updated 2 min ago</span>
-                    <span class="status-badge status-open">Near Target</span>
+                    <span class="status-badge status-alert">Near Stop</span>
                 </div>
             </div>
             
-            <!-- Position 4: Small Loss -->
-            <div class="position-card losing" onclick="alert('Navigate to MSFT Position Detail')">
+            <!-- Position 2: Apple Covered Call (Profitable) -->
+            <div class="position-card profitable" onclick="alert('Navigate to AAPL Covered Call Detail')">
+                <div class="position-header">
+                    <div>
+                        <div class="position-symbol">AAPL</div>
+                        <div class="position-strategy">Covered Call</div>
+                    </div>
+                    <div class="position-pl">
+                        <div class="pl-amount positive">+$285</div>
+                        <div class="pl-percent">+4.2%</div>
+                    </div>
+                </div>
+                <div class="options-details">
+                    100 shares @ $165.50 • Short 1 Call $170 Sep 27
+                </div>
+                <div class="options-legs">
+                    <div class="leg-item long">Long Stock</div>
+                    <div class="leg-item short">Short $170C</div>
+                </div>
+                <div class="position-metrics options">
+                    <div class="metric-item">
+                        <div class="metric-label">Stock Price</div>
+                        <div class="metric-value">$168.25</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Call Value</div>
+                        <div class="metric-value">$0.85</div>
+                    </div>
+                </div>
+                <div class="position-footer">
+                    <span class="last-updated">Updated 1 min ago</span>
+                    <span class="status-badge status-open">20 DTE</span>
+                </div>
+            </div>
+            
+            <!-- Position 3: Microsoft Bull Put Spread (Losing) -->
+            <div class="position-card losing" onclick="alert('Navigate to MSFT Bull Put Spread Detail')">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">MSFT</div>
-                        <div class="position-strategy">Long Stock</div>
+                        <div class="position-strategy">Bull Put Spread</div>
                     </div>
                     <div class="position-pl">
-                        <div class="pl-amount negative">-$245</div>
-                        <div class="pl-percent">-1.2%</div>
+                        <div class="pl-amount negative">-$340</div>
+                        <div class="pl-percent">-45.3%</div>
                     </div>
                 </div>
-                <div class="position-metrics">
+                <div class="options-details">
+                    Short $400P / Long $395P Sep 19 • 2 contracts
+                </div>
+                <div class="options-legs">
+                    <div class="leg-item short">Short $400P</div>
+                    <div class="leg-item long">Long $395P</div>
+                </div>
+                <div class="position-metrics options">
                     <div class="metric-item">
-                        <div class="metric-label">Avg Cost</div>
-                        <div class="metric-value">$408.75</div>
+                        <div class="metric-label">Stock Price</div>
+                        <div class="metric-value">$397.50</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-label">Current</div>
-                        <div class="metric-value">$403.50</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Target</div>
-                        <div class="metric-value">$445.00</div>
+                        <div class="metric-label">Spread Value</div>
+                        <div class="metric-value">$4.20</div>
                     </div>
                 </div>
                 <div class="position-footer">
                     <span class="last-updated">Updated 3 min ago</span>
-                    <span class="status-badge status-open">Open</span>
+                    <span class="status-badge status-open">12 DTE</span>
                 </div>
             </div>
             
-            <!-- Position 5: Break Even -->
-            <div class="position-card" onclick="alert('Navigate to GOOGL Position Detail')">
+            <!-- Position 4: Google Long Call Butterfly (Break Even) -->
+            <div class="position-card" onclick="alert('Navigate to GOOGL Butterfly Detail')">
                 <div class="position-header">
                     <div>
                         <div class="position-symbol">GOOGL</div>
-                        <div class="position-strategy">Long Stock</div>
+                        <div class="position-strategy">Long Call Butterfly</div>
                     </div>
                     <div class="position-pl">
-                        <div class="pl-amount">+$12</div>
-                        <div class="pl-percent">+0.1%</div>
+                        <div class="pl-amount">-$15</div>
+                        <div class="pl-percent">-3.8%</div>
                     </div>
                 </div>
-                <div class="position-metrics">
+                <div class="options-details">
+                    Long $135C / Short 2x $140C / Long $145C Oct 11
+                </div>
+                <div class="options-legs">
+                    <div class="leg-item long">$135C</div>
+                    <div class="leg-item short">2x $140C</div>
+                    <div class="leg-item long">$145C</div>
+                </div>
+                <div class="position-metrics options">
                     <div class="metric-item">
-                        <div class="metric-label">Avg Cost</div>
+                        <div class="metric-label">Stock Price</div>
                         <div class="metric-value">$139.85</div>
                     </div>
                     <div class="metric-item">
-                        <div class="metric-label">Current</div>
-                        <div class="metric-value">$139.95</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Target</div>
-                        <div class="metric-value">$158.00</div>
+                        <div class="metric-label">Net Value</div>
+                        <div class="metric-value">$3.85</div>
                     </div>
                 </div>
                 <div class="position-footer">
                     <span class="last-updated">Updated 4 min ago</span>
-                    <span class="status-badge status-open">Open</span>
+                    <span class="status-badge status-open">35 DTE</span>
+                </div>
+            </div>
+            
+            <!-- Position 5: NVDA Calendar Spread (Profitable) -->
+            <div class="position-card profitable" onclick="alert('Navigate to NVDA Calendar Spread Detail')">
+                <div class="position-header">
+                    <div>
+                        <div class="position-symbol">NVDA</div>
+                        <div class="position-strategy">Call Calendar Spread</div>
+                    </div>
+                    <div class="position-pl">
+                        <div class="pl-amount positive">+$145</div>
+                        <div class="pl-percent">+24.2%</div>
+                    </div>
+                </div>
+                <div class="options-details">
+                    Short $820C Sep 13 / Long $820C Oct 18
+                </div>
+                <div class="options-legs">
+                    <div class="leg-item short">Short $820C 9/13</div>
+                    <div class="leg-item long">Long $820C 10/18</div>
+                </div>
+                <div class="position-metrics options">
+                    <div class="metric-item">
+                        <div class="metric-label">Stock Price</div>
+                        <div class="metric-value">$818.50</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Net Value</div>
+                        <div class="metric-value">$7.45</div>
+                    </div>
+                </div>
+                <div class="position-footer">
+                    <span class="last-updated">Updated 1 min ago</span>
+                    <span class="status-badge status-open">6/41 DTE</span>
                 </div>
             </div>
         </main>
