@@ -450,6 +450,52 @@
             font-size: 16px;
         }
         
+        .price-input-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .price-input-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .price-input-label {
+            font-size: 14px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        .spread-pricing-header {
+            font-size: 14px;
+            color: #1f2937;
+            font-weight: 600;
+            margin: 16px 0 8px 0;
+            text-align: center;
+        }
+        
+        .leg-pricing-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        
+        .leg-pricing-row:last-child {
+            border-bottom: none;
+        }
+        
+        .leg-price-input {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
         .update-button {
             background: #3b82f6;
             color: white;
@@ -547,7 +593,7 @@
                 <div class="position-strategy">Short 2x $400P / Long 2x $395P Sep 19 • 12 DTE</div>
             </div>
             <div class="header-actions">
-                <button class="header-button" onclick="alert('Update Price')">Update</button>
+                <button class="header-button" onclick="togglePriceUpdate()">Edit Price</button>
                 <button class="header-button" onclick="alert('More Options')">•••</button>
             </div>
         </header>
@@ -578,17 +624,33 @@
         
         <main class="content">
             <!-- Price Update Card -->
-            <section class="section">
+            <section class="section" id="price-update-section" style="display: none;">
                 <div class="section-content">
                     <div class="price-update-card">
                         <div class="update-header">
                             <div class="update-title">Manual Price Update</div>
                             <div class="update-time">Last: 5 min ago</div>
                         </div>
-                        <div class="price-input-group">
-                            <input type="number" class="price-input" placeholder="397.50" value="397.50" step="0.01">
-                            <button class="update-button" onclick="alert('Price Updated')">Update</button>
+                        <div class="price-input-row">
+                            <div class="price-input-label">Stock:</div>
+                            <input type="number" class="price-input" id="stock-price" placeholder="397.50" value="397.50" step="0.01">
                         </div>
+                        <div class="spread-pricing-header">Option Leg Pricing</div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Short Put</div>
+                                <div class="leg-details">$400P • Sep 19</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="short-put-price" placeholder="3.75" value="3.75" step="0.01">
+                        </div>
+                        <div class="leg-pricing-row">
+                            <div class="leg-info">
+                                <div class="leg-type">Long Put</div>
+                                <div class="leg-details">$395P • Sep 19</div>
+                            </div>
+                            <input type="number" class="leg-price-input" id="long-put-price" placeholder="1.00" value="1.00" step="0.01">
+                        </div>
+                        <button class="update-button" onclick="updatePrices()">Update Prices</button>
                     </div>
                 </div>
             </section>
@@ -745,18 +807,33 @@
     </div>
 
     <script>
+        // Toggle price update section
+        function togglePriceUpdate() {
+            const priceUpdateSection = document.getElementById('price-update-section');
+            if (priceUpdateSection.style.display === 'none') {
+                priceUpdateSection.style.display = 'block';
+            } else {
+                priceUpdateSection.style.display = 'none';
+            }
+        }
+        
         // Price update functionality for options spread
-        document.querySelector('.update-button').addEventListener('click', function() {
-            const priceInput = document.querySelector('.price-input');
-            const newPrice = parseFloat(priceInput.value);
+        function updatePrices() {
+            const stockPriceInput = document.getElementById('stock-price');
+            const shortPutPriceInput = document.getElementById('short-put-price');
+            const longPutPriceInput = document.getElementById('long-put-price');
             
-            if (isNaN(newPrice) || newPrice <= 0) {
-                alert('Please enter a valid price');
+            const stockPrice = parseFloat(stockPriceInput.value);
+            const shortPutPrice = parseFloat(shortPutPriceInput.value);
+            const longPutPrice = parseFloat(longPutPriceInput.value);
+            
+            if (isNaN(stockPrice) || stockPrice <= 0 || isNaN(shortPutPrice) || shortPutPrice < 0 || isNaN(longPutPrice) || longPutPrice < 0) {
+                alert('Please enter valid prices');
                 return;
             }
             
             // Update current price display
-            document.querySelector('.current-price').textContent = `$${newPrice.toFixed(2)}`;
+            document.querySelector('.current-price').textContent = `$${stockPrice.toFixed(2)}`;
             
             // Calculate spread value and P&L for bull put spread
             const shortStrike = 400;
@@ -765,11 +842,14 @@
             const contracts = 2;
             
             // Calculate intrinsic values
-            const shortPutValue = Math.max(0, shortStrike - newPrice);
-            const longPutValue = Math.max(0, longStrike - newPrice);
-            const spreadValue = shortPutValue - longPutValue;
+            const shortPutIntrinsic = Math.max(0, shortStrike - stockPrice);
+            const longPutIntrinsic = Math.max(0, longStrike - stockPrice);
+            const spreadIntrinsicValue = shortPutIntrinsic - longPutIntrinsic;
             
-            // P&L calculation: Credit received - Current spread value
+            // Calculate current spread value based on leg prices
+            const spreadValue = shortPutPrice - longPutPrice;
+            
+            // P&L calculation: Net credit received - Current spread cost
             const totalCredit = creditReceived * contracts * 100;
             const currentSpreadCost = spreadValue * contracts * 100;
             const plAmount = totalCredit - currentSpreadCost;
@@ -786,15 +866,15 @@
             document.querySelector('.performance-stats .stat-item:first-child .stat-value').textContent = `$${spreadValue.toFixed(2)}`;
             
             // Update progress bar position (between long and short strikes)
-            const progress = Math.min(Math.max((newPrice - longStrike) / (shortStrike - longStrike), 0), 1) * 100;
+            const progress = Math.min(Math.max((stockPrice - longStrike) / (shortStrike - longStrike), 0), 1) * 100;
             
             document.querySelector('.progress-fill').style.width = `${progress}%`;
             document.querySelector('.progress-current').style.left = `${progress}%`;
             
             // Update distance to strikes
-            const toShortStrike = newPrice - shortStrike;
+            const toShortStrike = stockPrice - shortStrike;
             const breakeven = shortStrike - creditReceived; // $397.25
-            const toBreakeven = newPrice - breakeven;
+            const toBreakeven = stockPrice - breakeven;
             
             document.querySelector('.risk-metrics .risk-item:first-child .risk-value').textContent = 
                 toShortStrike >= 0 ? `+$${toShortStrike.toFixed(2)}` : `-$${Math.abs(toShortStrike).toFixed(2)}`;
@@ -813,16 +893,35 @@
             document.querySelector('.update-time').textContent = 'Last: Just now';
             
             // Visual feedback
-            priceInput.style.borderColor = '#16a34a';
+            stockPriceInput.style.borderColor = '#16a34a';
+            shortPutPriceInput.style.borderColor = '#16a34a';
+            longPutPriceInput.style.borderColor = '#16a34a';
             setTimeout(() => {
-                priceInput.style.borderColor = '#d1d5db';
+                stockPriceInput.style.borderColor = '#d1d5db';
+                shortPutPriceInput.style.borderColor = '#d1d5db';
+                longPutPriceInput.style.borderColor = '#d1d5db';
             }, 1000);
+            
+            // Hide the price update section after updating
+            document.getElementById('price-update-section').style.display = 'none';
+        }
+        
+        // Allow Enter key to update prices
+        document.getElementById('stock-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
+            }
         });
         
-        // Allow Enter key to update price
-        document.querySelector('.price-input').addEventListener('keypress', function(e) {
+        document.getElementById('short-put-price').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                document.querySelector('.update-button').click();
+                updatePrices();
+            }
+        });
+        
+        document.getElementById('long-put-price').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                updatePrices();
             }
         });
     </script>
