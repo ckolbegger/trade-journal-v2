@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Trade - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+        
+        .plan-context {
+            background: #f8fafc;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 16px 20px;
+        }
+        
+        .context-title {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        
+        .position-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .position-symbol {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .position-strategy {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .position-targets {
+            text-align: right;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .progress-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .progress-item {
+            text-align: center;
+        }
+        
+        .progress-label {
+            font-size: 10px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        
+        .progress-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: #1f2937;
+        }
+        
+        .progress-bar-container {
+            margin-top: 8px;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #f3f4f6;
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #16a34a);
+            width: 30%;
+            border-radius: 3px;
+        }
+        
+        .content {
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px #3b82f6;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+        
+        .trade-type-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .trade-type-button {
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .trade-type-button:hover {
+            border-color: #3b82f6;
+        }
+        
+        .trade-type-button.selected {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+        
+        .trade-calculation {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .calc-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+        
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .calc-row:last-child {
+            margin-bottom: 0;
+            font-weight: 600;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .calc-label {
+            color: #6b7280;
+        }
+        
+        .calc-value {
+            color: #1f2937;
+            font-weight: 500;
+        }
+        
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .warning-icon {
+            color: #f59e0b;
+            margin-right: 8px;
+            margin-top: 2px;
+        }
+        
+        .warning-text {
+            font-size: 13px;
+            color: #92400e;
+            line-height: 1.4;
+        }
+        
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            min-width: 100px;
+        }
+        
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+        
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .info-text {
+            font-size: 13px;
+            color: #1d4ed8;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="back-button" onclick="alert('Navigate back to Position Detail')">←</button>
+            <h1>Add Trade</h1>
+        </header>
+        
+        <section class="plan-context">
+            <div class="context-title">Executing Against Position Plan</div>
+            <div class="position-info">
+                <div>
+                    <div class="position-symbol">AAPL Long Stock</div>
+                    <div class="position-strategy">Target: 100 shares @ $149.50</div>
+                </div>
+                <div class="position-targets">
+                    <div>Target: $165.00</div>
+                    <div>Stop: $140.00</div>
+                </div>
+            </div>
+            
+            <div class="progress-summary">
+                <div class="progress-item">
+                    <div class="progress-label">Filled</div>
+                    <div class="progress-value">0 / 100</div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Avg Price</div>
+                    <div class="progress-value">—</div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">Remaining</div>
+                    <div class="progress-value">100 shares</div>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-labels">
+                    <span>0%</span>
+                    <span>Execution Progress</span>
+                    <span>100%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
+            </div>
+        </section>
+        
+        <main class="content">
+            <div class="info-box">
+                <div class="info-text">
+                    💡 This trade will be executed against your immutable position plan. Each execution is recorded with FIFO cost basis tracking.
+                </div>
+            </div>
+            
+            <div class="trade-type-selector">
+                <button class="trade-type-button selected" onclick="selectTradeType(this, 'buy')">
+                    <span>📈</span> BUY
+                </button>
+                <button class="trade-type-button" onclick="selectTradeType(this, 'sell')">
+                    <span>📉</span> SELL
+                </button>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label required">Quantity</label>
+                    <input type="number" class="form-input" placeholder="50" value="50" id="quantity" min="1" max="100">
+                    <div class="form-hint">Shares to buy</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label required">Price</label>
+                    <input type="number" class="form-input" placeholder="149.25" value="149.25" step="0.01" id="price">
+                    <div class="form-hint">Execution price</div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label required">Execution Date & Time</label>
+                <input type="datetime-local" class="form-input" value="2024-01-15T10:30" id="executionTime">
+                <div class="form-hint">When this trade was executed</div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <input type="text" class="form-input" placeholder="Partial fill on opening, good execution near target" id="notes">
+                <div class="form-hint">Optional execution notes</div>
+            </div>
+            
+            <div class="trade-calculation">
+                <div class="calc-title">Trade Calculation</div>
+                <div class="calc-row">
+                    <span class="calc-label">Shares:</span>
+                    <span class="calc-value" id="calcShares">50</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Price per Share:</span>
+                    <span class="calc-value" id="calcPrice">$149.25</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Gross Amount:</span>
+                    <span class="calc-value" id="calcGross">$7,462.50</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Est. Fees:</span>
+                    <span class="calc-value" id="calcFees">$1.00</span>
+                </div>
+                <div class="calc-row">
+                    <span class="calc-label">Net Amount:</span>
+                    <span class="calc-value" id="calcNet">$7,463.50</span>
+                </div>
+            </div>
+            
+            <div class="warning-box">
+                <span class="warning-icon">⚠️</span>
+                <div class="warning-text">
+                    This execution is $0.25 better than your target price of $149.50. Your position will be 50% filled after this trade.
+                </div>
+            </div>
+        </main>
+        
+        <div class="bottom-actions">
+            <button class="btn btn-secondary" onclick="alert('Cancel')">Cancel</button>
+            <button class="btn btn-primary" onclick="alert('Trade Added Successfully')">Add Trade</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedTradeType = 'buy';
+        
+        function selectTradeType(button, type) {
+            // Remove selected class from all buttons
+            document.querySelectorAll('.trade-type-button').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked button
+            button.classList.add('selected');
+            selectedTradeType = type;
+            
+            // Update form based on trade type
+            updateFormForTradeType(type);
+        }
+        
+        function updateFormForTradeType(type) {
+            const quantityHint = document.querySelector('#quantity + .form-hint');
+            const maxQuantity = document.getElementById('quantity');
+            
+            if (type === 'buy') {
+                quantityHint.textContent = 'Shares to buy';
+                maxQuantity.max = '100'; // Remaining target quantity
+            } else {
+                quantityHint.textContent = 'Shares to sell';
+                maxQuantity.max = '0'; // Current position (0 since no trades yet)
+            }
+            
+            updateCalculation();
+        }
+        
+        function updateCalculation() {
+            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+            const price = parseFloat(document.getElementById('price').value) || 0;
+            const fees = 1.00; // Fixed for demo
+            
+            const grossAmount = quantity * price;
+            const netAmount = selectedTradeType === 'buy' ? grossAmount + fees : grossAmount - fees;
+            
+            document.getElementById('calcShares').textContent = quantity.toString();
+            document.getElementById('calcPrice').textContent = `$${price.toFixed(2)}`;
+            document.getElementById('calcGross').textContent = `$${grossAmount.toFixed(2)}`;
+            document.getElementById('calcFees').textContent = `$${fees.toFixed(2)}`;
+            document.getElementById('calcNet').textContent = `$${netAmount.toFixed(2)}`;
+            
+            // Update warning based on target price comparison
+            const targetPrice = 149.50;
+            const priceDiff = selectedTradeType === 'buy' ? targetPrice - price : price - targetPrice;
+            const warningText = document.querySelector('.warning-text');
+            
+            if (priceDiff > 0) {
+                warningText.textContent = `This execution is $${Math.abs(priceDiff).toFixed(2)} better than your target price of $${targetPrice.toFixed(2)}. Your position will be ${(quantity/100*100).toFixed(0)}% filled after this trade.`;
+            } else if (priceDiff < 0) {
+                warningText.textContent = `This execution is $${Math.abs(priceDiff).toFixed(2)} worse than your target price of $${targetPrice.toFixed(2)}. Your position will be ${(quantity/100*100).toFixed(0)}% filled after this trade.`;
+            } else {
+                warningText.textContent = `This execution matches your target price of $${targetPrice.toFixed(2)}. Your position will be ${(quantity/100*100).toFixed(0)}% filled after this trade.`;
+            }
+        }
+        
+        // Update calculations when values change
+        document.getElementById('quantity').addEventListener('input', updateCalculation);
+        document.getElementById('price').addEventListener('input', updateCalculation);
+        
+        // Initialize
+        updateCalculation();
+    </script>
+</body>
+</html>

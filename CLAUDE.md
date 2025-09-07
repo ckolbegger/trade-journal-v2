@@ -30,6 +30,12 @@ The application uses a **Position vs Trade separation architecture** with **trad
 - Supports both stock trades (symbol, quantity, price) and options trades (adding option_type, strike_price, expiration_date)
 - Enables accurate tracking of partial fills, scale-ins, and complex strategy execution
 
+### Position vs Trade Implementation Details
+- **Position Creation** = Planning only (no actual trades recorded)
+- **Trade Execution** = Separate flow recording actual buy/sell against plan  
+- **Progress Tracking** = Visual indicators showing plan vs actual execution status
+- **Cost Basis** = Always calculated from actual trades using FIFO, never from plan targets
+
 ### P&L Calculation Methodology
 - Trade-level cost basis tracking with FIFO (first-in-first-out) matching for exits
 - Position P&L calculated by summing all trade-level P&L within the position  
@@ -39,10 +45,11 @@ The application uses a **Position vs Trade separation architecture** with **trad
 ## Development Phases
 
 ### Phase 1A: Core Trade Lifecycle (Current Focus)
-- Trade Entry System with immutable trade plan documentation
+- **Position Plan Creation** with immutable trade plan documentation  
+- **Trade Execution System** for recording actual trades against plans
 - Position Management with manual price updates and real-time P&L calculation
 - Position Closing with plan vs actual execution comparison
-- **Forced journaling**: Every trade entry requires journal entry
+- **Forced journaling**: Every position plan and trade execution requires journal entry
 
 ### Phase 1B: Daily Review Process
 - Volatility-based "needs attention" position sorting
@@ -67,6 +74,18 @@ The application uses a **Position vs Trade separation architecture** with **trad
 - Daily review workflow with habit tracking
 - Plan vs execution analysis for learning
 - Position prioritization algorithm based on volatility × position size
+
+### Habit Formation Through Design
+- **Progressive Disclosure** - Multi-step flows prevent cognitive overload
+- **Forced Reflection** - Mandatory journaling at critical decision points
+- **Visual Feedback** - Color coding and progress indicators reinforce positive behaviors
+- **Attention Direction** - Design guides focus to positions requiring action
+- **Educational Moments** - Transform administrative tasks into learning opportunities
+
+### Consistent Language and Mental Models
+- Maintain clear distinction between planning and execution throughout all interfaces
+- Use consistent terminology to avoid confusion between strategic intent and actual results
+- Visual design should reinforce the conceptual separation of plan vs execution
 
 ### Data Management
 - **Historical Data**: Permanent closing price records
@@ -93,6 +112,33 @@ No specific testing framework has been established yet. Check for package.json o
   - `/mockups/screenshots` - Screenshot images of mockups  
   - `/mockups/wireframes` - Wireframe images and sketches
 - Mockups are immutable design references and should be preserved throughout development
+
+### Mockup Sequence and Purpose
+- `01-empty-app-state.html` - First-time user onboarding experience
+- `02-position-creation-flow.html` - Position plan creation (immutable strategy)
+- `02b-add-trade-flow.html` - Trade execution against position plan
+- `03-position-dashboard.html` - Attention-based position management
+- `04-position-detail-view.html` - Individual position management interface  
+- `05-position-closing-flow.html` - Educational position closing with plan vs execution analysis
+- `06-journal-history-view.html` - Learning laboratory with behavioral insights
+
+### Design Decisions Documentation
+- All design decisions must be tracked in `/mockups/design-decisions.md`
+- Include rationale, alternatives considered, and behavioral psychology reasoning
+- Document any changes to established patterns or terminology
+
+### UI Terminology Standards
+- **"Position Plan"** - The immutable strategic intent (never "Trade Setup" or "Position Entry")
+- **"Target Entry Price/Quantity/Date"** - Planned values from position plan
+- **"Avg Cost"** - Actual FIFO cost basis from executed trades (never "Entry Price")
+- **"Add Trade"** - Recording actual executions against the plan
+- **"Position Plan"** - Journal entry type for planning documentation
+
+### Visual Design Patterns
+- **Attention System**: Yellow background + orange left border for positions requiring review
+- **Performance Colors**: Green borders (profitable), Red borders (losing), Orange borders (attention)
+- **Prioritization**: Attention-based ordering (needs attention positions always at top)
+- **Immutability Warnings**: Red background with lock icons for immutable elements
 
 ## Business Context
 

@@ -342,8 +342,8 @@
         <main class="step-content">
             <!-- Step 1: Trade Setup -->
             <div class="step active" id="step1">
-                <h2 class="step-title">Trade Setup</h2>
-                <p class="step-description">Define your position strategy and targets. This information becomes immutable once confirmed.</p>
+                <h2 class="step-title">Position Plan</h2>
+                <p class="step-description">Define your trading strategy and targets. This immutable plan guides your actual trade executions.</p>
                 
                 <div class="form-group">
                     <label class="form-label required">Symbol</label>
@@ -360,21 +360,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label required">Entry Date</label>
-                    <input type="date" class="form-input" value="2024-01-15" id="entryDate">
-                    <div class="form-hint">Date you plan to enter this position</div>
+                    <label class="form-label required">Target Entry Date</label>
+                    <input type="date" class="form-input" value="2024-01-15" id="targetEntryDate">
+                    <div class="form-hint">When you plan to start entering this position</div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label required">Entry Target</label>
-                        <input type="number" class="form-input" placeholder="150.00" value="149.50" step="0.01" id="entryTarget">
-                        <div class="form-hint">Price per share</div>
+                        <label class="form-label required">Target Entry Price</label>
+                        <input type="number" class="form-input" placeholder="150.00" value="149.50" step="0.01" id="targetEntryPrice">
+                        <div class="form-hint">Planned entry price per share</div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label required">Quantity</label>
-                        <input type="number" class="form-input" placeholder="100" value="100" id="quantity">
-                        <div class="form-hint">Shares</div>
+                        <label class="form-label required">Target Quantity</label>
+                        <input type="number" class="form-input" placeholder="100" value="100" id="targetQuantity">
+                        <div class="form-hint">Total shares planned</div>
                     </div>
                 </div>
                 
@@ -432,8 +432,8 @@
                 <p class="step-description">Document your reasoning. This journal entry is required and helps build trading discipline.</p>
                 
                 <div class="form-group">
-                    <label class="form-label required">Trade Thesis</label>
-                    <textarea class="form-input form-textarea" placeholder="Why are you entering this position? What's your market outlook?" id="thesis">AAPL showing strong support at 149 level with positive earnings momentum. Technical setup shows potential breakout above 155 resistance. Risk management with tight stop at 140.</textarea>
+                    <label class="form-label required">Position Thesis</label>
+                    <textarea class="form-input form-textarea" placeholder="Why are you planning this position? What's your market outlook and strategy?" id="thesis">AAPL showing strong support at 149 level with positive earnings momentum. Technical setup shows potential breakout above 155 resistance. Plan to accumulate shares over 2-3 days if price stays near target.</textarea>
                 </div>
                 
                 <div class="form-group">
@@ -442,15 +442,15 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Exit Strategy</label>
-                    <textarea class="form-input form-textarea" placeholder="When and why will you exit this position?" id="exitStrategy">Target: 165 (10% gain), Stop: 140 (6.4% loss). Will consider partial profits at 160 if momentum slows.</textarea>
+                    <label class="form-label">Execution Strategy</label>
+                    <textarea class="form-input form-textarea" placeholder="How will you enter and exit this position?" id="executionStrategy">Plan to enter 50 shares initially at $149.50, then scale in another 50 if it drops to $148. Target: 165 (10% gain), Stop: 140 (6.4% loss). Will consider partial profits at 160 if momentum slows.</textarea>
                 </div>
             </div>
             
             <!-- Step 4: Confirmation -->
             <div class="step" id="step4">
-                <h2 class="step-title">Confirm Position</h2>
-                <p class="step-description">Review all details carefully. Once confirmed, this trade plan becomes immutable.</p>
+                <h2 class="step-title">Confirm Position Plan</h2>
+                <p class="step-description">Review your trading plan carefully. Once confirmed, this plan becomes immutable. You'll add actual trades separately.</p>
                 
                 <div class="confirmation-summary">
                     <div class="summary-item">
@@ -462,15 +462,15 @@
                         <span class="summary-value" id="confirmStrategy">Long Stock</span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Quantity:</span>
+                        <span class="summary-label">Target Quantity:</span>
                         <span class="summary-value" id="confirmQuantity">100 shares</span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Entry Date:</span>
+                        <span class="summary-label">Target Entry Date:</span>
                         <span class="summary-value" id="confirmEntryDate">Jan 15, 2024</span>
                     </div>
                     <div class="summary-item">
-                        <span class="summary-label">Entry Target:</span>
+                        <span class="summary-label">Target Entry Price:</span>
                         <span class="summary-value" id="confirmEntry">$149.50</span>
                     </div>
                     <div class="summary-item">
@@ -490,7 +490,7 @@
                 <div class="immutable-checkbox">
                     <input type="checkbox" class="checkbox-input" id="immutableConfirm">
                     <label class="checkbox-label" for="immutableConfirm">
-                        I understand that this trade plan will be <strong>immutable</strong> once created. I have carefully reviewed all details and am ready to commit to this strategy.
+                        I understand that this <strong>position plan will be immutable</strong> once created. I have carefully reviewed all targets and strategy. I'll add actual trades separately to execute against this plan.
                     </label>
                 </div>
             </div>
@@ -499,8 +499,8 @@
             <div class="step" id="step5">
                 <div class="success-animation">
                     <div class="success-icon">✓</div>
-                    <h2 class="success-title">Position Created!</h2>
-                    <p class="success-description">Your AAPL long position has been added to your portfolio. You can now track its progress and add trades.</p>
+                    <h2 class="success-title">Position Plan Created!</h2>
+                    <p class="success-description">Your AAPL position plan is now ready. Next, add actual trades to execute against this immutable strategy.</p>
                 </div>
             </div>
         </main>
@@ -540,10 +540,10 @@
             prevBtn.style.display = currentStep > 1 ? 'block' : 'none';
             
             if (currentStep === 4) {
-                nextBtn.textContent = 'Create Position';
+                nextBtn.textContent = 'Create Plan';
                 nextBtn.disabled = !document.getElementById('immutableConfirm').checked;
             } else if (currentStep === 5) {
-                nextBtn.textContent = 'View Position';
+                nextBtn.textContent = 'Add First Trade';
                 nextBtn.disabled = false;
             } else {
                 nextBtn.textContent = 'Continue';
@@ -552,11 +552,11 @@
             
             // Update header
             const titles = {
-                1: 'Create Position',
+                1: 'Position Plan',
                 2: 'Risk Assessment',
-                3: 'Trading Journal',
-                4: 'Confirm Position',
-                5: 'Position Created'
+                3: 'Position Journal',
+                4: 'Confirm Plan',
+                5: 'Plan Created'
             };
             document.getElementById('headerTitle').textContent = titles[currentStep];
         }

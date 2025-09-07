@@ -18,20 +18,26 @@ We will implement a **Position vs Trade separation architecture** with **trade-l
 
 ### Architecture Components
 
-**Position Model:**
-- Contains immutable trade plan (strategy intent, targets, stops, thesis)
-- Stores per-share/per-contract price levels (target_price, stop_price) 
-- Planned quantity and strategy parameters
+**Position Model (Immutable Trade Plan):**
+- Contains immutable trade plan (strategy intent, targets, stops, thesis, time horizon)
+- Stores planned price levels (target_entry_price, profit_target, stop_loss)
+- Planned quantity (target_quantity) and strategy parameters
+- Entry date and market thesis for plan context
 - Status derived from trade activity (open when net quantity > 0, closed when net quantity = 0)
-- Dollar amounts (profit_target_$, max_loss_$) computed from actual trades
+- **Critical distinction**: Position represents the trader's original strategic intent and risk parameters
+- **Behavioral training**: Once confirmed, plan details become uneditable to mirror real-world trading discipline
+- Dollar-based risk/reward amounts computed dynamically from actual trade executions
 
-**Trade Model:**
-- Individual execution records (buy/sell transactions)
-- Each trade maintains its own cost basis and timestamp
+**Trade Model (Mutable Execution Records):**
+- Individual execution records (buy/sell transactions) within a position
+- Each trade maintains its own actual cost basis, quantity, and execution timestamp
+- Records actual market executions against the position's planned targets
 - Future-proofed structure supporting both stock and options:
-  - Stock: symbol, quantity, price
-  - Options: symbol, quantity, price, option_type, strike_price, expiration_date
+  - Stock: symbol, actual_quantity, actual_price, execution_date
+  - Options: symbol, actual_quantity, actual_price, option_type, strike_price, expiration_date, execution_date
 - Trade types: BUY, SELL, ASSIGNMENT, EXERCISE, EXPIRATION
+- **Plan vs Execution tracking**: Compare actual fills against position's planned targets
+- **Partial fill support**: Multiple trades can execute against a single position plan
 
 **P&L Calculation:**
 - Trade-level cost basis tracking with FIFO matching for exits
@@ -110,6 +116,15 @@ Each option leg becomes separate trade within position, enabling complex strateg
 - MVP excludes dividends/splits (ADR-002 to be created when addressing)
 - Trade types extensible for future corporate actions
 - Local storage architecture supports this data model
+
+## Mockup Validation (September 2025)
+Phase 1A mockups validated this architecture through complete user journey simulation:
+- **Position Creation Flow**: Clear separation between planning (02-position-creation-flow.html) and execution (02b-add-trade-flow.html)
+- **Dashboard Integration**: Position-centric view with execution status tracking (03-position-dashboard.html)
+- **Plan vs Execution Analysis**: Educational feedback during position closing (05-position-closing-flow.html)
+- **Behavioral Training**: Mandatory journaling integration reinforces architectural separation
+
+Key insight: Mockup development confirmed the critical importance of maintaining clear conceptual boundaries between strategic planning (Position) and tactical execution (Trades) for effective behavioral training.
 
 ## Review Date
 To be reviewed after Phase 1A implementation and user feedback.

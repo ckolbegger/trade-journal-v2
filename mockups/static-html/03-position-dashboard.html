@@ -403,7 +403,7 @@
                 </div>
             </div>
             
-            <!-- Position 1: Needs Attention -->
+            <!-- Position 1: Needs Attention (High Vol) -->
             <div class="position-card needs-attention" onclick="alert('Navigate to TSLA Position Detail')">
                 <div class="position-header">
                     <div>
@@ -417,7 +417,7 @@
                 </div>
                 <div class="position-metrics">
                     <div class="metric-item">
-                        <div class="metric-label">Entry</div>
+                        <div class="metric-label">Avg Cost</div>
                         <div class="metric-value">$248.50</div>
                     </div>
                     <div class="metric-item">
@@ -435,7 +435,39 @@
                 </div>
             </div>
             
-            <!-- Position 2: Profitable -->
+            <!-- Position 2: Needs Attention (Near Stop) -->
+            <div class="position-card needs-attention" onclick="alert('Navigate to NVDA Position Detail')">
+                <div class="position-header">
+                    <div>
+                        <div class="position-symbol">NVDA</div>
+                        <div class="position-strategy">Long Stock</div>
+                    </div>
+                    <div class="position-pl">
+                        <div class="pl-amount negative">-$680</div>
+                        <div class="pl-percent">-7.8%</div>
+                    </div>
+                </div>
+                <div class="position-metrics">
+                    <div class="metric-item">
+                        <div class="metric-label">Avg Cost</div>
+                        <div class="metric-value">$875.00</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Current</div>
+                        <div class="metric-value">$806.50</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="metric-label">Stop</div>
+                        <div class="metric-value">$787.50</div>
+                    </div>
+                </div>
+                <div class="position-footer">
+                    <span class="last-updated">Updated 1 min ago</span>
+                    <span class="status-badge status-alert">Near Stop</span>
+                </div>
+            </div>
+            
+            <!-- Position 3: Profitable -->
             <div class="position-card profitable" onclick="alert('Navigate to AAPL Position Detail')">
                 <div class="position-header">
                     <div>
@@ -449,7 +481,7 @@
                 </div>
                 <div class="position-metrics">
                     <div class="metric-item">
-                        <div class="metric-label">Entry</div>
+                        <div class="metric-label">Avg Cost</div>
                         <div class="metric-value">$149.50</div>
                     </div>
                     <div class="metric-item">
@@ -467,7 +499,7 @@
                 </div>
             </div>
             
-            <!-- Position 3: Small Loss -->
+            <!-- Position 4: Small Loss -->
             <div class="position-card losing" onclick="alert('Navigate to MSFT Position Detail')">
                 <div class="position-header">
                     <div>
@@ -481,7 +513,7 @@
                 </div>
                 <div class="position-metrics">
                     <div class="metric-item">
-                        <div class="metric-label">Entry</div>
+                        <div class="metric-label">Avg Cost</div>
                         <div class="metric-value">$408.75</div>
                     </div>
                     <div class="metric-item">
@@ -499,7 +531,7 @@
                 </div>
             </div>
             
-            <!-- Position 4: Break Even -->
+            <!-- Position 5: Break Even -->
             <div class="position-card" onclick="alert('Navigate to GOOGL Position Detail')">
                 <div class="position-header">
                     <div>
@@ -513,7 +545,7 @@
                 </div>
                 <div class="position-metrics">
                     <div class="metric-item">
-                        <div class="metric-label">Entry</div>
+                        <div class="metric-label">Avg Cost</div>
                         <div class="metric-value">$139.85</div>
                     </div>
                     <div class="metric-item">
@@ -528,38 +560,6 @@
                 <div class="position-footer">
                     <span class="last-updated">Updated 4 min ago</span>
                     <span class="status-badge status-open">Open</span>
-                </div>
-            </div>
-            
-            <!-- Position 5: Needs Attention (Approaching Stop) -->
-            <div class="position-card needs-attention" onclick="alert('Navigate to NVDA Position Detail')">
-                <div class="position-header">
-                    <div>
-                        <div class="position-symbol">NVDA</div>
-                        <div class="position-strategy">Long Stock</div>
-                    </div>
-                    <div class="position-pl">
-                        <div class="pl-amount negative">-$680</div>
-                        <div class="pl-percent">-7.8%</div>
-                    </div>
-                </div>
-                <div class="position-metrics">
-                    <div class="metric-item">
-                        <div class="metric-label">Entry</div>
-                        <div class="metric-value">$875.00</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Current</div>
-                        <div class="metric-value">$806.50</div>
-                    </div>
-                    <div class="metric-item">
-                        <div class="metric-label">Stop</div>
-                        <div class="metric-value">$787.50</div>
-                    </div>
-                </div>
-                <div class="position-footer">
-                    <span class="last-updated">Updated 1 min ago</span>
-                    <span class="status-badge status-alert">Near Stop</span>
                 </div>
             </div>
         </main>
