@@ -33,34 +33,44 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 
 ## Development Phases
 
-### Phase 1A: Core Trade Lifecycle
-**Deliverable Focus**: Basic trade tracking with journaling integration
+### Phase 1A: Core Trade Lifecycle Foundation
+**Deliverable Focus**: Build architectural foundation for all strategies, expose simple stock functionality
 
-**Core Features:**
+**Core Features (Stock-Only UI, Full Architecture):**
 - **Trade Entry System**
-  - Simple stock buy/sell position entry
+  - Simple stock buy/sell position entry (UI simplified, data model supports all strategies)
   - Immutable trade plan documentation (entry target, profit target, stop loss, thesis, target quantity)
+  - Strategy selection framework (stock-only initially, extensible for options)
   - Trade plan confirmation step before locking
   - **Forced journaling**: Every trade entry requires journal entry
   - Timestamp locking of all trade plan details
 
 - **Position Management**
-  - Manual price updates with real-time P&L calculation
+  - Manual price updates with real-time P&L calculation (single instrument, multi-instrument ready)
   - Current vs incremental profit visualization
     - *"You've captured 80% of potential profit, risking $200 to potentially gain $50 more"*
-  - Basic position list view
+  - Position dashboard with attention-based prioritization (algorithm supports mixed portfolios)
+  - Strategy-adaptive position detail views (renders based on position complexity)
 
 - **Position Closing**
-  - Exit trade functionality with actual execution tracking
-  - Exit journaling requirement
-  - Plan vs actual execution comparison
+  - Exit trade functionality with actual execution tracking (FIFO cost basis implementation)
+  - Exit journaling requirement with structured reason selection
+  - Plan vs actual execution comparison (educational analysis framework)
   - Partial fill handling (record actual execution, track vs target quantity)
+
+**Architectural Foundation Elements:**
+- **Data Models**: Full Position/Trade entities with options fields (unused in Phase 1)
+- **Component Architecture**: Strategy-adaptive UI components that scale from stock to complex spreads  
+- **Calculation Engines**: Strategy-aware P&L and risk calculations (stock-only initially)
+- **Manual Pricing System**: Multi-instrument price update framework (single instrument exposed)
+- **Behavioral Training Patterns**: Immutable planning and forced journaling that work for all strategies
 
 **Technical Specs:**
 - TypeScript + React + Vite
-- Mobile-first responsive web app
+- Mobile-first responsive web app  
 - Local data storage only
 - Manual price entry system (dual pricing: closing prices stored, current prices temporary)
+- Component architecture guided by full strategy mockups (04a-04d)
 
 ### Phase 1B: Daily Review Process
 **Deliverable Focus**: Habit-forming review workflow and position monitoring
@@ -204,32 +214,109 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 
 ---
 
-## Completed Mockup Development (September 2025)
+## Architectural Vision: Completed Mockup Development (September 2025)
 
-### Phase 1A Mockups Status: ✅ COMPLETED
-Six comprehensive HTML mockups have been created covering the complete user journey:
+### Full-Vision Mockups Status: ✅ COMPLETED
+Comprehensive HTML mockups representing the **complete architectural vision** across all planned phases:
 
-1. **01-empty-app-state.html** - First-time user onboarding with clear call-to-action
-2. **02-position-creation-flow.html** - Position planning workflow with immutable plan confirmation
-3. **02b-add-trade-flow.html** - Trade execution interface against established position plan
+**Core User Journey (All Phases):**
+1. **01-empty-app-state.html** - First-time user onboarding experience
+2. **02-position-creation-flow.html** - Position planning workflow with strategy selection
+3. **02b-add-trade-flow.html** - Trade execution interface against position plan
 4. **03-position-dashboard.html** - Position dashboard with attention-based prioritization
-5. **04-position-detail-view.html** - Individual position management and monitoring
-6. **05-position-closing-flow.html** - Position closing with plan vs execution analysis
-7. **06-journal-history-view.html** - Journal timeline for behavioral pattern recognition
+5. **05-position-closing-flow.html** - Position closing with plan vs execution analysis
+6. **06-journal-history-view.html** - Journal timeline for behavioral pattern recognition
+
+**Strategy-Specific Detail Views (Phases 1-5):**
+- **04-position-detail-view.html** - Simple stock position (Phase 1 target)
+- **04a-covered-call-detail-view.html** - Covered call strategy (Phase 3)
+- **04b-bull-put-spread-detail-view.html** - Bull put spread (Phase 4)
+- **04c-long-call-butterfly-detail-view.html** - Complex spread (Phase 5)
+- **04d-call-calendar-spread-detail-view.html** - Time-sensitive strategy (Phase 5)
+
+### Critical Understanding: Mockups as Architectural North Star
+
+**These mockups serve as the architectural vision for the entire product, NOT the Phase 1 implementation scope.** Their primary purpose is to:
+
+1. **Guide Future-Proof Architecture**: Show how Phase 1 decisions must accommodate complex multi-leg strategies
+2. **Inform Data Model Design**: Demonstrate why Position vs Trade separation is essential
+3. **Direct Component Architecture**: Show how simple stock components must extend to options
+4. **Validate UX Patterns**: Ensure consistent interaction patterns across all strategy types
+5. **Prevent Dead Ends**: Visualize the complete system to avoid architectural constraints
 
 ### Key Architectural Clarifications from Mockup Development
-- **Clear separation** between position planning (immutable) and trade execution (mutable)
-- **Attention-based prioritization** algorithm for position dashboard ordering
-- **Behavioral reinforcement** through mandatory journaling and plan vs execution analysis
-- **Educational focus** with profit visualization and decision-making insights
+- **Strategy-Adaptive Architecture**: UI components must flexibly support 1-4 leg strategies
+- **Position vs Trade Separation**: Critical for both behavioral training and complex strategy support
+- **Behavioral Consistency**: Immutable planning and forced journaling patterns scale across all strategies
+- **Manual Price Update System**: Privacy-first approach works for both simple and complex positions
+- **Attention-Based Prioritization**: Algorithm must work for mixed stock/options portfolios
+
+### Phase 1 Implementation Approach
+**Build the architectural foundation shown in mockups, expose only stock functionality:**
+- Implement full Position/Trade data models (including unused options fields)
+- Build flexible UI components that render based on strategy complexity
+- Create strategy-aware calculation engines (initially only stock calculations)
+- Establish behavioral training patterns that work for all future strategies
+- Set up manual price update system supporting multi-instrument positions
 
 ### Documentation Created
 - `/mockups/design-decisions.md` - Comprehensive design rationale and behavioral psychology principles
 - Updated `CLAUDE.md` with mockup preservation rules and UI consistency standards
+- `/docs/strategy-ui-patterns-guide.md` - Analysis of strategy-specific UI patterns from mockups
+
+## Phase 1 Implementation Strategy: Architecture vs Exposure
+
+### The Future-Proofing Approach
+**Build comprehensive architecture, expose simple functionality.** Phase 1 creates the foundation that enables all future phases without requiring rewrites or migrations.
+
+**What This Means in Practice:**
+
+**Data Models**: Implement complete Position and Trade entities from ADR-001, including all options fields
+- Expose: Basic stock position fields in UI
+- Include: option_type, strike_price, expiration_date fields in database (unused)
+- Benefit: Phase 3+ can activate options without data migration
+
+**UI Components**: Build strategy-adaptive components guided by mockups 04a-04d
+- Expose: Simple stock position rendering (`strategy_type: 'stock'`)
+- Include: Multi-leg display logic, conditional rendering based on strategy complexity
+- Benefit: Adding covered calls just requires changing strategy type and exposing existing UI
+
+**Calculation Engines**: Implement strategy-aware P&L and risk calculations
+- Expose: Stock P&L calculations only (`(current_price - avg_cost) * quantity`)
+- Include: Options pricing framework, multi-leg calculation scaffolding
+- Benefit: Complex strategy calculations slot into existing engine
+
+**Manual Price System**: Build multi-instrument price update architecture
+- Expose: Single stock price input
+- Include: Multi-instrument pricing models, spread calculations
+- Benefit: Bull put spread pricing just activates existing framework
+
+### Phase Relationship to Mockups
+
+**Phase 1A Target**: 04-position-detail-view.html (simple stock)
+- Full mockup functionality implemented
+- Architecture supports 04a-04d mockups (not exposed)
+- Users see simple, focused stock trading interface
+
+**Phase 3 Target**: 04a-covered-call-detail-view.html  
+- Activate covered call UI components (already built)
+- Enable dual pricing model (stock + option)
+- Turn on options fields in forms
+
+**Phase 4-5 Targets**: 04b-04d mockups
+- Multi-leg display components activate
+- Complex calculation engines surface
+- Advanced pricing models become available
+
+### Success Criteria for Phase 1
+- ✅ Simple stock positions work perfectly (user-facing)
+- ✅ Architecture accommodates all mockup complexity (internal)
+- ✅ No rewrites required for Phase 3+ (future-proofing validated)
+- ✅ Clean codebase without unused complexity cluttering UX (focused experience)
 
 ## Next Steps
-1. ✅ ~~Create detailed mockups for Phase 1A core workflows~~ **COMPLETED**
-2. ✅ ~~Define technical implementation approach for immutable trade plans~~ **CLARIFIED**
-3. ✅ ~~Design journaling UX integration points~~ **DESIGNED**
-4. ✅ ~~Plan manual price update workflow and data model~~ **PLANNED**
-5. **Begin Phase 1A development** - Ready to start with validated mockups
+1. ✅ ~~Create architectural vision mockups~~ **COMPLETED**
+2. ✅ ~~Define Position vs Trade separation architecture~~ **CLARIFIED**
+3. ✅ ~~Document mockup role as architectural north star~~ **CLARIFIED** 
+4. ✅ ~~Plan future-proofing implementation approach~~ **PLANNED**
+5. **Begin Phase 1A development** - Build foundation architecture, expose stock functionality
