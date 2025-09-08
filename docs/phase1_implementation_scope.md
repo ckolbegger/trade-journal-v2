@@ -2,11 +2,13 @@
 
 This document provides concrete guidance on what to build, stub, or prepare for in Phase 1A development, ensuring the architectural foundation supports all future phases without over-engineering the initial user experience.
 
-## Overview: Build Comprehensive, Expose Simple
+## Overview: Build Comprehensive, Expose Simple (Single-Trade Focus)
 
-**Phase 1A Goal**: Create a robust architectural foundation that enables all future phases while providing a focused, simple stock trading experience to users.
+**Phase 1A Goal**: Create a robust architectural foundation that enables all future phases while providing a focused, simple stock trading experience to users. **SIMPLIFIED APPROACH**: Restrict Phase 1 to single opening trade + single closing trade per position to dramatically accelerate development.
 
-**Strategy**: Implement complete data models and component architectures guided by the full mockup vision (04a-04d), but only expose stock functionality in the user interface.
+**Strategy**: Implement complete data models and component architectures guided by the full mockup vision (04a-04d), but only expose stock functionality with single-trade limitations in the user interface.
+
+**Key Simplification**: Defer complex cost basis tracking (FIFO) until Phase 2 by restricting positions to single buy + single sell transactions. This reduces Phase 1 development time from 7-9 weeks to 3-4 weeks while maintaining architectural future-proofing.
 
 ---
 
@@ -80,8 +82,8 @@ interface Trade {
 }
 ```
 
-**Phase 1 Usage**: Only `BUY`/`SELL` trade types, options fields always null
-**Future Benefit**: Options trades work with same FIFO matching logic
+**Phase 1 Usage**: Only `BUY`/`SELL` trade types, maximum 2 trades per position (1 buy + 1 sell), options fields always null
+**Future Benefit**: Options trades and multiple trades work with same data structure
 
 ### Journal Entry - IMPLEMENT FULLY
 ```typescript
@@ -240,29 +242,47 @@ function StockPositionDetail({ position }) {
 
 ## Calculation Engines: Full Framework, Stock Calculations
 
-### P&L Calculation Engine - BUILD COMPLETE
+### P&L Calculation Engine - BUILD SIMPLE, FIFO-READY
 
 ```typescript
-// BUILD: Strategy-aware calculation engine
+// BUILD: Strategy-aware calculation engine with Phase 1 simplifications
 class PnLCalculationEngine {
-  // EXPOSE: Stock P&L calculation
+  // EXPOSE: Simplified stock P&L calculation (Phase 1)
   calculateStockPnL(position: Position, trades: Trade[], current_price: number) {
-    const { avgCost, remainingQuantity } = this.calculateFIFOCostBasis(trades);
-    return (current_price - avgCost) * remainingQuantity;
+    // Phase 1: Single-trade assumption for speed
+    const buys = trades.filter(t => t.trade_type === 'BUY');
+    const sells = trades.filter(t => t.trade_type === 'SELL');
+    
+    // Validation: Ensure single-trade limitation
+    if (buys.length > 1) {
+      throw new Error('Phase 1: Multiple buy trades not supported');
+    }
+    
+    if (buys.length === 1 && sells.length === 0) {
+      // Open position: simple calculation
+      return (current_price - buys[0].actual_price) * buys[0].quantity;
+    }
+    
+    if (buys.length === 1 && sells.length === 1) {
+      // Closed position: simple realized P&L
+      return (sells[0].actual_price - buys[0].actual_price) * sells[0].quantity;
+    }
+    
+    return 0; // No trades yet
   }
   
-  // INCLUDE: Options calculation framework (not exposed)
+  // INCLUDE: Options calculation framework (not exposed in Phase 1)
   // calculateOptionsPnL(position: Position, trades: Trade[], pricing: PricingData) {
   //   return position.strategy_config.legs.reduce((total, leg) => {
   //     return total + this.calculateLegPnL(leg, trades, pricing);
   //   }, 0);
   // }
   
-  // BUILD: FIFO cost basis (used by all strategies)
-  calculateFIFOCostBasis(trades: Trade[]) {
-    // Complete FIFO implementation for accurate cost basis tracking
-    // Works for both stock and options (per instrument)
-  }
+  // PREPARE: FIFO cost basis framework for Phase 2+
+  // calculateFIFOCostBasis(trades: Trade[]) {
+  //   // Complete FIFO implementation deferred to Phase 2
+  //   // Will replace simple calculation above when multiple trades are supported
+  // }
 }
 ```
 
@@ -392,15 +412,16 @@ const availableStrategies = [
 - Form validation should work for both simple and complex strategies
 
 ### Mockup 2b: Add Trade Flow (02b-add-trade-flow.html)
-**Phase 1 Implementation**: ✅ Full implementation
-- Trade execution against position plan
-- FIFO cost basis tracking implementation
+**Phase 1 Implementation**: ✅ Simplified single-trade implementation
+- Trade execution against position plan (single opening trade only)
+- Simple cost basis tracking (no FIFO complexity)
 - Plan vs actual execution comparison
 
 **Architecture Notes**:
-- Trade entity must support all future instrument types
-- FIFO matching logic must work for options (separate cost basis per contract)
-- Execution tracking framework scales to multi-leg strategies
+- Trade entity must support all future instrument types (framework ready)
+- **Phase 1 Limitation**: Only allow single opening trade per position
+- **Phase 2+**: FIFO matching logic for options and multiple trades
+- **UI Handling**: Show clear messaging when user tries to add second trade
 
 ### Mockup 3: Position Dashboard (03-position-dashboard.html)
 **Phase 1 Implementation**: ✅ Full attention algorithm, stock cards only
@@ -432,15 +453,16 @@ function PositionCard({ position }) {
 ```
 
 ### Mockup 4: Stock Position Detail (04-position-detail-view.html)
-**Phase 1 Implementation**: ✅ Full implementation as primary target
-- Complete detail view matching mockup exactly
+**Phase 1 Implementation**: ✅ Full implementation with single-trade simplifications
+- Complete detail view matching mockup (adapted for single-trade)
 - Manual price update system (multi-instrument ready architecture)
-- FIFO cost basis visualization in trade history
+- Simple trade history (max 2 trades: 1 buy + 1 sell)
 
 **Key Architecture Elements**:
 - Price update component must support future multi-instrument pricing
 - Progress indicator must adapt to different strategy risk/reward profiles
-- Trade history must show FIFO matching clearly for educational purposes
+- **Phase 1 Simplification**: Trade history shows simple buy/sell sequence, no FIFO complexity
+- **UI Messaging**: Clear indication of Phase 1 single-trade limitation
 
 ### Mockups 4a-4d: Strategy-Specific Detail Views
 **Phase 1 Implementation**: 🏗️ Framework only, not exposed to users
@@ -527,26 +549,46 @@ function CoveredCallDetail({ position }) {
 
 ---
 
-## Success Validation
+## Success Validation & Development Timeline
 
-### Phase 1A Completion Criteria
+### Phase 1A Completion Criteria (Single-Trade Focus)
 
 **User Experience Validation:**
-- ✅ Simple, focused stock trading interface
-- ✅ No confusing options terminology or complexity
+- ✅ Simple, focused single-trade stock interface
+- ✅ No confusing options terminology or multiple-trade complexity
 - ✅ All behavioral training features work perfectly (immutable plans, journaling)
 - ✅ Manual price updates provide real-time P&L calculation
+- ✅ Clear messaging about Phase 1 limitations (single trade per position)
+- ✅ Graceful handling when users attempt multiple trades
 
 **Architecture Validation:**  
-- ✅ Data models accommodate all mockup strategies
+- ✅ Data models accommodate all mockup strategies (framework ready)
 - ✅ UI components render different strategies appropriately  
-- ✅ Calculation engines handle both simple and complex scenarios
-- ✅ No major refactoring needed to activate Phase 3+ features
+- ✅ Calculation engines handle single-trade scenarios perfectly
+- ✅ **Extension Test**: Adding second trade should be straightforward code change (Phase 2)
+- ✅ No major refactoring needed to activate Phase 2+ features
 
 **Future-Proofing Test:**
 1. Change `strategy_type` from 'stock' to 'covered_call' → should render covered call interface
 2. Add option legs to position → should display multi-leg UI components  
 3. Enable advanced strategy selection → should show options in dropdown
-4. Activate complex calculations → should show spread P&L and risk metrics
+4. **Phase 2 Test**: Remove single-trade limitation → should support multiple trades with FIFO
 
-If all tests pass without code rewrites, the architecture successfully supports the full mockup vision while maintaining Phase 1 simplicity.
+### Revised Development Timeline
+
+**Phase 1A (Single-Trade): 3-4 weeks** ⏱️ (Reduced from 7-9 weeks)
+- **Week 1**: Data models, basic UI components, position creation
+- **Week 2**: Position management, manual pricing, simple P&L calculation
+- **Week 3**: Position closing, journaling integration, dashboard
+- **Week 4**: Polish, testing, deployment preparation
+
+**Phase 2A (Multi-Trade + FIFO): 3-4 weeks**  
+- **Week 1**: FIFO cost basis engine implementation
+- **Week 2**: Multi-trade UI enhancements, complex P&L integration
+- **Week 3**: Scale-in/scale-out workflows, advanced cost basis visualization
+- **Week 4**: Testing and validation against brokerage statements
+
+**Total Time to Full Stock Functionality: 6-8 weeks** (vs 7-9 weeks original estimate)
+**Time to MVP with Core Behavioral Training: 3-4 weeks** (50% faster!)
+
+If all tests pass without code rewrites, the architecture successfully supports the full mockup vision while dramatically accelerating time-to-market.

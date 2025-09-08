@@ -33,10 +33,12 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 
 ## Development Phases
 
-### Phase 1A: Core Trade Lifecycle Foundation
-**Deliverable Focus**: Build architectural foundation for all strategies, expose simple stock functionality
+### Phase 1A: Core Trade Lifecycle Foundation (Single-Trade Focus)
+**Deliverable Focus**: Build architectural foundation for all strategies, expose simple single-trade stock functionality
 
-**Core Features (Stock-Only UI, Full Architecture):**
+**SIMPLIFIED APPROACH**: Restrict Phase 1 to single opening trade + single closing trade per position to dramatically accelerate development and validate behavioral training hypothesis.
+
+**Core Features (Stock-Only UI, Single-Trade Limitation):**
 - **Trade Entry System**
   - Simple stock buy/sell position entry (UI simplified, data model supports all strategies)
   - Immutable trade plan documentation (entry target, profit target, stop loss, thesis, target quantity)
@@ -51,17 +53,18 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
     - *"You've captured 80% of potential profit, risking $200 to potentially gain $50 more"*
   - Position dashboard with attention-based prioritization (algorithm supports mixed portfolios)
   - Strategy-adaptive position detail views (renders based on position complexity)
+  - **Single-trade limitation**: Clear UI messaging when users attempt multiple trades
 
 - **Position Closing**
-  - Exit trade functionality with actual execution tracking (FIFO cost basis implementation)
+  - Exit trade functionality with simple cost basis tracking (no FIFO complexity)
   - Exit journaling requirement with structured reason selection
   - Plan vs actual execution comparison (educational analysis framework)
-  - Partial fill handling (record actual execution, track vs target quantity)
+  - **Phase 1 Limitation**: Only single closing trade per position
 
 **Architectural Foundation Elements:**
 - **Data Models**: Full Position/Trade entities with options fields (unused in Phase 1)
 - **Component Architecture**: Strategy-adaptive UI components that scale from stock to complex spreads  
-- **Calculation Engines**: Strategy-aware P&L and risk calculations (stock-only initially)
+- **Calculation Engines**: Strategy-aware P&L and risk calculations (single-trade initially, FIFO-ready)
 - **Manual Pricing System**: Multi-instrument price update framework (single instrument exposed)
 - **Behavioral Training Patterns**: Immutable planning and forced journaling that work for all strategies
 
@@ -71,6 +74,8 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 - Local data storage only
 - Manual price entry system (dual pricing: closing prices stored, current prices temporary)
 - Component architecture guided by full strategy mockups (04a-04d)
+
+**Timeline**: 3-4 weeks (reduced from 7-9 weeks through FIFO deferral)
 
 ### Phase 1B: Daily Review Process
 **Deliverable Focus**: Habit-forming review workflow and position monitoring
@@ -89,13 +94,28 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
   - Review time tracking (future correlation with market conditions)
   - Simple position prioritization (basic sorting when multiple positions exist)
 
-### Phase 2: Stock Position Scaling
+### Phase 2: Multi-Trade & FIFO Implementation  
+**Deliverable Focus**: Enable multiple trades per position with accurate cost basis tracking
+
 **Features:**
-- Scale-in/scale-out functionality
-- Average cost basis tracking
-- Portfolio risk aggregation (total capital at risk)
-- Enhanced journaling with position timeline views
-- Multi-entry position management
+- **FIFO Cost Basis Engine**
+  - Complete FIFO matching algorithm implementation
+  - Accurate cost basis tracking matching brokerage statements
+  - Cost basis visualization and educational transparency
+- **Multi-Trade Support**
+  - Scale-in/scale-out functionality
+  - Multiple buy/sell trades per position
+  - Partial fill handling and tracking
+- **Enhanced Position Management**
+  - Advanced cost basis visualization in trade history
+  - Portfolio risk aggregation (total capital at risk)
+  - Enhanced journaling with position timeline views
+- **Performance & Validation**
+  - Testing against real brokerage statements
+  - Performance optimization for high-volume traders
+
+**Timeline**: 3-4 weeks
+**Total Stock Functionality**: Phase 1A + Phase 1B + Phase 2 = 8-11 weeks (vs 7-9 weeks original)
 
 ### Phase 3: Basic Options Introduction
 **Features:**
@@ -121,11 +141,18 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 
 ## Key Design Decisions
 
+### Single-Trade Phase 1 Approach
+- **Philosophy**: Validate behavioral training hypothesis before complex implementation
+- **Implementation**: Restrict to single opening + single closing trade per position
+- **Behavioral Goal**: Focus on immutable planning and journaling habits without complexity overhead
+- **Extension Path**: Phase 2 adds multi-trade support without architectural changes
+- **User Communication**: Clear messaging about Phase 1 limitations with "coming soon" indicators
+
 ### Trade Plan Immutability
 - **Philosophy**: Mirror real-world trading - no "undo" on executed plans
 - **Implementation**: True immutability with confirmation step
 - **Behavioral Goal**: Build pattern of thinking through decisions before execution
-- **Partial Fills**: Treat as scale-in events, record actual vs planned execution
+- **Multi-Trade Support**: Deferred to Phase 2 with FIFO cost basis tracking
 
 ### Daily Review Process
 **Purpose:** Create a systematic habit of position evaluation and decision-making reflection.
@@ -192,6 +219,12 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 
 ## Success Metrics
 
+### Phase 1A Validation Metrics
+- **Behavioral Training Validation**: Do users find value despite single-trade limitation?
+- **Architecture Validation**: Does framework support future complexity without rewrites?
+- **User Experience**: How often do users hit single-trade limitations?
+- **Development Velocity**: Did simplification actually accelerate delivery?
+
 ### Behavioral Improvements
 - Improved trade execution discipline
 - Better risk management decisions
@@ -205,6 +238,21 @@ Holistic learning tool combining trade tracking, behavioral discipline, and inte
 - Trade plan adherence tracking
 - Position holding period vs planned duration
 - Risk/reward decision improvements over time
+
+## Development Timeline Summary
+
+### Accelerated Approach Benefits
+- **Phase 1A (Single-Trade)**: 3-4 weeks - Validate behavioral training hypothesis
+- **Phase 1B (Daily Review)**: 2-3 weeks - Complete habit formation workflows
+- **Phase 2 (Multi-Trade + FIFO)**: 3-4 weeks - Complete stock functionality
+- **Total Stock Development**: 8-11 weeks vs 7-9 weeks original estimate
+- **Time to MVP Validation**: 5-7 weeks (Phase 1A + 1B combined)
+
+### Risk Mitigation
+- **User Limitation Risk**: Clear communication about Phase 1 restrictions
+- **Architecture Risk**: Complete data models prevent future refactoring
+- **Market Validation**: Earlier feedback on core behavioral training value
+- **Extension Test**: Phase 2 should require minimal architectural changes
 
 ## Validation Approach
 - **Primary**: Personal use by product owner
@@ -319,4 +367,7 @@ Comprehensive HTML mockups representing the **complete architectural vision** ac
 2. ✅ ~~Define Position vs Trade separation architecture~~ **CLARIFIED**
 3. ✅ ~~Document mockup role as architectural north star~~ **CLARIFIED** 
 4. ✅ ~~Plan future-proofing implementation approach~~ **PLANNED**
-5. **Begin Phase 1A development** - Build foundation architecture, expose stock functionality
+5. ✅ ~~Simplify Phase 1 scope for accelerated delivery~~ **COMPLETED**
+6. **Begin Phase 1A development** - Build foundation architecture, expose single-trade stock functionality (3-4 weeks)
+7. **Phase 1B development** - Add daily review workflows and habit formation (2-3 weeks) 
+8. **Phase 2 development** - Implement multi-trade support and FIFO cost basis tracking (3-4 weeks)
