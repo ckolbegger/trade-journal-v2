@@ -4,6 +4,13 @@ import { Dashboard } from './Dashboard'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { TEST_POSITIONS, createPosition } from '@/test/data-factories'
 import { renderWithRouter } from '@/test/test-utils'
+import {
+  assertPositionInDashboard,
+  assertPositionDetails,
+  assertFabButtonVisible,
+  assertTextExists,
+  assertElementsVisible
+} from '@/test/assertion-helpers'
 import type { Position } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -55,10 +62,10 @@ describe('Dashboard', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
-      expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('TSLA')).toBeInTheDocument()
-      expect(screen.getAllByText('Long Stock')).toHaveLength(2) // Both positions have this strategy
-      expect(screen.getAllByText('No trades executed')).toHaveLength(2) // Both positions show this
+      assertPositionInDashboard('AAPL', 1)
+      assertPositionInDashboard('TSLA', 1)
+      assertTextExists('Long Stock', { count: 2 })
+      assertTextExists('No trades executed', { count: 2 })
     })
   })
 
@@ -69,8 +76,8 @@ describe('Dashboard', () => {
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getByText('$140.00')).toBeInTheDocument() // Stop Loss AAPL
-      expect(screen.getByText('$180.00')).toBeInTheDocument() // Stop Loss TSLA
+      assertPositionDetails('AAPL', { stopLoss: '140.00' })
+      assertPositionDetails('TSLA', { stopLoss: '180.00' })
     })
   })
 
@@ -81,8 +88,8 @@ describe('Dashboard', () => {
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
-      expect(screen.getAllByText('TODO')).toHaveLength(4) // 2 positions × 2 TODO fields each
-      expect(screen.getAllByText('TODO: Current P&L')).toHaveLength(2) // Both positions show this
+      assertTextExists('TODO', { count: 4 })
+      assertTextExists('TODO: Current P&L', { count: 2 })
     })
   })
 
@@ -110,8 +117,7 @@ describe('Dashboard', () => {
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
-      const plannedBadges = screen.getAllByText('Planned')
-      expect(plannedBadges.length).toBe(2)
+      assertTextExists('Planned', { count: 2 })
     })
   })
 
@@ -122,10 +128,7 @@ describe('Dashboard', () => {
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
-      const fabButtons = screen.getAllByRole('link', { name: '' })
-      const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
-      expect(fabButton).toBeInTheDocument()
-      expect(fabButton).toHaveClass('fixed', 'bottom-24', 'right-4')
+      assertFabButtonVisible()
     })
   })
 

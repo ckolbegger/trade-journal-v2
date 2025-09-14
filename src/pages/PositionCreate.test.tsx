@@ -4,6 +4,16 @@ import React from 'react'
 import { PositionCreate } from './PositionCreate'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { renderWithRouterAndProps } from '@/test/test-utils'
+import {
+  assertStepVisible,
+  assertFormValidationErrors,
+  assertFormFieldExists,
+  assertStrategyTypeLocked,
+  assertRiskCalculations,
+  assertStepDotsStatus,
+  assertImmutableConfirmationVisible,
+  assertImmutableConfirmationComplete
+} from '@/test/assertion-helpers'
 import type { PositionService } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -39,30 +49,24 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
   describe('Step 1: Position Plan', () => {
     it('should display position plan form with all required fields', () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      renderWithRouterAndProps(<PositionCreate />)
 
-      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+      assertStepVisible('Position Plan')
 
       // Check for required form fields
-      expect(screen.getByLabelText(/Symbol/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Strategy Type/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Target Entry Price/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Target Quantity/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Profit Target/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Stop Loss/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
+      assertFormFieldExists(/Symbol/i)
+      assertFormFieldExists(/Strategy Type/i)
+      assertFormFieldExists(/Target Entry Price/i)
+      assertFormFieldExists(/Target Quantity/i)
+      assertFormFieldExists(/Profit Target/i)
+      assertFormFieldExists(/Stop Loss/i)
+      assertFormFieldExists(/Position Thesis/i)
     })
 
     it('should only show "Long Stock" as strategy type option in Phase 1A', () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      renderWithRouterAndProps(<PositionCreate />)
 
-      const strategySelect = screen.getByLabelText(/Strategy Type/i)
-      expect(strategySelect).toBeInTheDocument()
-
-      // Should be disabled/readonly with only "Long Stock" option
-      expect(strategySelect).toHaveValue('Long Stock')
+      assertStrategyTypeLocked()
     })
 
     it('should validate required fields before proceeding to step 2', async () => {
@@ -74,12 +78,14 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
       // Should show validation errors and stay on step 1
       await waitFor(() => {
-        expect(screen.getByText(/Symbol is required/i)).toBeInTheDocument()
-        expect(screen.getByText(/Target entry price is required/i)).toBeInTheDocument()
-        expect(screen.getByText(/Target quantity is required/i)).toBeInTheDocument()
+        assertFormValidationErrors([
+          'Symbol is required',
+          'Target entry price is required',
+          'Target quantity is required'
+        ])
       })
 
-      expect(screen.getByText('Position Plan')).toBeInTheDocument() // Still on step 1
+      assertStepVisible('Position Plan') // Still on step 1
     })
 
     it('should validate positive numbers for prices and quantities', async () => {
@@ -94,8 +100,10 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.click(nextButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/Target entry price must be positive/i)).toBeInTheDocument()
-        expect(screen.getByText(/Target quantity must be positive/i)).toBeInTheDocument()
+        assertFormValidationErrors([
+          'Target entry price must be positive',
+          'Target quantity must be positive'
+        ])
       })
     })
 
@@ -114,7 +122,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.click(nextButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/Position thesis is required/i)).toBeInTheDocument()
+        assertFormValidationErrors(['Position thesis is required'])
       })
     })
   })
@@ -136,37 +144,34 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.click(nextButton)
 
       await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+        assertStepVisible('Risk Assessment')
       })
     })
 
     it('should display risk calculation based on position plan', () => {
-      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+      assertStepVisible('Risk Assessment')
 
       // Should calculate and display risk metrics
-      expect(screen.getByText(/Total Investment/i)).toBeInTheDocument()
-      expect(screen.getByText(/Maximum Profit/i)).toBeInTheDocument()
-      expect(screen.getByText(/Maximum Loss/i)).toBeInTheDocument()
-      expect(screen.getByText(/Risk\/Reward Ratio/i)).toBeInTheDocument()
-
-      // Check calculated values
-      expect(screen.getByText('$15,000.00')).toBeInTheDocument() // 150 * 100
-      expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Both profit and loss = $1,500
-      expect(screen.getByText('1:1')).toBeInTheDocument()        // 1500/1500
+      assertRiskCalculations({
+        totalInvestment: '15,000.00',
+        maxProfit: '1,500.00',
+        maxLoss: '1,500.00',
+        riskRewardRatio: '1:1'
+      })
     })
 
     it('should allow navigation back to step 1', () => {
       const backButton = screen.getByText('Back to Position Plan')
       fireEvent.click(backButton)
 
-      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+      assertStepVisible('Position Plan')
     })
 
     it('should proceed to confirmation when Next is clicked', () => {
       const nextButton = screen.getByText('Next: Confirmation')
       fireEvent.click(nextButton)
 
-      expect(screen.getByText('Confirmation')).toBeInTheDocument()
+      assertStepVisible('Confirmation')
     })
   })
 
@@ -185,15 +190,15 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
       // Go to step 2
       fireEvent.click(screen.getByText('Next: Risk Assessment'))
-      await waitFor(() => expect(screen.getByText('Risk Assessment')).toBeInTheDocument())
+      await waitFor(() => assertStepVisible('Risk Assessment'))
 
       // Go to step 3
       fireEvent.click(screen.getByText('Next: Confirmation'))
-      await waitFor(() => expect(screen.getByText('Confirmation')).toBeInTheDocument())
+      await waitFor(() => assertStepVisible('Confirmation'))
     })
 
     it('should display position summary for confirmation', () => {
-      expect(screen.getByText('Confirmation')).toBeInTheDocument()
+      assertStepVisible('Confirmation')
 
       // Should show summary of all entered data
       expect(screen.getByText('AAPL')).toBeInTheDocument()
@@ -204,25 +209,20 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should show immutability warning with required checkbox', () => {
-      expect(screen.getByText(/I understand this position plan will be immutable/i)).toBeInTheDocument()
-
-      const immutableCheckbox = screen.getByRole('checkbox', { name: /immutable/i })
-      expect(immutableCheckbox).toBeInTheDocument()
-      expect(immutableCheckbox).not.toBeChecked()
+      assertImmutableConfirmationVisible()
     })
 
     it('should require immutability checkbox before creating position', async () => {
-      const createButton = screen.getByText('Create Position Plan')
-
-      // Should be disabled initially
-      expect(createButton).toBeDisabled()
+      assertImmutableConfirmationVisible()
 
       // Check the immutable checkbox
-      const immutableCheckbox = screen.getByRole('checkbox', { name: /immutable/i })
+      const immutableCheckbox = screen.getByRole('checkbox', {
+        name: /I understand this position plan will be immutable/i
+      })
       fireEvent.click(immutableCheckbox)
 
       // Button should now be enabled
-      expect(createButton).toBeEnabled()
+      assertImmutableConfirmationComplete()
     })
 
     it('should create position and navigate to dashboard when confirmed', async () => {
@@ -257,21 +257,17 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
   describe('Step Navigation', () => {
     it('should display step progress indicator', () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      renderWithRouterAndProps(<PositionCreate />)
 
       const stepIndicator = screen.getByTestId('step-indicator')
       expect(stepIndicator).toBeInTheDocument()
 
       // Should show 3 steps with step 1 active
-      const stepDots = screen.getAllByTestId('step-dot')
-      expect(stepDots).toHaveLength(3)
-      expect(stepDots[0]).toHaveClass('active')
+      assertStepDotsStatus({ active: 0 })
     })
 
     it('should update step indicator as user progresses', async () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      renderWithRouterAndProps(<PositionCreate />)
 
       // Complete step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -284,9 +280,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.click(screen.getByText('Next: Risk Assessment'))
 
       await waitFor(() => {
-        const stepDots = screen.getAllByTestId('step-dot')
-        expect(stepDots[0]).toHaveClass('completed')
-        expect(stepDots[1]).toHaveClass('active')
+        assertStepDotsStatus({ active: 1, completed: [0] })
       })
     })
   })

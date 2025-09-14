@@ -10,6 +10,11 @@ import {
   verifyDashboardPosition
 } from '@/test/integration-helpers'
 import { createIntegrationTestData } from '@/test/data-factories'
+import {
+  assertEmptyState,
+  assertStepVisible,
+  assertFabButtonVisible
+} from '@/test/assertion-helpers'
 
 describe('Integration: Position Dashboard Display Flow', () => {
   let positionService: PositionService
@@ -27,8 +32,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     // Should show EmptyState with "Create Your First Position" button
     await waitFor(() => {
-      expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
-      expect(screen.getByText(/Track your trades, learn from your decisions/)).toBeInTheDocument()
+      assertEmptyState()
     }, { timeout: 2000 })
 
     // 2. ACTION: Click "Create Your First Position" button
@@ -38,7 +42,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     // 3. VERIFY: Navigate to position creation (Step 1)
     await waitFor(() => {
-      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+      assertStepVisible('Position Plan')
       expect(screen.getByText('Create Position')).toBeInTheDocument() // Header title
     })
 
@@ -79,10 +83,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
     expect(screen.getAllByText('TODO')).toHaveLength(2) // Avg Cost and Current are TODOs
 
     // 15. VERIFY: Floating action button is present
-    const fabButtons = screen.getAllByRole('link', { name: '' })
-    const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
-    expect(fabButton).toBeInTheDocument()
-    expect(fabButton).toHaveClass('fixed', 'bottom-24', 'right-4')
+    assertFabButtonVisible()
 
     // 16. INTEGRATION VERIFY: Position was actually saved to IndexedDB
     const savedPositions = await positionService.getAll()

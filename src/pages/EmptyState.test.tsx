@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { EmptyState } from './EmptyState'
 import { renderWithRouter } from '@/test/test-utils'
+import {
+  assertEmptyState,
+  assertTextExists,
+  assertElementVisible,
+  assertMobileResponsive,
+  assertButtonState
+} from '@/test/assertion-helpers'
 
 // Mock react-router-dom
 const mockNavigate = vi.fn()
@@ -20,33 +27,27 @@ describe('EmptyState - Phase 1A: Empty App State', () => {
   })
   it('should display welcome message and description', () => {
     renderWithRouter(<EmptyState />)
-
-    expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
-    expect(screen.getByText(/Track your trades, learn from your decisions/)).toBeInTheDocument()
+    assertEmptyState()
   })
 
   it('should display Create Position button', () => {
     renderWithRouter(<EmptyState />)
-
-    const createButton = screen.getByRole('button', { name: /Create Your First Position/i })
-    expect(createButton).toBeInTheDocument()
+    assertButtonState('Create Your First Position', true)
   })
 
   it('should display key features list', () => {
     renderWithRouter(<EmptyState />)
 
-    expect(screen.getByText(/Immutable trade plans with forced journaling/)).toBeInTheDocument()
-    expect(screen.getByText(/Real-time P&L tracking/)).toBeInTheDocument()
-    expect(screen.getByText(/Plan vs execution analysis for learning/)).toBeInTheDocument()
-    expect(screen.getByText(/Privacy-first with local data storage/)).toBeInTheDocument()
+    assertTextExists(/Immutable trade plans with forced journaling/)
+    assertTextExists(/Real-time P&L tracking/)
+    assertTextExists(/Plan vs execution analysis for learning/)
+    assertTextExists(/Privacy-first with local data storage/)
   })
 
   it('should display trading journal chart icon', () => {
     renderWithRouter(<EmptyState />)
-
-    // Look for icon container
     const iconElement = screen.getByTestId('empty-state-icon')
-    expect(iconElement).toBeInTheDocument()
+    assertElementVisible(iconElement)
   })
 
   it('should navigate to position creation when Create Position button is clicked', () => {
@@ -60,12 +61,7 @@ describe('EmptyState - Phase 1A: Empty App State', () => {
 
   it('should have mobile-first responsive design', () => {
     renderWithRouter(<EmptyState />)
-
-    const container = screen.getByTestId('empty-state-container')
-    expect(container).toBeInTheDocument()
-
-    // Check that container follows mobile-first design
-    expect(container).toHaveClass('max-w-sm', 'mx-auto')
+    assertMobileResponsive('empty-state-container', ['max-w-sm', 'mx-auto'])
   })
 
   it('should display feature checkmarks with proper styling', () => {

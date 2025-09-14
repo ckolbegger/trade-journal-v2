@@ -4,6 +4,15 @@ import { Home } from './Home'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { TEST_POSITIONS, createPosition } from '@/test/data-factories'
 import { renderWithRouter } from '@/test/test-utils'
+import {
+  assertEmptyState,
+  assertPositionInDashboard,
+  assertFabButtonVisible,
+  assertTextExists,
+  assertElementsVisible,
+  assertTextDoesNotExist,
+  assertButtonState
+} from '@/test/assertion-helpers'
 import type { Position } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -37,40 +46,37 @@ describe('Home', () => {
   it('shows EmptyState when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
-      expect(screen.getByTestId('empty-state-container')).toBeInTheDocument()
-      expect(screen.getByTestId('empty-state-icon')).toBeInTheDocument()
+      assertEmptyState()
+      const iconElement = screen.getByTestId('empty-state-icon')
+      assertElementsVisible([iconElement])
     })
   })
 
   it('shows Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
-      expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('Long Stock')).toBeInTheDocument() // At least one has this strategy
+      assertTextExists('Positions')
+      assertPositionInDashboard('AAPL')
+      assertTextExists('Long Stock')
     })
   })
 
   it('shows EmptyState features when no positions', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      expect(screen.getByText('Immutable trade plans with forced journaling')).toBeInTheDocument()
-      expect(screen.getByText('Real-time P&L tracking with FIFO cost basis')).toBeInTheDocument()
-      expect(screen.getByText('Plan vs execution analysis for learning')).toBeInTheDocument()
-      expect(screen.getByText('Privacy-first with local data storage')).toBeInTheDocument()
+      assertTextExists(/Immutable trade plans with forced journaling/)
+      assertTextExists(/Real-time P&L tracking with FIFO cost basis/)
+      assertTextExists(/Plan vs execution analysis for learning/)
+      assertTextExists(/Privacy-first with local data storage/)
 
       const checkmarks = screen.getAllByTestId('feature-checkmark')
       expect(checkmarks).toHaveLength(4)
@@ -81,12 +87,11 @@ describe('Home', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+      assertEmptyState()
+      assertTextDoesNotExist('Loading...')
     })
 
     consoleSpy.mockRestore()
@@ -95,25 +100,20 @@ describe('Home', () => {
   it('shows Create Position button in EmptyState', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Create Your First Position' })).toBeInTheDocument()
+      assertButtonState('Create Your First Position', true)
     })
   })
 
   it('shows floating action button in Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
-      const fabButtons = screen.getAllByRole('link', { name: '' })
-      const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
-      expect(fabButton).toBeInTheDocument()
-      expect(fabButton).toHaveClass('fixed', 'bottom-24', 'right-4')
+      assertFabButtonVisible()
     })
   })
 })
