@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
 import { EmptyState } from './EmptyState'
+import { renderWithRouter } from '@/test/test-utils'
 
 // Mock react-router-dom
 const mockNavigate = vi.fn()
@@ -13,13 +13,6 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-const renderWithRouter = (component: React.ReactElement) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  )
-}
 
 describe('EmptyState - Phase 1A: Empty App State', () => {
   beforeEach(() => {

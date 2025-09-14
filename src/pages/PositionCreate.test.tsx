@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
 import { PositionCreate } from './PositionCreate'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
+import { renderWithRouterAndProps } from '@/test/test-utils'
 import type { PositionService } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -24,17 +25,6 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-const renderWithRouter = (component: React.ReactElement, positionService?: PositionService) => {
-  const { BrowserRouter } = require('react-router-dom')
-  return render(
-    <BrowserRouter>
-      {positionService
-        ? React.cloneElement(component, { positionService } as React.ComponentProps<typeof PositionCreate>)
-        : component
-      }
-    </BrowserRouter>
-  )
-}
 
 describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   let mockPositionService: any
@@ -50,7 +40,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 1: Position Plan', () => {
     it('should display position plan form with all required fields', () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       expect(screen.getByText('Position Plan')).toBeInTheDocument()
 
@@ -66,7 +56,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should only show "Long Stock" as strategy type option in Phase 1A', () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       const strategySelect = screen.getByLabelText(/Strategy Type/i)
       expect(strategySelect).toBeInTheDocument()
@@ -77,7 +67,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should validate required fields before proceeding to step 2', async () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       const nextButton = screen.getByText('Next: Risk Assessment')
       fireEvent.click(nextButton)
@@ -94,7 +84,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should validate positive numbers for prices and quantities', async () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       // Fill in negative values
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
@@ -111,7 +101,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should require non-empty position thesis', async () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       // Fill required fields but leave thesis empty
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -133,7 +123,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     beforeEach(async () => {
       // Fill out step 1 completely first
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
@@ -183,7 +173,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 3: Confirmation', () => {
     beforeEach(async () => {
       // Navigate to step 3
-      renderWithRouter(<PositionCreate />, mockPositionService)
+      renderWithRouterAndProps(<PositionCreate />, { positionService: mockPositionService })
 
       // Fill step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -268,7 +258,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step Navigation', () => {
     it('should display step progress indicator', () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       const stepIndicator = screen.getByTestId('step-indicator')
       expect(stepIndicator).toBeInTheDocument()
@@ -281,7 +271,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should update step indicator as user progresses', async () => {
       render
-    renderWithRouter(<PositionCreate />)
+    renderWithRouterAndProps(<PositionCreate />)
 
       // Complete step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })

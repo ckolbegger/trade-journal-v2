@@ -3,6 +3,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Home } from './Home'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { TEST_POSITIONS, createPosition } from '@/test/data-factories'
+import { renderWithRouter } from '@/test/test-utils'
 import type { Position } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -14,14 +15,6 @@ vi.mock('@/lib/position', async () => {
   }
 })
 
-const renderWithRouter = (component: React.ReactElement) => {
-  const { BrowserRouter } = require('react-router-dom')
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  )
-}
 
 describe('Home', () => {
   let mockPositionService: any
