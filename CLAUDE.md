@@ -102,7 +102,16 @@ The application uses a **Position vs Trade separation architecture** with **trad
 - Clean separation between position planning and trade execution
 
 ### Testing Approach
-No specific testing framework has been established yet. Check for package.json or other config files to determine testing approach when implementing tests.
+Uses Vitest + React Testing Library + fake-indexeddb for comprehensive testing coverage.
+
+**Key Testing Principles:**
+- **Test-Driven Development (TDD)**: Write failing tests first, then implement code to pass
+- **Integration Tests**: Test complete user journeys end-to-end without mocks
+- **Element Visibility Validation**: Always verify elements are visible before interaction in tests
+  - Use `expect(element).toBeVisible()` before clicking/interacting with elements
+  - Catches layout conflicts, CSS hiding, and positioning issues
+  - Example: `expect(nextButton).toBeVisible(); fireEvent.click(nextButton)`
+- **Real Data Persistence**: Integration tests use actual IndexedDB (via fake-indexeddb) for realistic testing
 
 ### Mockups and Design
 - **All mockups must be stored in `/mockups` directory structure**

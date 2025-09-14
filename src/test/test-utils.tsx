@@ -16,3 +16,10 @@ const customRender = (
 // Re-export everything
 export * from '@testing-library/react'
 export { customRender as render }
+
+// Helper function to click visible elements with validation
+export const clickVisibleElement = async (element: HTMLElement, user: ReturnType<typeof import('@testing-library/user-event').default.setup>) => {
+  const { expect } = await import('vitest')
+  expect(element).toBeVisible()
+  await user.click(element)
+}
