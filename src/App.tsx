@@ -1,18 +1,22 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { EmptyState } from '@/pages/EmptyState'
+import { PositionCreate } from '@/pages/PositionCreate'
 import { ComingSoon } from '@/pages/ComingSoon'
 
 function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<EmptyState />} />
-          <Route path="/journal" element={<ComingSoon page="Journal" />} />
-          <Route path="/settings" element={<ComingSoon page="Settings" />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* Position Create has its own layout (header + bottom actions) */}
+        <Route path="/position/create" element={<PositionCreate />} />
+
+        {/* Other routes use the main Layout with bottom navigation */}
+        <Route path="/" element={<Layout><EmptyState /></Layout>} />
+        <Route path="/dashboard" element={<Layout><ComingSoon page="Position Dashboard" /></Layout>} />
+        <Route path="/journal" element={<Layout><ComingSoon page="Journal" /></Layout>} />
+        <Route path="/settings" element={<Layout><ComingSoon page="Settings" /></Layout>} />
+      </Routes>
     </Router>
   )
 }

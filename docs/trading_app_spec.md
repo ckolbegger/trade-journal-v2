@@ -384,7 +384,7 @@ This architecture scales from simple stock positions to complex multi-leg option
 - Visual charts and graphs for analysis
 
 ### Security & Privacy
-- Local data storage (no cloud requirement)
+- IndexedDB data storage (no cloud requirement)
 - Data backup and export functionality
 - Privacy-focused design (standalone tool)
 

@@ -1,7 +1,10 @@
 import { BarChart3, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { useNavigate } from 'react-router-dom'
 
 export function EmptyState() {
+  const navigate = useNavigate()
+
   const features = [
     "Immutable trade plans with forced journaling",
     "Real-time P&L tracking with FIFO cost basis",
@@ -9,10 +12,20 @@ export function EmptyState() {
     "Privacy-first with local data storage"
   ]
 
+  const handleCreatePosition = () => {
+    navigate('/position/create')
+  }
+
   return (
-    <div className="text-center px-5 py-15 flex flex-col items-center justify-center min-h-[calc(100vh-120px)]">
+    <div
+      data-testid="empty-state-container"
+      className="text-center px-5 py-15 flex flex-col items-center justify-center min-h-[calc(100vh-120px)] max-w-sm mx-auto"
+    >
       {/* Empty Icon */}
-      <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6 text-gray-400">
+      <div
+        data-testid="empty-state-icon"
+        className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-6 text-gray-400"
+      >
         <BarChart3 className="w-8 h-8" />
       </div>
 
@@ -29,7 +42,7 @@ export function EmptyState() {
       {/* CTA Button */}
       <Button
         className="w-full max-w-[280px] h-12 text-base font-semibold bg-blue-600 hover:bg-blue-500"
-        onClick={() => alert('Navigate to Position Creation Flow')}
+        onClick={handleCreatePosition}
       >
         Create Your First Position
       </Button>
@@ -38,7 +51,10 @@ export function EmptyState() {
       <div className="mt-10 text-left max-w-[280px] w-full">
         {features.map((feature, index) => (
           <div key={index} className="flex items-start mb-4 text-sm text-gray-500">
-            <div className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-0.5">
+            <div
+              data-testid="feature-checkmark"
+              className="w-5 h-5 bg-green-100 text-green-600 rounded-full flex items-center justify-center mr-3 flex-shrink-0 mt-0.5"
+            >
               <Check className="w-3 h-3" />
             </div>
             <div>{feature}</div>
