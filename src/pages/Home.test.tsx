@@ -1,0 +1,132 @@
+import { render, screen, waitFor } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { Home } from './Home'
+import { PositionService } from '@/lib/position'
+import type { Position } from '@/lib/position'
+
+// Mock the PositionService
+vi.mock('@/lib/position', async () => {
+  const actual = await vi.importActual('@/lib/position')
+  return {
+    ...actual,
+    PositionService: vi.fn()
+  }
+})
+
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(<BrowserRouter>{component}</BrowserRouter>)
+}
+
+describe('Home', () => {
+  let mockPositionService: any
+  let mockPositions: Position[]
+
+  beforeEach(() => {
+    mockPositions = [
+      {
+        id: '1',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150,
+        target_quantity: 100,
+        profit_target: 170,
+        stop_loss: 140,
+        position_thesis: 'Strong earnings expected',
+        created_date: new Date('2024-01-15'),
+        status: 'planned'
+      }
+    ]
+
+    mockPositionService = {
+      getAll: vi.fn()
+    }
+
+    // @ts-ignore
+    PositionService.mockImplementation(() => mockPositionService)
+  })
+
+  it('shows loading state initially', () => {
+    mockPositionService.getAll.mockResolvedValue(mockPositions)
+    renderWithRouter(<Home />)
+
+    expect(screen.getByText('Loading...')).toBeInTheDocument()
+  })
+
+  it('shows EmptyState when no positions exist', async () => {
+    mockPositionService.getAll.mockResolvedValue([])
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
+      expect(screen.getByTestId('empty-state-container')).toBeInTheDocument()
+      expect(screen.getByTestId('empty-state-icon')).toBeInTheDocument()
+    })
+  })
+
+  it('shows Dashboard when positions exist', async () => {
+    mockPositionService.getAll.mockResolvedValue(mockPositions)
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
+      expect(screen.getByText('AAPL')).toBeInTheDocument()
+      expect(screen.getByText('Long Stock')).toBeInTheDocument() // At least one has this strategy
+    })
+  })
+
+  it('shows EmptyState features when no positions', async () => {
+    mockPositionService.getAll.mockResolvedValue([])
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Immutable trade plans with forced journaling')).toBeInTheDocument()
+      expect(screen.getByText('Real-time P&L tracking with FIFO cost basis')).toBeInTheDocument()
+      expect(screen.getByText('Plan vs execution analysis for learning')).toBeInTheDocument()
+      expect(screen.getByText('Privacy-first with local data storage')).toBeInTheDocument()
+
+      const checkmarks = screen.getAllByTestId('feature-checkmark')
+      expect(checkmarks).toHaveLength(4)
+    })
+  })
+
+  it('handles error when checking for positions', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+    })
+
+    consoleSpy.mockRestore()
+  })
+
+  it('shows Create Position button in EmptyState', async () => {
+    mockPositionService.getAll.mockResolvedValue([])
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Create Your First Position' })).toBeInTheDocument()
+    })
+  })
+
+  it('shows floating action button in Dashboard when positions exist', async () => {
+    mockPositionService.getAll.mockResolvedValue(mockPositions)
+
+    renderWithRouter(<Home />)
+
+    await waitFor(() => {
+      const fabButtons = screen.getAllByRole('link', { name: '' })
+      const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
+      expect(fabButton).toBeInTheDocument()
+      expect(fabButton).toHaveClass('fixed', 'bottom-24', 'right-4')
+    })
+  })
+})

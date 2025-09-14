@@ -27,11 +27,18 @@ interface ValidationErrors {
   position_thesis?: string
 }
 
-export function PositionCreate() {
+interface PositionCreateProps {
+  positionService?: PositionService
+}
+
+export function PositionCreate({ positionService: injectedPositionService }: PositionCreateProps = {}) {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
+
+  // Use injected service or create default one
+  const positionService = injectedPositionService || new PositionService()
 
   const [formData, setFormData] = useState<PositionFormData>({
     symbol: '',
@@ -129,8 +136,6 @@ export function PositionCreate() {
 
   const handleCreatePosition = async () => {
     if (!immutableConfirmed) return
-
-    const positionService = new PositionService()
 
     const position: Position = {
       id: `pos-${Date.now()}`,

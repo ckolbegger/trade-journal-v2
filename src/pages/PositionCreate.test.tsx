@@ -1,11 +1,32 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import React from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { PositionCreate } from './PositionCreate'
 import { PositionService } from '@/lib/position'
 
 // Mock the PositionService
-vi.mock('@/lib/position')
+vi.mock('@/lib/position', async () => {
+  const actual = await vi.importActual('@/lib/position')
+  const createMockPositionService = () => ({
+    create: vi.fn(),
+    getById: vi.fn(),
+    getAll: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    clearAll: vi.fn(),
+    getDB: vi.fn(),
+    validatePosition: vi.fn(),
+    dbName: 'TradingJournalDB',
+    version: 1,
+    positionStore: 'positions'
+  })
+
+  return {
+    ...actual,
+    PositionService: vi.fn().mockImplementation(createMockPositionService)
+  }
+})
 
 // Mock react-router-dom
 const mockNavigate = vi.fn()
@@ -17,37 +38,25 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
-const renderWithRouter = (component: React.ReactElement) => {
+const renderWithRouter = (component: React.ReactElement, positionService?: PositionService) => {
   return render(
     <BrowserRouter>
-      {component}
+      {positionService
+        ? React.cloneElement(component, { positionService } as React.ComponentProps<typeof PositionCreate>)
+        : component
+      }
     </BrowserRouter>
   )
 }
 
 describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
-  let mockPositionService: {
-    create: ReturnType<typeof vi.fn>
-    getById: ReturnType<typeof vi.fn>
-    getAll: ReturnType<typeof vi.fn>
-    update: ReturnType<typeof vi.fn>
-    delete: ReturnType<typeof vi.fn>
-    clearAll: ReturnType<typeof vi.fn>
-  }
+  let mockPositionService: any
 
   beforeEach(() => {
     vi.clearAllMocks()
 
-    mockPositionService = {
-      create: vi.fn(),
-      getById: vi.fn(),
-      getAll: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-      clearAll: vi.fn(),
-    }
-
-    vi.mocked(PositionService).mockImplementation(() => mockPositionService)
+    // Get the mocked instance
+    mockPositionService = new PositionService()
   })
 
   describe('Step 1: Position Plan', () => {
@@ -180,7 +189,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 3: Confirmation', () => {
     beforeEach(async () => {
       // Navigate to step 3
-      renderWithRouter(<PositionCreate />)
+      renderWithRouter(<PositionCreate />, mockPositionService)
 
       // Fill step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })

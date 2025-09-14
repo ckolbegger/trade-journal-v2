@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
-import { EmptyState } from '@/pages/EmptyState'
+import { Home } from '@/pages/Home'
 import { PositionCreate } from '@/pages/PositionCreate'
 import { ComingSoon } from '@/pages/ComingSoon'
 
@@ -12,8 +12,8 @@ function App() {
         <Route path="/position/create" element={<PositionCreate />} />
 
         {/* Other routes use the main Layout with bottom navigation */}
-        <Route path="/" element={<Layout><EmptyState /></Layout>} />
-        <Route path="/dashboard" element={<Layout><ComingSoon page="Position Dashboard" /></Layout>} />
+        <Route path="/" element={<Layout><Home /></Layout>} />
+        <Route path="/dashboard" element={<Layout><Home /></Layout>} />
         <Route path="/journal" element={<Layout><ComingSoon page="Journal" /></Layout>} />
         <Route path="/settings" element={<Layout><ComingSoon page="Settings" /></Layout>} />
       </Routes>

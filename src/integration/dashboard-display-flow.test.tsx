@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 
-describe('Integration: Position Creation Flow', () => {
+describe('Integration: Position Dashboard Display Flow', () => {
   let positionService: PositionService
 
   beforeEach(async () => {
@@ -12,12 +12,12 @@ describe('Integration: Position Creation Flow', () => {
     await positionService.clearAll()
   })
 
-  it('should complete full user journey: Empty State → Position Creation → Save to IndexedDB', async () => {
-    // Ensure we start at the root route and render the full app
+  it('should complete full user journey: Empty State → Position Creation → Dashboard Display', async () => {
+    // 1. VERIFY: Start at empty state with Dashboard routing
     window.history.pushState({}, 'Test', '/')
     render(<App />)
 
-    // 1. VERIFY: Start at empty state
+    // Should show EmptyState with "Create Your First Position" button
     await waitFor(() => {
       expect(screen.getByText('Start Your Trading Journey')).toBeInTheDocument()
       expect(screen.getByText(/Track your trades, learn from your decisions/)).toBeInTheDocument()
@@ -96,14 +96,26 @@ describe('Integration: Position Creation Flow', () => {
     expect(createPositionButton).toBeVisible()
     fireEvent.click(createPositionButton)
 
-    // 13. VERIFY: Navigate to dashboard with created position
+    // 13. VERIFY: Navigate to Dashboard with created position
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
       expect(screen.getByText('AAPL')).toBeInTheDocument()
       expect(screen.getByText('Long Stock')).toBeInTheDocument()
     }, { timeout: 3000 })
 
-    // 14. INTEGRATION VERIFY: Position was actually saved to IndexedDB
+    // 14. VERIFY: Dashboard displays correct position information
+    expect(screen.getByText('No trades executed')).toBeInTheDocument()
+    expect(screen.getByText('TODO: Current P&L')).toBeInTheDocument()
+    expect(screen.getByText('$135.00')).toBeInTheDocument() // Stop Loss
+    expect(screen.getAllByText('TODO')).toHaveLength(2) // Avg Cost and Current are TODOs
+
+    // 15. VERIFY: Floating action button is present
+    const fabButtons = screen.getAllByRole('link', { name: '' })
+    const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
+    expect(fabButton).toBeInTheDocument()
+    expect(fabButton).toHaveClass('fixed', 'bottom-24', 'right-4')
+
+    // 16. INTEGRATION VERIFY: Position was actually saved to IndexedDB
     const savedPositions = await positionService.getAll()
     expect(savedPositions).toHaveLength(1)
 
@@ -119,123 +131,101 @@ describe('Integration: Position Creation Flow', () => {
     expect(savedPosition.created_date).toBeInstanceOf(Date)
     expect(savedPosition.id).toMatch(/^pos-\d+$/) // Generated ID format
 
-    // 15. BONUS: Test position retrieval by ID
+    // 17. BONUS: Test position retrieval by ID
     const retrievedPosition = await positionService.getById(savedPosition.id)
     expect(retrievedPosition).toEqual(savedPosition)
   })
 
-  it('should handle form validation during complete flow', async () => {
-    // Ensure we start at the root route
+  it('should show Dashboard with multiple positions', async () => {
+    // Create two positions directly in IndexedDB (matching how PositionCreate creates them)
+    await positionService.create({
+      id: `pos-${Date.now()}`,
+      symbol: 'AAPL',
+      strategy_type: 'Long Stock',
+      target_entry_price: 150,
+      target_quantity: 100,
+      profit_target: 165,
+      stop_loss: 135,
+      position_thesis: 'First position thesis',
+      created_date: new Date(),
+      status: 'planned'
+    })
+
+    await positionService.create({
+      id: `pos-${Date.now() + 1}`,
+      symbol: 'MSFT',
+      strategy_type: 'Long Stock',
+      target_entry_price: 300,
+      target_quantity: 50,
+      profit_target: 330,
+      stop_loss: 270,
+      position_thesis: 'Second position thesis',
+      created_date: new Date(),
+      status: 'planned'
+    })
+
+    // Navigate to home
     window.history.pushState({}, 'Test', '/')
     render(<App />)
 
-    // Navigate to position creation
+    // Should show Dashboard with both positions
     await waitFor(() => {
-      const createButton = screen.getByRole('button', { name: /Create Your First Position/i })
-      expect(createButton).toBeVisible()
-      fireEvent.click(createButton)
-    })
+      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
+      expect(screen.getByText('AAPL')).toBeInTheDocument()
+      expect(screen.getByText('MSFT')).toBeInTheDocument()
+    }, { timeout: 2000 })
 
-    await waitFor(() => {
-      expect(screen.getByText('Position Plan')).toBeInTheDocument()
-    })
-
-    // Try to proceed without filling required fields
-    const nextButton = screen.getByText('Next: Risk Assessment')
-    expect(nextButton).toBeVisible()
-    fireEvent.click(nextButton)
-
-    // Verify validation errors appear and we stay on Step 1
-    await waitFor(() => {
-      expect(screen.getByText(/Symbol is required/i)).toBeInTheDocument()
-      expect(screen.getByText(/Target entry price is required/i)).toBeInTheDocument()
-      expect(screen.getByText(/Target quantity is required/i)).toBeInTheDocument()
-    })
-
-    expect(screen.getByText('Position Plan')).toBeInTheDocument() // Still on step 1
-
-    // Fill in invalid data
-    fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
-    fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '0' } })
-
-    const nextButton2 = screen.getByText('Next: Risk Assessment')
-    expect(nextButton2).toBeVisible()
-    fireEvent.click(nextButton2)
-
-    // Verify specific validation messages
-    await waitFor(() => {
-      expect(screen.getByText(/Target entry price must be positive/i)).toBeInTheDocument()
-      expect(screen.getByText(/Target quantity must be positive/i)).toBeInTheDocument()
-    })
-
-    // No positions should be saved due to validation failure
-    const savedPositions = await positionService.getAll()
-    expect(savedPositions).toHaveLength(0)
+    // Verify both positions are displayed with correct data
+    expect(screen.getAllByText('Long Stock')).toHaveLength(2)
+    expect(screen.getAllByText('No trades executed')).toHaveLength(2)
+    expect(screen.getByText('$135.00')).toBeInTheDocument() // AAPL stop loss
+    expect(screen.getByText('$270.00')).toBeInTheDocument() // MSFT stop loss
+    expect(screen.getAllByText('TODO')).toHaveLength(4) // 2 positions × 2 TODO fields each
   })
 
-  it('should allow navigation back through steps', async () => {
-    // Ensure we start at the root route
+  it('should handle Dashboard navigation and maintain position data', async () => {
+    // Create a position first (matching how PositionCreate creates them)
+    await positionService.create({
+      id: `pos-${Date.now()}`,
+      symbol: 'TSLA',
+      strategy_type: 'Long Stock',
+      target_entry_price: 200,
+      target_quantity: 75,
+      profit_target: 220,
+      stop_loss: 180,
+      position_thesis: 'Test navigation thesis',
+      created_date: new Date(),
+      status: 'planned'
+    })
+
+    // Navigate to home
     window.history.pushState({}, 'Test', '/')
     render(<App />)
 
-    // Navigate to position creation and fill Step 1
+    // Verify Dashboard shows the position
     await waitFor(() => {
-      const createButton = screen.getByRole('button', { name: /Create Your First Position/i })
-      expect(createButton).toBeVisible()
-      fireEvent.click(createButton)
+      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
+      expect(screen.getByText('TSLA')).toBeInTheDocument()
     })
 
-    await waitFor(() => {
-      expect(screen.getByText('Position Plan')).toBeInTheDocument()
-    })
+    // Navigate to position creation using floating action button
+    const fabButtons = screen.getAllByRole('link', { name: '' })
+    const fabButton = fabButtons.find(button => button.classList.contains('fixed'))
+    expect(fabButton).toBeVisible()
+    fireEvent.click(fabButton)
 
-    // Fill valid data
-    fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'MSFT' } })
-    fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '300' } })
-    fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '50' } })
-    fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '330' } })
-    fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '270' } })
-    fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Cloud growth' } })
-
-    // Go to Step 2
-    const nextToStep2Button = screen.getByText('Next: Risk Assessment')
-    expect(nextToStep2Button).toBeVisible()
-    fireEvent.click(nextToStep2Button)
-
-    await waitFor(() => {
-      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-    })
-
-    // Go to Step 3
-    const nextToStep3Button = screen.getByText('Next: Confirmation')
-    expect(nextToStep3Button).toBeVisible()
-    fireEvent.click(nextToStep3Button)
-
-    await waitFor(() => {
-      expect(screen.getByText('Confirmation')).toBeInTheDocument()
-    })
-
-    // Go back to Step 2
-    const backToStep2Button = screen.getByText('Back to Risk Assessment')
-    expect(backToStep2Button).toBeVisible()
-    fireEvent.click(backToStep2Button)
-
-    await waitFor(() => {
-      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-    })
-
-    // Go back to Step 1
-    const backToStep1Button = screen.getByText('Back to Position Plan')
-    expect(backToStep1Button).toBeVisible()
-    fireEvent.click(backToStep1Button)
-
+    // Verify position creation page loads
     await waitFor(() => {
       expect(screen.getByText('Position Plan')).toBeInTheDocument()
     })
 
-    // Verify data is preserved
-    expect(screen.getByDisplayValue('MSFT')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('300')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Cloud growth')).toBeInTheDocument()
+    // Navigate back using browser back button (simulates user behavior)
+    window.history.back()
+
+    // Should still show the Dashboard with the same position
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
+      expect(screen.getByText('TSLA')).toBeInTheDocument()
+    })
   })
 })
