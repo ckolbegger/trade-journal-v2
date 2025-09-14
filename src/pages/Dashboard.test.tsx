@@ -1,21 +1,25 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Dashboard } from './Dashboard'
-import { PositionService } from '@/lib/position'
+import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import type { Position } from '@/lib/position'
 
-// Mock the PositionService
+// Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
   const actual = await vi.importActual('@/lib/position')
   return {
     ...actual,
-    PositionService: vi.fn()
+    PositionService: vi.fn().mockImplementation(() => mockPositionServiceModule)
   }
 })
 
 const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>)
+  const { BrowserRouter } = require('react-router-dom')
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  )
 }
 
 describe('Dashboard', () => {
@@ -50,16 +54,13 @@ describe('Dashboard', () => {
       }
     ]
 
-    mockPositionService = {
-      getAll: vi.fn()
-    }
-
-    // @ts-ignore
-    PositionService.mockImplementation(() => mockPositionService)
+    mockPositionService = mockPositionServiceModule
+    resetMockService(mockPositionService)
   })
 
   it('shows loading state initially', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
+    render
     renderWithRouter(<Dashboard />)
 
     expect(screen.getByText('Loading positions...')).toBeInTheDocument()
@@ -68,6 +69,7 @@ describe('Dashboard', () => {
   it('shows empty state when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -80,6 +82,7 @@ describe('Dashboard', () => {
   it('displays positions when they exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -94,6 +97,7 @@ describe('Dashboard', () => {
   it('shows formatted currency values', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -105,6 +109,7 @@ describe('Dashboard', () => {
   it('displays TODO placeholders for unimplemented features', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -116,6 +121,7 @@ describe('Dashboard', () => {
   it('shows formatted dates', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -132,6 +138,7 @@ describe('Dashboard', () => {
   it('displays planned status badges', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -143,6 +150,7 @@ describe('Dashboard', () => {
   it('shows floating action button', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {
@@ -157,6 +165,7 @@ describe('Dashboard', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
+    render
     renderWithRouter(<Dashboard />)
 
     await waitFor(() => {

@@ -1,21 +1,25 @@
 import { render, screen, waitFor } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Home } from './Home'
-import { PositionService } from '@/lib/position'
+import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import type { Position } from '@/lib/position'
 
-// Mock the PositionService
+// Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
   const actual = await vi.importActual('@/lib/position')
   return {
     ...actual,
-    PositionService: vi.fn()
+    PositionService: vi.fn().mockImplementation(() => mockPositionServiceModule)
   }
 })
 
 const renderWithRouter = (component: React.ReactElement) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>)
+  const { BrowserRouter } = require('react-router-dom')
+  return render(
+    <BrowserRouter>
+      {component}
+    </BrowserRouter>
+  )
 }
 
 describe('Home', () => {
@@ -38,16 +42,13 @@ describe('Home', () => {
       }
     ]
 
-    mockPositionService = {
-      getAll: vi.fn()
-    }
-
-    // @ts-ignore
-    PositionService.mockImplementation(() => mockPositionService)
+    mockPositionService = mockPositionServiceModule
+    resetMockService(mockPositionService)
   })
 
   it('shows loading state initially', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
+    render
     renderWithRouter(<Home />)
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
@@ -56,6 +57,7 @@ describe('Home', () => {
   it('shows EmptyState when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
@@ -68,6 +70,7 @@ describe('Home', () => {
   it('shows Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
@@ -80,6 +83,7 @@ describe('Home', () => {
   it('shows EmptyState features when no positions', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
@@ -97,6 +101,7 @@ describe('Home', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
@@ -110,6 +115,7 @@ describe('Home', () => {
   it('shows Create Position button in EmptyState', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {
@@ -120,6 +126,7 @@ describe('Home', () => {
   it('shows floating action button in Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
+    render
     renderWithRouter(<Home />)
 
     await waitFor(() => {

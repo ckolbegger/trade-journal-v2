@@ -1,30 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import React from 'react'
-import { BrowserRouter } from 'react-router-dom'
 import { PositionCreate } from './PositionCreate'
-import { PositionService } from '@/lib/position'
+import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
+import type { PositionService } from '@/lib/position'
 
-// Mock the PositionService
+// Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
   const actual = await vi.importActual('@/lib/position')
-  const createMockPositionService = () => ({
-    create: vi.fn(),
-    getById: vi.fn(),
-    getAll: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    clearAll: vi.fn(),
-    getDB: vi.fn(),
-    validatePosition: vi.fn(),
-    dbName: 'TradingJournalDB',
-    version: 1,
-    positionStore: 'positions'
-  })
-
   return {
     ...actual,
-    PositionService: vi.fn().mockImplementation(createMockPositionService)
+    PositionService: vi.fn().mockImplementation(() => mockPositionServiceModule)
   }
 })
 
@@ -39,6 +25,7 @@ vi.mock('react-router-dom', async () => {
 })
 
 const renderWithRouter = (component: React.ReactElement, positionService?: PositionService) => {
+  const { BrowserRouter } = require('react-router-dom')
   return render(
     <BrowserRouter>
       {positionService
@@ -55,13 +42,15 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
-    // Get the mocked instance
-    mockPositionService = new PositionService()
+    // Use the mock module directly
+    mockPositionService = mockPositionServiceModule
+    resetMockService(mockPositionService)
   })
 
   describe('Step 1: Position Plan', () => {
     it('should display position plan form with all required fields', () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       expect(screen.getByText('Position Plan')).toBeInTheDocument()
 
@@ -76,7 +65,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should only show "Long Stock" as strategy type option in Phase 1A', () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       const strategySelect = screen.getByLabelText(/Strategy Type/i)
       expect(strategySelect).toBeInTheDocument()
@@ -86,7 +76,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should validate required fields before proceeding to step 2', async () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       const nextButton = screen.getByText('Next: Risk Assessment')
       fireEvent.click(nextButton)
@@ -102,7 +93,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should validate positive numbers for prices and quantities', async () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       // Fill in negative values
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
@@ -118,7 +110,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should require non-empty position thesis', async () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       // Fill required fields but leave thesis empty
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -139,7 +132,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 2: Risk Assessment', () => {
     beforeEach(async () => {
       // Fill out step 1 completely first
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
@@ -273,7 +267,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
   describe('Step Navigation', () => {
     it('should display step progress indicator', () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       const stepIndicator = screen.getByTestId('step-indicator')
       expect(stepIndicator).toBeInTheDocument()
@@ -285,7 +280,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should update step indicator as user progresses', async () => {
-      renderWithRouter(<PositionCreate />)
+      render
+    renderWithRouter(<PositionCreate />)
 
       // Complete step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })

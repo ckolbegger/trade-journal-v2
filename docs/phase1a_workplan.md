@@ -30,6 +30,19 @@
 
 ---
 
+## 🛠️ **Test Refactoring Initiative** (September 14, 2025)
+
+**Objective**: Reduce code duplication by ~410 lines and improve test maintainability for future development.
+
+**Refactoring Tasks:**
+- 🔄 **Refactor #1**: Create centralized PositionService mock factory (~120 line reduction)
+- 🔄 **Refactor #2**: Extract integration test helper functions (~60 line reduction)
+- 🔄 **Refactor #3**: Create test data factories (~140 line reduction)
+- 🔄 **Refactor #4**: Consolidate render helper functions (~60 line reduction)
+- 🔄 **Refactor #5**: Create custom assertion helpers (~30 line reduction)
+
+---
+
 ## 1. Create Basic Position Planning (No Trades Yet) ✅ **COMPLETED**
 
 **Description**: Build end-to-end position creation from empty state through position plan creation to basic dashboard display. Foundation for all other functionality.
