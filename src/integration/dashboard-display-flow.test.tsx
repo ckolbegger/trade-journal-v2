@@ -2,6 +2,13 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
+import {
+  fillPositionForm,
+  proceedToRiskAssessment,
+  proceedToConfirmation,
+  completePositionCreationFlow,
+  verifyDashboardPosition
+} from '@/test/integration-helpers'
 
 describe('Integration: Position Dashboard Display Flow', () => {
   let positionService: PositionService
@@ -35,48 +42,13 @@ describe('Integration: Position Dashboard Display Flow', () => {
     })
 
     // 4. ACTION: Fill out Step 1 - Position Plan
-    fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
-    fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150.00' } })
-    fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-    fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165.00' } })
-    fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135.00' } })
-    fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
-      target: { value: 'Integration test: Bullish on Q4 earnings and iPhone cycle' }
-    })
-
-    // Verify strategy type is locked to "Long Stock"
-    const strategyInput = screen.getByLabelText(/Strategy Type/i)
-    expect(strategyInput).toHaveValue('Long Stock')
-    expect(strategyInput).toHaveAttribute('readonly')
+    await fillPositionForm()
 
     // 5. ACTION: Proceed to Step 2 - Risk Assessment
-    const nextButton = screen.getByText('Next: Risk Assessment')
-    expect(nextButton).toBeVisible()
-    fireEvent.click(nextButton)
-
-    // 6. VERIFY: Step 2 displays risk calculations
-    await waitFor(() => {
-      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-    })
-
-    expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
-    expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
-    expect(screen.getByText('1:1')).toBeInTheDocument()        // Risk/reward ratio
+    await proceedToRiskAssessment()
 
     // 7. ACTION: Proceed to Step 3 - Confirmation
-    const nextToConfirmationButton = screen.getByText('Next: Confirmation')
-    expect(nextToConfirmationButton).toBeVisible()
-    fireEvent.click(nextToConfirmationButton)
-
-    // 8. VERIFY: Step 3 displays position summary
-    await waitFor(() => {
-      expect(screen.getByText('Confirmation')).toBeInTheDocument()
-    })
-
-    expect(screen.getByText('AAPL')).toBeInTheDocument()
-    expect(screen.getByText('Long Stock')).toBeInTheDocument()
-    expect(screen.getByText('$150.00')).toBeInTheDocument()
-    expect(screen.getByText('100 shares')).toBeInTheDocument()
+    await proceedToConfirmation()
 
     // 9. VERIFY: Immutable confirmation checkbox is required
     const createPositionButton = screen.getByText('Create Position Plan')
@@ -97,11 +69,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
     fireEvent.click(createPositionButton)
 
     // 13. VERIFY: Navigate to Dashboard with created position
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
-      expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('Long Stock')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    await verifyDashboardPosition()
 
     // 14. VERIFY: Dashboard displays correct position information
     expect(screen.getByText('No trades executed')).toBeInTheDocument()
