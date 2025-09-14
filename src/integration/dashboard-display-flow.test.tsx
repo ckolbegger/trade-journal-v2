@@ -9,6 +9,7 @@ import {
   completePositionCreationFlow,
   verifyDashboardPosition
 } from '@/test/integration-helpers'
+import { createIntegrationTestData } from '@/test/data-factories'
 
 describe('Integration: Position Dashboard Display Flow', () => {
   let positionService: PositionService
@@ -105,32 +106,10 @@ describe('Integration: Position Dashboard Display Flow', () => {
   })
 
   it('should show Dashboard with multiple positions', async () => {
-    // Create two positions directly in IndexedDB (matching how PositionCreate creates them)
-    await positionService.create({
-      id: `pos-${Date.now()}`,
-      symbol: 'AAPL',
-      strategy_type: 'Long Stock',
-      target_entry_price: 150,
-      target_quantity: 100,
-      profit_target: 165,
-      stop_loss: 135,
-      position_thesis: 'First position thesis',
-      created_date: new Date(),
-      status: 'planned'
-    })
-
-    await positionService.create({
-      id: `pos-${Date.now() + 1}`,
-      symbol: 'MSFT',
-      strategy_type: 'Long Stock',
-      target_entry_price: 300,
-      target_quantity: 50,
-      profit_target: 330,
-      stop_loss: 270,
-      position_thesis: 'Second position thesis',
-      created_date: new Date(),
-      status: 'planned'
-    })
+    // Create two positions using data factory
+    const testData = createIntegrationTestData()
+    await positionService.create(testData.multiple[0])
+    await positionService.create(testData.multiple[1])
 
     // Navigate to home
     window.history.pushState({}, 'Test', '/')
@@ -152,19 +131,9 @@ describe('Integration: Position Dashboard Display Flow', () => {
   })
 
   it('should handle Dashboard navigation and maintain position data', async () => {
-    // Create a position first (matching how PositionCreate creates them)
-    await positionService.create({
-      id: `pos-${Date.now()}`,
-      symbol: 'TSLA',
-      strategy_type: 'Long Stock',
-      target_entry_price: 200,
-      target_quantity: 75,
-      profit_target: 220,
-      stop_loss: 180,
-      position_thesis: 'Test navigation thesis',
-      created_date: new Date(),
-      status: 'planned'
-    })
+    // Create a position using data factory
+    const testData = createIntegrationTestData()
+    await positionService.create(testData.navigation)
 
     // Navigate to home
     window.history.pushState({}, 'Test', '/')

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Home } from './Home'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
+import { TEST_POSITIONS, createPosition } from '@/test/data-factories'
 import type { Position } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
@@ -27,21 +28,7 @@ describe('Home', () => {
   let mockPositions: Position[]
 
   beforeEach(() => {
-    mockPositions = [
-      {
-        id: '1',
-        symbol: 'AAPL',
-        strategy_type: 'Long Stock',
-        target_entry_price: 150,
-        target_quantity: 100,
-        profit_target: 170,
-        stop_loss: 140,
-        position_thesis: 'Strong earnings expected',
-        created_date: new Date('2024-01-15'),
-        status: 'planned'
-      }
-    ]
-
+    mockPositions = [TEST_POSITIONS.single]
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
   })
