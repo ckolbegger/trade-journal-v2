@@ -150,8 +150,8 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
       status: 'planned'
     }
 
-    await positionService.create(position)
-    navigate(`/position/${position.id}`)
+    const createdPosition = await positionService.create(position)
+    navigate(`/position/${createdPosition.id}`)
   }
 
   const renderStepIndicator = () => (

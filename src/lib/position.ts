@@ -62,7 +62,7 @@ export class PositionService {
     }
   }
 
-  async create(position: Position): Promise<void> {
+  async create(position: Position): Promise<Position> {
     this.validatePosition(position)
 
     const db = await this.getDB()
@@ -72,7 +72,7 @@ export class PositionService {
       const request = store.add(position)
 
       request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve()
+      request.onsuccess = () => resolve(position)
     })
   }
 

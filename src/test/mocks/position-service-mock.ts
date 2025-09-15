@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 // Create a comprehensive mock PositionService with all required methods
 export const createMockPositionService = (customMethods = {}) => {
   const defaultMethods = {
-    create: vi.fn(),
+    create: vi.fn().mockImplementation((position: any) => Promise.resolve(position)),
     getById: vi.fn(),
     getAll: vi.fn(),
     update: vi.fn(),
@@ -32,7 +32,7 @@ export const resetMockService = (mockService: any) => {
 
 // Pre-configured mock module for easy import
 export const mockPositionServiceModule = {
-  create: vi.fn(),
+  create: vi.fn().mockImplementation((position: any) => Promise.resolve(position)),
   getById: vi.fn(),
   getAll: vi.fn(),
   update: vi.fn(),

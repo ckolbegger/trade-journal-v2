@@ -251,7 +251,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       })
 
       // Should navigate to position detail
-      expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/position\/pos-\d+$/))
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/position\/pos-\d+$/)) // Uses the generated ID
     })
   })
 
