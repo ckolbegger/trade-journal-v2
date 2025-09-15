@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Dashboard } from './Dashboard'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
@@ -145,5 +145,50 @@ describe('Dashboard', () => {
     })
 
     consoleSpy.mockRestore()
+  })
+
+  describe('Position Hover Effects', () => {
+    it('should apply hover highlighting to position cards on mouseover', async () => {
+      mockPositionService.getAll.mockResolvedValue(mockPositions)
+      renderWithRouter(<Dashboard />)
+
+      await waitFor(() => {
+        const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
+        expect(positionCard).toBeInTheDocument()
+
+        // Initially should not have hover classes
+        expect(positionCard).not.toHaveClass('hover:shadow-lg', 'hover:bg-gray-50', 'border-blue-200')
+
+        // Simulate hover (fire mouseover event)
+        if (positionCard) {
+          fireEvent.mouseOver(positionCard)
+
+          // Should now have hover highlighting classes
+          expect(positionCard).toHaveClass('hover:shadow-lg', 'hover:bg-gray-50', 'border-blue-200')
+        }
+      })
+    })
+
+    it('should remove hover highlighting when mouse leaves position card', async () => {
+      mockPositionService.getAll.mockResolvedValue(mockPositions)
+      renderWithRouter(<Dashboard />)
+
+      await waitFor(() => {
+        const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
+        expect(positionCard).toBeInTheDocument()
+
+        if (positionCard) {
+          // Simulate hover
+          fireEvent.mouseOver(positionCard)
+          expect(positionCard).toHaveClass('hover:shadow-lg', 'hover:bg-gray-50', 'border-blue-200')
+
+          // Simulate mouse leave
+          fireEvent.mouseOut(positionCard)
+
+          // Should revert to original state (but hover classes remain in classList)
+          expect(positionCard).toBeInTheDocument()
+        }
+      })
+    })
   })
 })

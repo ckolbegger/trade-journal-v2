@@ -67,11 +67,12 @@ describe('Integration: Position Creation Flow', () => {
     expect(createPositionButton).toBeVisible()
     fireEvent.click(createPositionButton)
 
-    // 13. VERIFY: Navigate to dashboard with created position
+    // 13. VERIFY: Navigate to Position Detail with created position
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
       expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('Long Stock')).toBeInTheDocument()
+      expect(screen.getByText(/Long Stock/)).toBeInTheDocument()
+      expect(screen.getByText('Trade Plan')).toBeInTheDocument()
+      expect(screen.getByText('Add Trade')).toBeInTheDocument() // Only one in bottom actions
     }, { timeout: 3000 })
 
     // 14. INTEGRATION VERIFY: Position was actually saved to IndexedDB

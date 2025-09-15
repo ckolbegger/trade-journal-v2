@@ -1,0 +1,341 @@
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { PositionService } from '@/lib/position'
+import type { Position } from '@/lib/position'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
+
+interface PositionDetailProps {
+  positionService?: PositionService
+}
+
+export function PositionDetail({ positionService: injectedPositionService }: PositionDetailProps = {}) {
+  const navigate = useNavigate()
+  const { id } = useParams<{ id: string }>()
+  const [position, setPosition] = useState<Position | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [showPriceUpdate, setShowPriceUpdate] = useState(false)
+  const [currentPrice, setCurrentPrice] = useState('')
+  const positionService = injectedPositionService || new PositionService()
+
+  useEffect(() => {
+    loadPosition()
+  }, [id])
+
+  const loadPosition = async () => {
+    if (!id) return
+
+    try {
+      const loadedPosition = await positionService.getById(id)
+      setPosition(loadedPosition)
+      if (loadedPosition) {
+        setCurrentPrice(loadedPosition.target_entry_price?.toString() || '0')
+      }
+    } catch (error) {
+      console.error('Failed to load position:', error)
+      setPosition(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const formatDate = (date: Date) => {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    }).format(date)
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount)
+  }
+
+  const handlePriceUpdate = () => {
+    if (!currentPrice || isNaN(parseFloat(currentPrice))) return
+
+    // Update the price display
+    setCurrentPrice(currentPrice)
+    setShowPriceUpdate(false)
+  }
+
+  const handleAddTrade = () => {
+    // Will be implemented in Trade Execution Flow
+    console.log('Add Trade clicked')
+  }
+
+  const handleClosePosition = () => {
+    // Will be implemented in Position Closing Workflow
+    console.log('Close Position clicked')
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading position...</div>
+      </div>
+    )
+  }
+
+  if (!position) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Position not found</h2>
+          <Button onClick={() => navigate('/')}>Back to Dashboard</Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Calculate some basic metrics (will be enhanced with trade data)
+  const targetEntryPrice = position.target_entry_price || 0
+  const stopLoss = position.stop_loss || 0
+  const profitTarget = position.profit_target || 0
+
+  return (
+    <div className="min-h-screen bg-gray-50 max-w-md mx-auto bg-white shadow-lg">
+      {/* Header */}
+      <header className="bg-gray-800 text-white p-4 flex items-center justify-between sticky top-0 z-50">
+        <button
+          onClick={() => navigate('/')}
+          className="text-white text-xl hover:bg-gray-700 rounded p-1 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
+        <div className="flex-1 ml-4">
+          <div className="text-lg font-semibold">{position.symbol}</div>
+          <div className="text-xs opacity-80">
+            {position.strategy_type} • {position.target_quantity || 0} shares
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowPriceUpdate(!showPriceUpdate)}
+            className="bg-white/20 hover:bg-white/30 text-white px-3 py-1 rounded text-xs transition-colors"
+          >
+            <Edit className="w-3 h-3 mr-1 inline" />
+            Edit Price
+          </button>
+          <button className="bg-white/20 hover:bg-white/30 text-white p-1 rounded transition-colors">
+            <MoreHorizontal className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* Performance Section */}
+      <section className="bg-gradient-to-br from-red-600 to-red-800 text-white p-5">
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-3xl font-bold">
+            {formatCurrency(parseFloat(currentPrice))}
+          </div>
+          <div className="text-right">
+            <div className="text-xl font-semibold">-$1,890</div>
+            <div className="text-sm opacity-90">-12.4%</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="text-center">
+            <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Avg Cost</div>
+            <div className="text-lg font-semibold">{formatCurrency(targetEntryPrice)}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Current</div>
+            <div className="text-lg font-semibold">{formatCurrency(parseFloat(currentPrice))}</div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Stop</div>
+            <div className="text-lg font-semibold">{formatCurrency(stopLoss)}</div>
+          </div>
+        </div>
+      </section>
+
+      <main className="pb-24">
+        {/* Price Update Section */}
+        {showPriceUpdate && (
+          <section className="p-4">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <div className="flex justify-between items-center mb-3">
+                <div className="text-sm font-medium text-yellow-800">Manual Price Update</div>
+                <div className="text-xs text-yellow-600">Last: 2 min ago</div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  value={currentPrice}
+                  onChange={(e) => setCurrentPrice(e.target.value)}
+                  step="0.01"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  placeholder="Enter price"
+                />
+                <Button
+                  onClick={handlePriceUpdate}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-500 text-white"
+                >
+                  Update
+                </Button>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Progress to Target */}
+        <section className="mb-6">
+          <div className="px-4 py-3">
+            <h3 className="text-base font-semibold text-gray-900 mb-3">Progress to Target</h3>
+
+            <div className="mb-4">
+              <div className="flex justify-between text-xs text-gray-600 mb-2">
+                <span>Stop {formatCurrency(stopLoss)}</span>
+                <span>Current {formatCurrency(parseFloat(currentPrice))}</span>
+                <span className="text-red-600">Near Stop</span>
+              </div>
+              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                <div
+                  className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
+                  style={{ width: '35%' }}
+                ></div>
+                <div
+                  className="absolute top-[-2px] w-3 h-3 bg-gray-800 border-2 border-white rounded-full shadow-md"
+                  style={{ left: '35%' }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">To Stop</div>
+                <div className="text-lg font-semibold text-red-600">
+                  -{formatCurrency(parseFloat(currentPrice) - stopLoss)}
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
+                <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Risk Amount</div>
+                <div className="text-lg font-semibold text-red-600">
+                  -{formatCurrency((parseFloat(currentPrice) - stopLoss) * (position.target_quantity || 0))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trade Plan */}
+        <section className="mb-6">
+          <div className="px-4 py-3">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-base font-semibold text-gray-900">Trade Plan</h3>
+              <button className="text-blue-600 text-sm hover:text-blue-700">
+                View Full
+              </button>
+            </div>
+
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center bg-red-50 border border-red-200 rounded-lg p-2 mb-3 text-xs text-red-800">
+                <span className="mr-2">🔒</span>
+                This trade plan is immutable and cannot be modified
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Target Entry Price</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatCurrency(targetEntryPrice)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Target Quantity</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {position.target_quantity} shares
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Profit Target</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatCurrency(profitTarget)}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-600 mb-1">Stop Loss</div>
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatCurrency(stopLoss)}
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-600 mb-1">Position Thesis</div>
+                <div className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded border border-gray-200">
+                  {position.position_thesis}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trade History */}
+        <section className="mb-6">
+          <div className="px-4 py-3">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-base font-semibold text-gray-900">Trade History</h3>
+            </div>
+
+            <div className="bg-white">
+              <div className="p-4 text-center text-gray-500 text-sm">
+                No trades executed yet
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Journal Entries */}
+        <section className="mb-6">
+          <div className="px-4 py-3">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-base font-semibold text-gray-900">Journal Entries</h3>
+              <button className="text-blue-600 text-sm hover:text-blue-700">
+                Add Entry
+              </button>
+            </div>
+
+            <div className="bg-white">
+              <div className="p-4 border-b border-gray-100">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-xs text-gray-600 uppercase tracking-wide">Position Plan</div>
+                  <div className="text-xs text-gray-500">{formatDate(position.created_date)}</div>
+                </div>
+                <div className="text-sm text-gray-700 leading-relaxed">
+                  {position.position_thesis}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      {/* Bottom Actions */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 p-4">
+        <div className="flex gap-3">
+          <button
+            onClick={handleAddTrade}
+            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-4 px-6 rounded-lg font-semibold transition-colors"
+          >
+            Add Trade
+          </button>
+          <button
+            onClick={handleClosePosition}
+            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
+          >
+            Close Position
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

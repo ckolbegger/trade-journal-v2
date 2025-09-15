@@ -151,7 +151,7 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
     }
 
     await positionService.create(position)
-    navigate('/dashboard')
+    navigate(`/position/${position.id}`)
   }
 
   const renderStepIndicator = () => (

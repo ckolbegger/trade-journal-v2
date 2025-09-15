@@ -225,7 +225,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertImmutableConfirmationComplete()
     })
 
-    it('should create position and navigate to dashboard when confirmed', async () => {
+    it('should create position and navigate to position detail when confirmed', async () => {
       // Check immutable checkbox
       const immutableCheckbox = screen.getByRole('checkbox', { name: /immutable/i })
       fireEvent.click(immutableCheckbox)
@@ -250,8 +250,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
         )
       })
 
-      // Should navigate to dashboard
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard')
+      // Should navigate to position detail
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringMatching(/^\/position\/pos-\d+$/))
     })
   })
 

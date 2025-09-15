@@ -73,17 +73,22 @@ describe('Integration: Position Dashboard Display Flow', () => {
     expect(createPositionButton).toBeVisible()
     fireEvent.click(createPositionButton)
 
-    // 13. VERIFY: Navigate to Dashboard with created position
-    await verifyDashboardPosition()
+    // 13. VERIFY: Navigate to Position Detail with created position
+    await waitFor(() => {
+      expect(screen.getByText('AAPL')).toBeInTheDocument()
+      expect(screen.getByText(/Long Stock/)).toBeInTheDocument()
+      expect(screen.getByText('Trade Plan')).toBeInTheDocument()
+      expect(screen.getByText('Add Trade')).toBeInTheDocument()
+    }, { timeout: 3000 })
 
-    // 14. VERIFY: Dashboard displays correct position information
-    expect(screen.getByText('No trades executed')).toBeInTheDocument()
-    expect(screen.getByText('TODO: Current P&L')).toBeInTheDocument()
-    expect(screen.getByText('$135.00')).toBeInTheDocument() // Stop Loss
-    expect(screen.getAllByText('TODO')).toHaveLength(2) // Avg Cost and Current are TODOs
+    // 14. VERIFY: Position Detail displays correct position information
+    expect(screen.getByText('No trades executed yet')).toBeInTheDocument()
+    expect(screen.getAllByText('$135.00')).toHaveLength(2) // Stop Loss appears in performance section and trade plan
+    expect(screen.getAllByText('Integration test: Bullish on Q4 earnings and iPhone cycle')).toHaveLength(2) // Position thesis appears in Trade Plan and Journal Entries
 
-    // 15. VERIFY: Floating action button is present
-    assertFabButtonVisible()
+    // 15. VERIFY: Bottom action buttons are present
+    expect(screen.getByText('Add Trade')).toBeInTheDocument()
+    expect(screen.getByText('Close Position')).toBeInTheDocument()
 
     // 16. INTEGRATION VERIFY: Position was actually saved to IndexedDB
     const savedPositions = await positionService.getAll()

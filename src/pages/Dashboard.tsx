@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,8 @@ interface DashboardProps {
 export function Dashboard({ positionService: injectedPositionService }: DashboardProps = {}) {
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
+  const [hoveredPositionId, setHoveredPositionId] = useState<string | null>(null)
+  const navigate = useNavigate()
   const positionService = injectedPositionService || new PositionService()
 
   useEffect(() => {
@@ -92,8 +94,14 @@ export function Dashboard({ positionService: injectedPositionService }: Dashboar
         {positions.map((position) => (
           <div
             key={position.id}
-            className="bg-white rounded-lg border border-gray-200 p-4 mb-3 shadow-sm cursor-pointer transition-all hover:shadow-md"
-            onClick={() => window.location.href = `/position/${position.id}`}
+            className={`bg-white rounded-lg border p-4 mb-3 shadow-sm cursor-pointer transition-all ${
+              hoveredPositionId === position.id
+                ? 'border-blue-200 hover:shadow-lg hover:bg-gray-50 shadow-lg bg-gray-50'
+                : 'border-gray-200 hover:shadow-md'
+            }`}
+            onClick={() => navigate(`/position/${position.id}`)}
+            onMouseEnter={() => setHoveredPositionId(position.id)}
+            onMouseLeave={() => setHoveredPositionId(null)}
           >
             {/* Position Header */}
             <div className="flex items-start justify-between mb-3">
