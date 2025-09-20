@@ -78,18 +78,110 @@
 
 ---
 
-## 2. Add Mandatory Journal Entries to Position Creation 🔄 **NEXT**
+## 2. Position Plan Journal Entry (Complete User Journey) 🔄 **NEXT**
 
-**Description**: Add journal entry requirement to position creation and create journal history view.
+**Description**: Complete vertical slice enabling users to create required journal entries during position creation, with immediate visibility of the entry linked to the position.
 
-**Acceptance Criteria**:
-- JournalEntry interface: id, position_id?, entry_type ('position_plan'|'position_update'|'position_close'|'market_observation'), content, timestamp, created_date
-- IndexedDB for journal_entries: basic CRUD operations
-- Add step 3 to position creation: Trading Journal (required thesis entry)
-- Journal entries linked to positions via position_id
-- Journal history view (06-journal-history-view.html) showing all entries chronologically
-- Position creation now saves both position and initial journal entry
-- Journal entries can exist without position_id for general market observations
+**User Journey**: Create position → Required journal entry with structured prompts → Return to dashboard with journal visible on position card → View journal in position detail
+
+**Task Breakdown**:
+
+### 2.1 Journal Data Foundation (TDD Service Layer)
+- **Write failing tests** for JournalEntry service CRUD operations
+- **JournalEntry interface**: id, position_id?, trade_id?, entry_type, fields: {prompt, response}[], created_at, executed_at?
+- **IndexedDB JournalService**: create, read, update, delete, findByPositionId
+- **Position model update**: Add journal_entry_ids: string[] field
+- **Position service update**: Link journal entries to positions
+
+### 2.2 Journal Entry UI Component (TDD Component Layer)
+- **Write failing tests** for JournalEntryForm component
+- **Structured prompt rendering**: Display prompts for 'position_plan' entry type
+- **Form validation**: Required responses for all prompts
+- **Save/cancel functionality**: Handle form submission and navigation
+- **Mobile-responsive design**: Match existing app styling
+
+### 2.3 Position Creation Integration (TDD Integration)
+- **Write failing tests** for enhanced position creation flow
+- **Add journal step** to position creation wizard (after risk assessment)
+- **Position plan prompts**: "Why this trade?", "What could invalidate thesis?", etc.
+- **Journal creation**: Save journal entry linked to new position
+- **Navigation flow**: Return to dashboard after successful creation
+
+### 2.4 Journal Visibility in UI
+- **Dashboard enhancement**: Show journal indicator on position cards
+- **Position detail enhancement**: Display linked journal entries with timestamps
+- **Journal entry display**: Clean formatting of prompts and responses
+- **Mobile optimization**: Readable journal content on small screens
+
+### 2.5 Complete Integration Testing
+- **End-to-end test**: Full user journey from position creation through journal viewing
+- **Data persistence**: Verify journal entries persist across browser refresh
+- **Error handling**: Journal creation failures don't break position creation
+
+## 2A. Trade Execution Journal Entry (Vertical Slice)
+
+**Description**: Optional journal entry during trade execution with immediate visibility in position detail and trade history.
+
+**User Journey**: Execute trade → Optional journal entry with execution-focused prompts → Return to position detail with journal visible → View execution reasoning in trade timeline
+
+**Task Breakdown**:
+
+### 2A.1 Trade Execution Journal Service (TDD)
+- **Write failing tests** for trade execution journal functionality
+- **Entry type 'trade_execution'**: Add prompts for execution documentation
+- **Trade linking**: Connect journal entries to specific trade_id
+- **Service methods**: createTradeExecutionEntry, findByTradeId
+
+### 2A.2 Trade Execution Journal UI (TDD)
+- **Write failing tests** for trade execution journal component
+- **Execution prompts**: "Describe the execution", "How do you feel?", "Deviations from plan?"
+- **Optional workflow**: Clear skip/cancel options, not mandatory
+- **Context display**: Show position plan and trade details during journaling
+
+### 2A.3 Trade Flow Integration (TDD)
+- **Write failing tests** for enhanced trade execution flow
+- **Journal option** after successful trade entry
+- **Return navigation**: Back to position detail with journal visible
+- **Trade history enhancement**: Show journal entries linked to specific trades
+
+### 2A.4 Position Detail Journal Display (TDD)
+- **Write failing tests** for journal timeline in position detail
+- **Chronological display**: Show all journal entries with timestamps
+- **Trade linkage**: Highlight which journals relate to specific executions
+- **Mobile formatting**: Clean journal display on small screens
+
+## 2B. Market Observation Journal Entry (Vertical Slice)
+
+**Description**: Standalone journal entries for market observations not tied to specific positions, accessible from main navigation.
+
+**User Journey**: From any page → Create market observation → Structured market prompts → Return to journal history view → Browse all market observations
+
+**Task Breakdown**:
+
+### 2B.1 Market Observation Service (TDD)
+- **Write failing tests** for market observation functionality
+- **Entry type 'market_observation'**: No position_id or trade_id required
+- **Market prompts**: "What changed?", "Impact on positions?", "Planned response?"
+- **Service methods**: createMarketObservation, findAllMarketObservations
+
+### 2B.2 Market Journal UI and Navigation (TDD)
+- **Write failing tests** for market observation component
+- **Navigation access**: Add journal entry button to main navigation
+- **Market-focused prompts**: Context-free observation and planning
+- **Entry type selection**: Choose between market observation and position-specific
+
+### 2B.3 Journal History View (TDD)
+- **Write failing tests** for comprehensive journal history
+- **Implement 06-journal-history-view.html**: Chronological timeline of all entries
+- **Entry type filtering**: Filter by position-specific vs market observations
+- **Search functionality**: Find entries by content or date
+- **Mobile timeline**: Clean chronological display
+
+---
+
+**Note**: Position Review journal entries (entry_type: 'position_review') are implemented in **Phase 1B** as part of the Daily Review workflow, not Phase 1A.
+
+---
 
 ## 3. Add Trade Execution Against Position Plans
 
@@ -121,21 +213,7 @@
 - Review workflow guides users through each open position sequentially
 - Price updates stored with timestamps for tracking review consistency
 
-## 5. Add Journal Entry Creation During Daily Review
-
-**Description**: Integrate journal entry opportunities into the daily review process to reinforce reflection habits.
-
-**Acceptance Criteria**:
-- Optional journal entry creation during price update workflow
-- Entry type 'position_update' for review-based reflections
-- Quick journal entry interface: position context + text area + save
-- Journal entries automatically linked to reviewed position
-- Review workflow shows "Add Reflection" option after each price update
-- Journal history displays review-based entries with special indicators
-- Position detail view shows timeline of all associated journal entries
-- Habit reinforcement: visual indicators for positions with recent journal activity
-
-## 6. Add Position Closing Workflow
+## 5. Add Position Closing Workflow
 
 **Description**: Complete position lifecycle with structured closing process and final P&L.
 
@@ -149,7 +227,7 @@
 - Dashboard separates open and closed positions
 - Closed positions no longer accept price updates or new trades
 
-## 7. Add Behavioral Training and Validation Elements
+## 6. Add Behavioral Training and Validation Elements
 
 **Description**: Implement immutability warnings, validation, and behavioral training throughout all flows.
 
@@ -164,7 +242,7 @@
 - Error messages for validation failures (user-friendly)
 - Daily review habit indicators: show review streaks, last review date
 
-## 8. Polish User Experience and Complete Integration
+## 7. Polish User Experience and Complete Integration
 
 **Description**: Final integration testing, performance optimization, and UX polish for complete user journey.
 
