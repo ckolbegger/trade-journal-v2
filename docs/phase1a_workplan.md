@@ -91,22 +91,166 @@
 - Position creation now saves both position and initial journal entry
 - Journal entries can exist without position_id for general market observations
 
-## 3. Add Trade Execution Against Position Plans
+---
 
-**Description**: Enable actual trade execution against position plans, transitioning from 'planned' to 'open' status with real P&L calculation.
+## 🎯 **Journal Entry System - TDD Vertical Slices**
 
-**Acceptance Criteria**:
-- Trade interface: id, position_id, trade_type ('buy'|'sell'), quantity, price, execution_date, notes, timestamp
-- IndexedDB for trades: basic CRUD operations
-- Trade execution flow (02b-add-trade-flow.html) accessible from position detail
-- Position status updates: 'planned' → 'open' after first buy trade
-- Cost basis calculation: simple average of buy trade prices
-- Trade history display in position detail view
-- Two-trade validation: maximum 1 buy, 1 sell per position
-- Dashboard updates to show positions with actual trades vs just plans
-- Position detail view shows actual trade data and average cost
+### **Vertical Slice 1: Core Journal Entry Infrastructure**
 
-## 4. Add Daily Review and Price Update System
+**Objective**: Build the foundational journal entry data layer and basic CRUD operations with comprehensive test coverage.
+
+**Task Breakdown**:
+
+**1.1 Define JournalEntry Interfaces**
+- Create `JournalEntry` interface with top-level invariant fields
+- Create `JournalEntryVersion` interface with versioned content
+- Create `JournalEntryType` union types for different entry types
+- Create `EmotionalState` type for behavioral tracking
+- Add comprehensive JSDoc documentation
+
+**1.2 Implement JournalService with IndexedDB**
+- Create `JournalService` class in `/src/services/journal-service.ts`
+- Implement IndexedDB store setup for journal entries
+- Create CRUD operations: `create()`, `getById()`, `getByPositionId()`, `update()`, `delete()`
+- Implement version management logic for editable entries
+- Add error handling and validation
+- Create comprehensive unit tests for all operations
+
+**1.3 Create Test Infrastructure for Journal**
+- Extend `test/factories/journal-entry-factory.ts` with mock data
+- Add journal-specific assertion helpers to `test/assertion-helpers.ts`
+- Create integration test helpers for journal workflows
+- Add IndexedDB test setup/teardown for journal entries
+
+**1.4 Implement Data Validation**
+- Create validation functions for journal entry types
+- Implement emotional state validation
+- Add structured field validation based on entry type
+- Create comprehensive validation tests
+
+**Success Criteria**:
+- ✅ All journal entry CRUD operations tested (15+ tests)
+- ✅ Version management working correctly
+- ✅ Data validation comprehensive with edge cases
+- ✅ IndexedDB operations reliable with proper error handling
+- ✅ Test infrastructure complete and reusable
+
+---
+
+### **Vertical Slice 2: Position Plan Journal Integration**
+
+**Objective**: Integrate journal entries into position creation flow, making thesis a proper journal entry with immutability.
+
+**Task Breakdown**:
+
+**2.1 Update Position Creation Flow**
+- Modify `PositionCreateFlow.tsx` to include journal entry step
+- Add step 3: "Trading Journal" between Risk Assessment and Confirmation
+- Create `JournalEntryStep` component with structured fields
+- Implement emotional state selector and structured fields
+- Add thesis field as required journal entry content
+
+**2.2 Create Journal Entry UI Components**
+- Build `JournalEntryForm.tsx` component with context-aware fields
+- Create `EmotionalStateSelector.tsx` for behavioral tracking
+- Implement `StructuredFields.tsx` with dynamic field rendering
+- Add character count and validation indicators
+- Create responsive mobile-first design
+
+**2.3 Integrate Journal with Position Creation**
+- Update `PositionService.create()` to handle journal entry creation
+- Modify position creation workflow to save both position and journal entry
+- Implement transaction-like behavior (both succeed or both fail)
+- Add proper error handling and rollback logic
+- Create integration tests for complete position+journal creation
+
+**2.4 Update Position Detail View**
+- Modify `PositionDetail.tsx` to display associated journal entries
+- Create `JournalEntryCard.tsx` component for entry display
+- Add journal entry timeline to position detail
+- Implement emotional state visualization
+- Add version history indicator for edited entries
+
+**Success Criteria**:
+- ✅ Position creation now includes mandatory journal entry step
+- ✅ Thesis properly captured as position_plan journal entry
+- ✅ Emotional state tracking integrated into creation flow
+- ✅ Position detail shows complete journal history
+- ✅ Integration tests validate complete workflow (10+ tests)
+- ✅ Mobile-responsive journal entry forms working
+
+---
+
+### **Vertical Slice 3: Trade Execution Journal Integration**
+
+**Objective**: Enable journal entries during trade execution, capturing execution rationale and emotional state.
+
+**Task Breakdown**:
+
+**3.1 Implement Trade Execution UI**
+- Create `TradeExecutionFlow.tsx` based on 02b-add-trade-flow.html mockup
+- Build `TradeForm.tsx` with trade type, quantity, price fields
+- Add trade validation and position status management
+- Create `TradeService.tsx` for trade CRUD operations
+- Implement position status transitions: 'planned' → 'open'
+
+**3.2 Add Journal Entry to Trade Execution**
+- Integrate `JournalEntryForm` into trade execution flow
+- Create trade-specific structured fields (execution quality, timing, fill comparison)
+- Add mandatory journal entry requirement for trade executions
+- Implement emotional state tracking during trading
+- Add plan deviation detection and structured fields
+
+**3.3 Update Position Dashboard**
+- Modify `PositionDashboard.tsx` to show positions with trade activity
+- Add visual indicators for positions with trades vs planned positions
+- Create trade count badges and status indicators
+- Implement journal entry activity indicators
+- Add quick access to trade execution from position cards
+
+**3.4 Implement Cost Basis Calculation**
+- Create `CostBasisCalculator.ts` for FIFO calculations
+- Implement simple average cost calculation for buy trades
+- Add P&L calculation for open positions
+- Update position detail view to show actual trade data
+- Create integration tests for cost basis accuracy
+
+**Success Criteria**:
+- ✅ Trade execution flow with mandatory journal entry working
+- ✅ Position status properly transitions from planned to open
+- ✅ Cost basis calculations accurate and tested
+- ✅ Dashboard shows distinction between planned and executed positions
+- ✅ Journal entries capture execution rationale and emotional state
+- ✅ Integration tests validate complete trade+journal workflow (15+ tests)
+
+---
+
+---
+
+## **Updated Total Test Targets for Journal Features**
+- **Journal Infrastructure**: 25+ tests
+- **Position Integration**: 20+ tests
+- **Trade Integration**: 25+ tests
+- **Integration Tests**: 15+ tests
+- **Total**: 85+ additional tests for core journal system
+
+---
+
+**Deferred to Phase 1B:**
+- Journal history view with filtering and search
+- Journal entry editing and version management
+- Plan violation detection and behavioral insights
+- Daily review workflow with journal entries
+- Market observation standalone entries
+- Advanced behavioral analytics and pattern recognition
+- Chart link attachments
+- Emotional state trend analysis and reporting
+
+---
+
+## **Remaining Phase 1A Features (Post-Journal System)**
+
+### **3. Daily Review and Price Update System**
 
 **Description**: Enable systematic daily position review with price updates and P&L calculation. Foundation for habit-forming behavioral training.
 
@@ -121,21 +265,7 @@
 - Review workflow guides users through each open position sequentially
 - Price updates stored with timestamps for tracking review consistency
 
-## 5. Add Journal Entry Creation During Daily Review
-
-**Description**: Integrate journal entry opportunities into the daily review process to reinforce reflection habits.
-
-**Acceptance Criteria**:
-- Optional journal entry creation during price update workflow
-- Entry type 'position_update' for review-based reflections
-- Quick journal entry interface: position context + text area + save
-- Journal entries automatically linked to reviewed position
-- Review workflow shows "Add Reflection" option after each price update
-- Journal history displays review-based entries with special indicators
-- Position detail view shows timeline of all associated journal entries
-- Habit reinforcement: visual indicators for positions with recent journal activity
-
-## 6. Add Position Closing Workflow
+### **4. Position Closing Workflow**
 
 **Description**: Complete position lifecycle with structured closing process and final P&L.
 
@@ -149,7 +279,7 @@
 - Dashboard separates open and closed positions
 - Closed positions no longer accept price updates or new trades
 
-## 7. Add Behavioral Training and Validation Elements
+### **5. Behavioral Training and Validation Elements**
 
 **Description**: Implement immutability warnings, validation, and behavioral training throughout all flows.
 
@@ -164,7 +294,7 @@
 - Error messages for validation failures (user-friendly)
 - Daily review habit indicators: show review streaks, last review date
 
-## 8. Polish User Experience and Complete Integration
+### **6. Polish User Experience and Complete Integration**
 
 **Description**: Final integration testing, performance optimization, and UX polish for complete user journey.
 
@@ -178,8 +308,6 @@
 - Performance: app loads in <3 seconds, operations complete in <500ms
 - Filter functionality: All/Open/Closed tabs work correctly
 - Journal entries properly linked and displayed throughout
-
----
 
 ## Deferred Features (For Future Phases):
 
