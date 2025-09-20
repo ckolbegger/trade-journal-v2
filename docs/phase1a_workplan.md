@@ -107,11 +107,46 @@
 - **Journal creation**: Save journal entry linked to new position
 - **Navigation flow**: Return to dashboard after successful creation
 
-### 2.4 Journal Visibility in UI
+### 2.4 Dashboard Journal Indicators
 - **Dashboard enhancement**: Show journal indicator on position cards
-- **Position detail enhancement**: Display linked journal entries with timestamps
-- **Journal entry display**: Clean formatting of prompts and responses
-- **Mobile optimization**: Readable journal content on small screens
+- **Journal status badges**: Visual indicators for positions with/without recent journals
+- **Mobile optimization**: Clear journal status in compact position cards
+
+## 2.1A. Position Detail Journal Display (Focused UI Workitem)
+
+**Description**: Design and implement comprehensive journal entry display in position detail view, ensuring excellent mobile UX for reading structured journal entries.
+
+**User Journey**: View position → See all linked journal entries in timeline → Read structured prompts and responses clearly → Navigate between multiple entries
+
+**Task Breakdown**:
+
+### 2.1A.1 Journal Timeline UI Design (TDD)
+- **Write failing tests** for journal timeline component
+- **Chronological display**: Show all position journal entries by date
+- **Entry type indicators**: Visual distinction between position_plan, trade_execution, market_observation
+- **Expandable entries**: Tap to expand/collapse full journal content
+- **Mobile-first layout**: Readable on 414px screens
+
+### 2.1A.2 Structured Prompt Display (TDD)
+- **Write failing tests** for journal entry card component
+- **Structured formatting**: Display prompt questions with user responses
+- **Visual hierarchy**: Clear separation between prompts and answers
+- **Content preservation**: Handle long responses with proper text wrapping
+- **Timestamp display**: Show when journal was written vs when action occurred
+
+### 2.1A.3 Position Detail Integration (TDD)
+- **Write failing tests** for position detail journal section
+- **Journal tab/section**: Dedicated area in position detail for journal timeline
+- **Empty states**: Handle positions without journal entries
+- **Loading states**: Progressive loading for positions with many entries
+- **Navigation flow**: Smooth scrolling between journal entries
+
+### 2.1A.4 Mobile UX Optimization (TDD)
+- **Write failing tests** for mobile journal display
+- **Touch interactions**: Tap to expand, swipe gestures for navigation
+- **Text readability**: Proper font sizes and line spacing for journal content
+- **Scroll performance**: Smooth scrolling through long journal entries
+- **Memory efficiency**: Lazy loading for positions with extensive journal history
 
 ### 2.5 Complete Integration Testing
 - **End-to-end test**: Full user journey from position creation through journal viewing

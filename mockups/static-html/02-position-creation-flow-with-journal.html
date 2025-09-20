@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Position - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+        }
+
+        .step-indicator {
+            background: #f3f4f6;
+            padding: 12px 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .step-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+        }
+
+        .step-dot.active {
+            background: #3b82f6;
+        }
+
+        .step-dot.completed {
+            background: #16a34a;
+        }
+
+        .step-content {
+            padding: 20px;
+            padding-bottom: 120px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1f2937;
+        }
+
+        .step-description {
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+
+        .form-label.required::after {
+            content: " *";
+            color: #dc2626;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .risk-summary {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .risk-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            font-size: 14px;
+        }
+
+        .risk-item:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+
+        .warning-box {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .warning-icon {
+            flex-shrink: 0;
+            font-size: 16px;
+        }
+
+        .warning-text {
+            font-size: 14px;
+            color: #92400e;
+            line-height: 1.4;
+        }
+
+        /* Journal-specific styles */
+        .journal-prompt-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .journal-prompt-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .journal-prompt-number {
+            background: #3b82f6;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .journal-prompt-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .journal-prompt-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .journal-response {
+            min-height: 80px;
+        }
+
+        .journal-helper {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 20px;
+        }
+
+        .journal-helper-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .journal-helper-text {
+            font-size: 12px;
+            color: #1e40af;
+            line-height: 1.4;
+        }
+
+        .confirmation-summary {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .summary-item:not(:last-child) {
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 6px;
+            padding-bottom: 12px;
+        }
+
+        .summary-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .summary-value {
+            color: #1f2937;
+            font-weight: 600;
+        }
+
+        .immutable-checkbox {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-input {
+            margin-right: 8px;
+        }
+
+        .checkbox-label {
+            font-size: 14px;
+            color: #991b1b;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            background: #16a34a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+            font-size: 32px;
+        }
+
+        .success-title {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+            color: #16a34a;
+            margin-bottom: 8px;
+        }
+
+        .success-message {
+            text-align: center;
+            font-size: 16px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 414px;
+            width: 100%;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 16px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-primary:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #15803d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="back-button">←</button>
+            <h1>Create Position</h1>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step-dots">
+                <div class="step-dot completed" id="dot1"></div>
+                <div class="step-dot completed" id="dot2"></div>
+                <div class="step-dot active" id="dot3"></div>
+                <div class="step-dot" id="dot4"></div>
+            </div>
+        </div>
+
+        <div class="step-content">
+            <!-- Step 1: Position Details -->
+            <div class="step" id="step1">
+                <h2 class="step-title">Position Details</h2>
+                <p class="step-description">Enter your planned position details. These will become immutable once confirmed.</p>
+
+                <div class="form-group">
+                    <label class="form-label required">Symbol</label>
+                    <input type="text" class="form-input" placeholder="AAPL" value="AAPL" id="symbol">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Strategy Type</label>
+                    <select class="form-input" id="strategy">
+                        <option value="long_stock">Long Stock</option>
+                        <option value="covered_call">Covered Call</option>
+                        <option value="cash_secured_put">Cash Secured Put</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Target Entry Price</label>
+                    <input type="number" class="form-input" placeholder="149.50" value="149.50" step="0.01" id="entryPrice">
+                    <div class="form-hint">Price per share you plan to enter at</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Target Quantity</label>
+                    <input type="number" class="form-input" placeholder="100" value="100" id="quantity">
+                    <div class="form-hint">Number of shares planned</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Target Entry Date</label>
+                    <input type="date" class="form-input" value="2024-01-15" id="entryDate">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Profit Target</label>
+                    <input type="number" class="form-input" placeholder="165.00" value="165.00" step="0.01" id="profitTarget">
+                    <div class="form-hint">Price per share to take profits</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Stop Loss</label>
+                    <input type="number" class="form-input" placeholder="140.00" value="140.00" step="0.01" id="stopLoss">
+                    <div class="form-hint">Price per share to cut losses</div>
+                </div>
+            </div>
+
+            <!-- Step 2: Risk Assessment -->
+            <div class="step" id="step2">
+                <h2 class="step-title">Risk Assessment</h2>
+                <p class="step-description">Review calculated risk metrics and portfolio impact before proceeding.</p>
+
+                <div class="risk-summary">
+                    <div class="risk-item">
+                        <span>Position Size:</span>
+                        <span id="positionSize">$14,950</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Max Profit:</span>
+                        <span style="color: #16a34a;" id="maxProfit">+$1,550</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Max Loss:</span>
+                        <span style="color: #dc2626;" id="maxLoss">-$950</span>
+                    </div>
+                    <div class="risk-item">
+                        <span>Risk/Reward Ratio:</span>
+                        <span id="riskReward">1:1.63</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Portfolio Risk %</label>
+                    <input type="number" class="form-input" placeholder="2.5" value="1.9" step="0.1" id="portfolioRisk">
+                    <div class="form-hint">Percentage of total portfolio at risk</div>
+                </div>
+
+                <div class="warning-box">
+                    <span class="warning-icon">⚠️</span>
+                    <span class="warning-text">Ensure this position aligns with your risk management rules and portfolio allocation strategy.</span>
+                </div>
+            </div>
+
+            <!-- Step 3: Structured Journal Entry -->
+            <div class="step active" id="step3">
+                <h2 class="step-title">Position Plan Journal</h2>
+                <p class="step-description">Document your reasoning with structured prompts. This helps build systematic thinking and trading discipline.</p>
+
+                <div class="journal-helper">
+                    <div class="journal-helper-title">
+                        💡 Why Journal Your Trades?
+                    </div>
+                    <div class="journal-helper-text">
+                        Documenting your reasoning helps identify patterns, improve decision-making, and build emotional awareness. Answer each prompt thoughtfully.
+                    </div>
+                </div>
+
+                <!-- Prompt 1: Why this trade? -->
+                <div class="journal-prompt-card">
+                    <div class="journal-prompt-header">
+                        <div class="journal-prompt-number">1</div>
+                        <div class="journal-prompt-title">Why this trade? Why now?</div>
+                    </div>
+                    <div class="journal-prompt-text">
+                        Explain your thesis and reasoning for entering this position at this time. What's your market outlook?
+                    </div>
+                    <textarea
+                        class="form-input journal-response"
+                        placeholder="Example: AAPL showing strong support at $149 level with positive earnings momentum. Technical setup shows potential breakout above $155 resistance..."
+                        id="whyTrade">AAPL showing strong support at $149 level with positive earnings momentum. Technical setup shows potential breakout above $155 resistance. Recent pullback from highs created good entry opportunity with limited downside risk.</textarea>
+                </div>
+
+                <!-- Prompt 2: What could invalidate this thesis? -->
+                <div class="journal-prompt-card">
+                    <div class="journal-prompt-header">
+                        <div class="journal-prompt-number">2</div>
+                        <div class="journal-prompt-title">What could invalidate this thesis?</div>
+                    </div>
+                    <div class="journal-prompt-text">
+                        Identify specific conditions or events that would make this trade no longer attractive. What are the key risks?
+                    </div>
+                    <textarea
+                        class="form-input journal-response"
+                        placeholder="Example: Break below $140 support would signal trend change. Broader market correction could pressure all tech stocks..."
+                        id="invalidation">Break below $140 support would signal trend change. Broader market correction could pressure all tech stocks. Negative earnings guidance or supply chain issues would undermine bullish thesis.</textarea>
+                </div>
+
+                <!-- Prompt 3: How will you know if you're wrong? -->
+                <div class="journal-prompt-card">
+                    <div class="journal-prompt-header">
+                        <div class="journal-prompt-number">3</div>
+                        <div class="journal-prompt-title">How will you know if you're wrong?</div>
+                    </div>
+                    <div class="journal-prompt-text">
+                        Define clear signals that indicate your analysis was incorrect. What will trigger you to exit or reassess?
+                    </div>
+                    <textarea
+                        class="form-input journal-response"
+                        placeholder="Example: Price action below $140 stop loss level. Volume-based breakdown with follow-through selling..."
+                        id="wrongSignals">Price action below $140 stop loss level. Volume-based breakdown with follow-through selling. If price stalls at resistance for more than a week without momentum.</textarea>
+                </div>
+
+                <!-- Prompt 4: What's your edge? -->
+                <div class="journal-prompt-card">
+                    <div class="journal-prompt-header">
+                        <div class="journal-prompt-number">4</div>
+                        <div class="journal-prompt-title">What's your edge in this trade?</div>
+                    </div>
+                    <div class="journal-prompt-text">
+                        Explain what gives you an advantage or edge in this position. Why do you think this trade will be profitable?
+                    </div>
+                    <textarea
+                        class="form-input journal-response"
+                        placeholder="Example: Technical analysis shows oversold RSI with positive divergence. Options flow suggests institutional accumulation..."
+                        id="tradingEdge">Technical analysis shows oversold RSI with positive divergence. Strong fundamentals with multiple expansion potential. Risk-reward setup favors upside with clear stop loss defined.</textarea>
+                </div>
+
+                <div class="warning-box">
+                    <span class="warning-icon">📝</span>
+                    <span class="warning-text">Take your time with these responses. Quality journaling leads to better trading decisions and improved self-awareness.</span>
+                </div>
+            </div>
+
+            <!-- Step 4: Confirmation -->
+            <div class="step" id="step4">
+                <h2 class="step-title">Confirm Position Plan</h2>
+                <p class="step-description">Review your trading plan carefully. Once confirmed, this plan becomes immutable. You'll add actual trades separately.</p>
+
+                <div class="confirmation-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Symbol:</span>
+                        <span class="summary-value" id="confirmSymbol">AAPL</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Strategy:</span>
+                        <span class="summary-value" id="confirmStrategy">Long Stock</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Target Quantity:</span>
+                        <span class="summary-value" id="confirmQuantity">100 shares</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Target Entry Date:</span>
+                        <span class="summary-value" id="confirmEntryDate">Jan 15, 2024</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Target Entry Price:</span>
+                        <span class="summary-value" id="confirmEntry">$149.50</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Profit Target:</span>
+                        <span class="summary-value" id="confirmProfit">$165.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Stop Loss:</span>
+                        <span class="summary-value" id="confirmStop">$140.00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Max Risk:</span>
+                        <span class="summary-value" style="color: #dc2626;" id="confirmRisk">$950</span>
+                    </div>
+                </div>
+
+                <div class="immutable-checkbox">
+                    <input type="checkbox" class="checkbox-input" id="immutableConfirm">
+                    <label class="checkbox-label" for="immutableConfirm">
+                        I understand that this <strong>position plan and journal entry will be immutable</strong> once created. I have carefully reviewed all targets, strategy, and documented reasoning. I'll add actual trades separately to execute against this plan.
+                    </label>
+                </div>
+            </div>
+
+            <!-- Step 5: Success -->
+            <div class="step" id="step5">
+                <div class="success-icon">✓</div>
+                <h2 class="success-title">Position Plan Created!</h2>
+                <p class="success-message">Your position plan and journal entry have been saved. You can now start executing trades against this plan or create another position.</p>
+
+                <div class="confirmation-summary">
+                    <div class="summary-item">
+                        <span class="summary-label">Position ID:</span>
+                        <span class="summary-value">#POS-001</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Status:</span>
+                        <span class="summary-value" style="color: #f59e0b;">Planned</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Journal Entry:</span>
+                        <span class="summary-value" style="color: #16a34a;">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn btn-secondary" id="backBtn" onclick="previousStep()">Back</button>
+            <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 3; // Start on journal step for demo
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+
+            // Show current step
+            document.getElementById(`step${step}`).classList.add('active');
+
+            // Update step indicators
+            document.querySelectorAll('.step-dot').forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index + 1 < step) {
+                    dot.classList.add('completed');
+                } else if (index + 1 === step) {
+                    dot.classList.add('active');
+                }
+            });
+
+            // Update button states
+            const backBtn = document.getElementById('backBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (step === 1) {
+                backBtn.style.display = 'none';
+                nextBtn.style.flex = '1';
+            } else {
+                backBtn.style.display = 'block';
+                nextBtn.style.flex = '1';
+            }
+
+            if (step === 5) {
+                nextBtn.textContent = 'View Position';
+                nextBtn.className = 'btn btn-success';
+            } else if (step === 4) {
+                nextBtn.textContent = 'Create Position';
+                nextBtn.className = 'btn btn-primary';
+                // Check if immutable checkbox is checked
+                const checkbox = document.getElementById('immutableConfirm');
+                nextBtn.disabled = !checkbox?.checked;
+            } else {
+                nextBtn.textContent = 'Next';
+                nextBtn.className = 'btn btn-primary';
+                nextBtn.disabled = false;
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < 5) {
+                // Validate current step
+                if (validateStep(currentStep)) {
+                    currentStep++;
+                    showStep(currentStep);
+                }
+            } else {
+                // Final step - redirect to position dashboard
+                alert('Redirecting to position dashboard...');
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        }
+
+        function validateStep(step) {
+            if (step === 3) {
+                // Validate journal entries
+                const prompts = ['whyTrade', 'invalidation', 'wrongSignals', 'tradingEdge'];
+                for (let prompt of prompts) {
+                    const value = document.getElementById(prompt)?.value?.trim();
+                    if (!value || value.length < 10) {
+                        alert(`Please provide a thoughtful response to: ${document.querySelector(`#${prompt}`).previousElementSibling.querySelector('.journal-prompt-title').textContent}`);
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        // Initialize
+        showStep(currentStep);
+
+        // Handle immutable checkbox for step 4
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'immutableConfirm') {
+                const nextBtn = document.getElementById('nextBtn');
+                nextBtn.disabled = !e.target.checked;
+            }
+        });
+
+        // Auto-resize textareas
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName === 'TEXTAREA') {
+                e.target.style.height = 'auto';
+                e.target.style.height = Math.max(80, e.target.scrollHeight) + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
