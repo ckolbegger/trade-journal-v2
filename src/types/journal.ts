@@ -22,6 +22,11 @@ export const JOURNAL_PROMPTS = {
       required: true
     },
     {
+      name: 'emotional_state',
+      prompt: 'How are you feeling about this trade?',
+      required: false
+    },
+    {
       name: 'market_conditions',
       prompt: 'Describe current market environment and how it affects this trade',
       required: false
@@ -44,8 +49,13 @@ export const JOURNAL_PROMPTS = {
       required: false
     },
     {
-      name: 'plan_deviations',
-      prompt: 'Any deviations from your original plan?',
+      name: 'market_conditions',
+      prompt: 'Describe current market environment and how it affects this trade',
+      required: false
+    },
+    {
+      name: 'execution_strategy',
+      prompt: 'How will you enter and exit this position?',
       required: false
     }
   ]

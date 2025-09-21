@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
+  proceedToTradingJournal,
+  fillTradingJournal,
   proceedToConfirmation,
   completePositionCreationFlow
 } from '@/test/integration-helpers'
@@ -16,6 +18,13 @@ describe('Integration: Position Creation Flow', () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
+  })
+
+  afterEach(() => {
+    // Close database connection to prevent memory leaks
+    if (positionService) {
+      positionService.close()
+    }
   })
 
   it('should complete full user journey: Empty State → Position Creation → Save to IndexedDB', async () => {
@@ -46,7 +55,13 @@ describe('Integration: Position Creation Flow', () => {
     // 5. ACTION: Proceed to Step 2 - Risk Assessment
     await proceedToRiskAssessment()
 
-    // 7. ACTION: Proceed to Step 3 - Confirmation
+    // 6. ACTION: Proceed to Step 3 - Trading Journal
+    await proceedToTradingJournal()
+
+    // 7. ACTION: Fill Trading Journal
+    await fillTradingJournal()
+
+    // 8. ACTION: Proceed to Step 4 - Confirmation
     await proceedToConfirmation()
 
     // 9. VERIFY: Immutable confirmation checkbox is required
@@ -89,7 +104,7 @@ describe('Integration: Position Creation Flow', () => {
     expect(savedPosition.position_thesis).toBe('Integration test: Bullish on Q4 earnings and iPhone cycle')
     expect(savedPosition.status).toBe('planned')
     expect(savedPosition.created_date).toBeInstanceOf(Date)
-    expect(savedPosition.id).toMatch(/^pos-\d+$/) // Generated ID format
+    expect(savedPosition.id).toMatch(/^pos-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/) // UUID format
 
     // 15. BONUS: Test position retrieval by ID
     const retrievedPosition = await positionService.getById(savedPosition.id)
@@ -178,17 +193,40 @@ describe('Integration: Position Creation Flow', () => {
       expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
     })
 
-    // Go to Step 3
-    const nextToStep3Button = screen.getByText('Next: Confirmation')
+    // Go to Step 3 (Trading Journal)
+    const nextToStep3Button = screen.getByText('Next: Trading Journal')
     expect(nextToStep3Button).toBeVisible()
     fireEvent.click(nextToStep3Button)
+
+    await waitFor(() => {
+      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
+    })
+
+    // Fill journal form quickly
+    fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+      target: { value: 'Cloud growth analysis' }
+    })
+
+    // Go to Step 4 (Confirmation)
+    const nextToStep4Button = screen.getByRole('button', { name: /Next: Confirmation/i })
+    expect(nextToStep4Button).toBeVisible()
+    fireEvent.click(nextToStep4Button)
 
     await waitFor(() => {
       expect(screen.getByText('Confirmation')).toBeInTheDocument()
     })
 
-    // Go back to Step 2
-    const backToStep2Button = screen.getByText('Back to Risk Assessment')
+    // Go back to Step 3 (Trading Journal)
+    const backToStep3Button = screen.getByText('Back to Trading Journal')
+    expect(backToStep3Button).toBeVisible()
+    fireEvent.click(backToStep3Button)
+
+    await waitFor(() => {
+      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
+    })
+
+    // Go back to Step 2 (using Cancel button in journal form)
+    const backToStep2Button = screen.getByText('Cancel')
     expect(backToStep2Button).toBeVisible()
     fireEvent.click(backToStep2Button)
 

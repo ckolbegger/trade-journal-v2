@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
@@ -17,6 +17,13 @@ describe('Integration: Position Detail Routing', () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
+  })
+
+  afterEach(() => {
+    // Close database connection to prevent memory leaks
+    if (positionService) {
+      positionService.close()
+    }
   })
 
   it('should navigate from Dashboard to Position Detail when position is clicked', async () => {

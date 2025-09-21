@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
 import type { Position } from '@/lib/position'
 import { PositionService } from '@/lib/position'
-import { JournalEntryForm } from '@/components/JournalEntryForm'
 import { JournalService } from '@/services/JournalService'
+import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
+import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
@@ -32,19 +33,38 @@ interface ValidationErrors {
 
 interface PositionCreateProps {
   positionService?: PositionService
-  // journalService?: JournalService
+  journalService?: JournalService
 }
 
-export function PositionCreate({ positionService: injectedPositionService }: PositionCreateProps = {}) {
+export function PositionCreate({
+  positionService: injectedPositionService,
+  journalService: injectedJournalService
+}: PositionCreateProps = {}) {
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
-  // const [journalFields, setJournalFields] = useState<JournalField[]>([])
+  const [journalFields, setJournalFields] = useState<JournalField[]>([])
+  const [isCreating, setIsCreating] = useState(false)
 
-  // Use injected services or create default ones
+  // Initialize services
   const positionService = injectedPositionService || new PositionService()
-  // Journal service will be initialized when needed
+
+  // For journal service, we need to wait for DB initialization
+  const initJournalService = async (): Promise<JournalService> => {
+    if (injectedJournalService) {
+      return injectedJournalService
+    }
+
+    // Open the same database that PositionService uses
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('TradingJournalDB', 2)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+    })
+
+    return new JournalService(db)
+  }
 
   const [formData, setFormData] = useState<PositionFormData>({
     symbol: '',
@@ -131,6 +151,8 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
       setCurrentStep(2)
     } else if (currentStep === 2) {
       setCurrentStep(3)
+    } else if (currentStep === 3 && journalFields.length > 0) {
+      setCurrentStep(4)
     }
   }
 
@@ -140,48 +162,52 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
     }
   }
 
+  const handleJournalSave = (fields: JournalField[]) => {
+    setJournalFields(fields)
+    setCurrentStep(4)
+  }
+
+  const handleJournalCancel = () => {
+    setCurrentStep(2)
+  }
+
   const handleCreatePosition = async () => {
-    if (!immutableConfirmed) return
+    if (!immutableConfirmed || journalFields.length === 0) return
 
-    const position: Position = {
-      id: `pos-${Date.now()}`,
-      symbol: formData.symbol.toUpperCase(),
-      strategy_type: formData.strategy_type,
-      target_entry_price: parseFloat(formData.target_entry_price),
-      target_quantity: parseInt(formData.target_quantity),
-      profit_target: parseFloat(formData.profit_target),
-      stop_loss: parseFloat(formData.stop_loss),
-      position_thesis: formData.position_thesis,
-      created_date: new Date(),
-      status: 'planned',
-      journal_entry_ids: []
+    setIsCreating(true)
+
+    try {
+      // Initialize journal service
+      const journalService = await initJournalService()
+
+      // Create transaction service
+      const transactionService = new PositionJournalTransaction(positionService, journalService)
+
+      // Execute UUID-based transaction
+      const result = await transactionService.createPositionWithJournal({
+        symbol: formData.symbol,
+        target_entry_price: parseFloat(formData.target_entry_price),
+        target_quantity: parseInt(formData.target_quantity),
+        profit_target: parseFloat(formData.profit_target),
+        stop_loss: parseFloat(formData.stop_loss),
+        position_thesis: formData.position_thesis,
+        journalFields: journalFields
+      })
+
+      // Navigate to position detail on success
+      navigate(`/position/${result.position.id}`)
+    } catch (error) {
+      console.error('Failed to create position and journal entry:', error)
+      alert('Failed to create position. Please check the console for details.')
+    } finally {
+      setIsCreating(false)
     }
-
-    const createdPosition = await positionService.create(position)
-
-    // Create journal entry if fields were provided (not implemented yet)
-    // if (journalFields.length > 0 && injectedJournalService) {
-    //   const journalEntry = await injectedJournalService.create({
-    //     position_id: createdPosition.id,
-    //     entry_type: 'position_plan',
-    //     fields: journalFields
-    //   })
-
-    //   // Update position with journal entry id
-    //   const updatedPosition = {
-    //     ...createdPosition,
-    //     journal_entry_ids: [journalEntry.id]
-    //   }
-    //   await positionService.update(updatedPosition)
-    // }
-
-    navigate(`/position/${createdPosition.id}`)
   }
 
   const renderStepIndicator = () => (
     <div data-testid="step-indicator" className="bg-gray-50 p-3 border-b border-gray-200">
       <div className="flex justify-center gap-2">
-        {[1, 2, 3].map(step => (
+        {[1, 2, 3, 4].map(step => (
           <div
             key={step}
             data-testid="step-dot"
@@ -360,27 +386,20 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
     )
   }
 
-  const handleJournalSave = (fields: JournalField[]) => {
-    setJournalFields(fields)
-    setCurrentStep(4)
-  }
-
-  const handleJournalCancel = () => {
-    // For now, just go back to previous step
-    setCurrentStep(2)
-  }
-
   const renderStep3 = () => (
     <div className="p-5 pb-32">
-      <h2 className="text-2xl font-semibold mb-2">Position Journal</h2>
-      <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-        Document your reasoning and strategy. This journal entry helps build trading discipline.
-      </p>
-
-      <JournalEntryForm
+      <EnhancedJournalEntryForm
         entryType="position_plan"
         onSave={handleJournalSave}
         onCancel={handleJournalCancel}
+        submitButtonText="Next: Confirmation"
+        initialFields={[
+          {
+            name: 'thesis',
+            prompt: 'Why are you planning this position?',
+            response: formData.position_thesis
+          }
+        ]}
       />
     </div>
   )
@@ -443,6 +462,11 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
   )
 
   const renderBottomActions = () => {
+    // Step 3 (journal form) handles its own actions, so don't render bottom actions
+    if (currentStep === 3) {
+      return null
+    }
+
     return (
       <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 p-4">
         <div className="flex gap-3">
@@ -451,25 +475,28 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
               variant="outline"
               onClick={handlePrevStep}
               className="flex-1"
+              disabled={isCreating}
             >
-              {currentStep === 2 ? 'Back to Position Plan' : 'Back to Risk Assessment'}
+              {currentStep === 2 ? 'Back to Position Plan' :
+               currentStep === 4 ? 'Back to Trading Journal' : 'Back to Risk Assessment'}
             </Button>
           )}
 
-          {currentStep < 3 ? (
+          {currentStep < 4 ? (
             <Button
               onClick={handleNextStep}
               className="flex-1 bg-blue-600 hover:bg-blue-500"
             >
-              {currentStep === 1 ? 'Next: Risk Assessment' : 'Next: Confirmation'}
+              {currentStep === 1 ? 'Next: Risk Assessment' :
+               'Next: Trading Journal'}
             </Button>
           ) : (
             <Button
               onClick={handleCreatePosition}
-              disabled={!immutableConfirmed}
+              disabled={!immutableConfirmed || isCreating}
               className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300"
             >
-              Create Position Plan
+              {isCreating ? 'Creating...' : 'Create Position Plan'}
             </Button>
           )}
         </div>
@@ -496,7 +523,8 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
       <main>
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
-        {currentStep === 3 && renderStep4()}
+        {currentStep === 3 && renderStep3()}
+        {currentStep === 4 && renderStep4()}
       </main>
 
       {renderBottomActions()}

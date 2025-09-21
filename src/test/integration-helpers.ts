@@ -65,14 +65,54 @@ export const proceedToRiskAssessment = async () => {
 }
 
 /**
- * Navigate from Risk Assessment to Confirmation (Step 2 → Step 3)
+ * Navigate from Risk Assessment to Trading Journal (Step 2 → Step 3)
  */
-export const proceedToConfirmation = async () => {
-  const nextToConfirmationButton = screen.getByText('Next: Confirmation')
-  expect(nextToConfirmationButton).toBeVisible()
-  fireEvent.click(nextToConfirmationButton)
+export const proceedToTradingJournal = async () => {
+  const nextToJournalButton = screen.getByText('Next: Trading Journal')
+  expect(nextToJournalButton).toBeVisible()
+  fireEvent.click(nextToJournalButton)
 
   // Verify Step 3 displays
+  await waitFor(() => {
+    expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
+  })
+
+  // Verify enhanced journal form is displayed
+  expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/How are you feeling about this trade/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
+}
+
+/**
+ * Fill out the Trading Journal form (Step 3)
+ */
+export const fillTradingJournal = async () => {
+  // Fill out journal form
+  fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+    target: { value: 'Strong technical support at current levels with bullish momentum' }
+  })
+  fireEvent.change(screen.getByLabelText(/How are you feeling about this trade/i), {
+    target: { value: 'Confident' }
+  })
+  fireEvent.change(screen.getByLabelText(/Market Conditions/i), {
+    target: { value: 'Bullish trend with Fed pause expected' }
+  })
+  fireEvent.change(screen.getByLabelText(/Execution Strategy/i), {
+    target: { value: 'Limit order at support level' }
+  })
+}
+
+/**
+ * Navigate from Trading Journal to Confirmation (Step 3 → Step 4)
+ */
+export const proceedToConfirmation = async () => {
+  // Submit journal form
+  const submitJournal = screen.getByRole('button', { name: /Next: Confirmation/i })
+  expect(submitJournal).toBeVisible()
+  fireEvent.click(submitJournal)
+
+  // Verify Step 4 displays
   await waitFor(() => {
     expect(screen.getByText('Confirmation')).toBeInTheDocument()
   })
@@ -94,10 +134,16 @@ export const completePositionCreationFlow = async (formData?: PositionFormData) 
   // Step 1 → Step 2: Risk Assessment
   await proceedToRiskAssessment()
 
-  // Step 2 → Step 3: Confirmation
+  // Step 2 → Step 3: Trading Journal
+  await proceedToTradingJournal()
+
+  // Step 3: Fill Trading Journal
+  await fillTradingJournal()
+
+  // Step 3 → Step 4: Confirmation
   await proceedToConfirmation()
 
-  // Step 3: Confirm immutable checkbox and create position
+  // Step 4: Confirm immutable checkbox and create position
   const immutableCheckbox = screen.getByRole('checkbox', {
     name: /I understand this position plan will be immutable/i
   })

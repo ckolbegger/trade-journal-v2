@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
+  proceedToTradingJournal,
+  fillTradingJournal,
   proceedToConfirmation,
   completePositionCreationFlow,
   verifyDashboardPosition
@@ -23,6 +25,13 @@ describe('Integration: Position Dashboard Display Flow', () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
+  })
+
+  afterEach(() => {
+    // Close database connection to prevent memory leaks
+    if (positionService) {
+      positionService.close()
+    }
   })
 
   it('should complete full user journey: Empty State → Position Creation → Dashboard Display', async () => {
@@ -52,7 +61,13 @@ describe('Integration: Position Dashboard Display Flow', () => {
     // 5. ACTION: Proceed to Step 2 - Risk Assessment
     await proceedToRiskAssessment()
 
-    // 7. ACTION: Proceed to Step 3 - Confirmation
+    // 6. ACTION: Proceed to Step 3 - Trading Journal
+    await proceedToTradingJournal()
+
+    // 7. ACTION: Fill Trading Journal
+    await fillTradingJournal()
+
+    // 8. ACTION: Proceed to Step 4 - Confirmation
     await proceedToConfirmation()
 
     // 9. VERIFY: Immutable confirmation checkbox is required
@@ -104,7 +119,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
     expect(savedPosition.position_thesis).toBe('Integration test: Bullish on Q4 earnings and iPhone cycle')
     expect(savedPosition.status).toBe('planned')
     expect(savedPosition.created_date).toBeInstanceOf(Date)
-    expect(savedPosition.id).toMatch(/^pos-\d+$/) // Generated ID format
+    expect(savedPosition.id).toMatch(/^pos-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/) // UUID format
 
     // 17. BONUS: Test position retrieval by ID
     const retrievedPosition = await positionService.getById(savedPosition.id)

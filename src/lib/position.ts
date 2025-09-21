@@ -18,13 +18,20 @@ export class PositionService {
   private dbName = 'TradingJournalDB'
   private version = 2
   private positionStore = 'positions'
+  private dbConnection: IDBDatabase | null = null
 
   private async getDB(): Promise<IDBDatabase> {
+    if (this.dbConnection) {
+      return this.dbConnection
+    }
     return new Promise((resolve, reject) => {
       const request = indexedDB.open(this.dbName, this.version)
 
       request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
+      request.onsuccess = () => {
+        this.dbConnection = request.result
+        resolve(request.result)
+      }
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
@@ -175,5 +182,12 @@ export class PositionService {
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve()
     })
+  }
+
+  close(): void {
+    if (this.dbConnection) {
+      this.dbConnection.close()
+      this.dbConnection = null
+    }
   }
 }

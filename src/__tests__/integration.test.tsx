@@ -8,10 +8,10 @@ describe('Real Integration Tests - Import Resolution', () => {
     expect(JOURNAL_PROMPTS.position_plan).toBeDefined();
   });
 
-  it('should import JournalEntryForm from @/components/JournalEntryForm', async () => {
+  it('should import EnhancedJournalEntryForm from @/components/EnhancedJournalEntryForm', async () => {
     // This should match exactly what PositionCreate.tsx does
-    const { JournalEntryForm } = await import('@/components/JournalEntryForm');
-    expect(JournalEntryForm).toBeDefined();
+    const { EnhancedJournalEntryForm } = await import('@/components/EnhancedJournalEntryForm');
+    expect(EnhancedJournalEntryForm).toBeDefined();
   });
 
   it('should import JournalService from @/services/JournalService', async () => {
