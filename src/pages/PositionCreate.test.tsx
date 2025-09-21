@@ -167,11 +167,11 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertStepVisible('Position Plan')
     })
 
-    it('should proceed to confirmation when Next is clicked', () => {
-      const nextButton = screen.getByText('Next: Confirmation')
+    it('should proceed to journal when Next is clicked', () => {
+      const nextButton = screen.getByText('Next: Journal')
       fireEvent.click(nextButton)
 
-      assertStepVisible('Confirmation')
+      assertStepVisible('Position Journal')
     })
   })
 
@@ -193,8 +193,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       await waitFor(() => assertStepVisible('Risk Assessment'))
 
       // Go to step 3
-      fireEvent.click(screen.getByText('Next: Confirmation'))
-      await waitFor(() => assertStepVisible('Confirmation'))
+      fireEvent.click(screen.getByText('Next: Journal'))
+      await waitFor(() => assertStepVisible('Position Journal'))
     })
 
     it('should display position summary for confirmation', () => {

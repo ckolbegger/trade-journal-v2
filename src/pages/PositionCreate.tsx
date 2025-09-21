@@ -7,6 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
 import type { Position } from '@/lib/position'
 import { PositionService } from '@/lib/position'
+import { JournalEntryForm } from '@/components/JournalEntryForm'
+import { JournalService } from '@/services/JournalService'
+import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
   symbol: string
@@ -29,6 +32,7 @@ interface ValidationErrors {
 
 interface PositionCreateProps {
   positionService?: PositionService
+  // journalService?: JournalService
 }
 
 export function PositionCreate({ positionService: injectedPositionService }: PositionCreateProps = {}) {
@@ -36,9 +40,11 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
+  // const [journalFields, setJournalFields] = useState<JournalField[]>([])
 
-  // Use injected service or create default one
+  // Use injected services or create default ones
   const positionService = injectedPositionService || new PositionService()
+  // Journal service will be initialized when needed
 
   const [formData, setFormData] = useState<PositionFormData>({
     symbol: '',
@@ -147,10 +153,28 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
       stop_loss: parseFloat(formData.stop_loss),
       position_thesis: formData.position_thesis,
       created_date: new Date(),
-      status: 'planned'
+      status: 'planned',
+      journal_entry_ids: []
     }
 
     const createdPosition = await positionService.create(position)
+
+    // Create journal entry if fields were provided (not implemented yet)
+    // if (journalFields.length > 0 && injectedJournalService) {
+    //   const journalEntry = await injectedJournalService.create({
+    //     position_id: createdPosition.id,
+    //     entry_type: 'position_plan',
+    //     fields: journalFields
+    //   })
+
+    //   // Update position with journal entry id
+    //   const updatedPosition = {
+    //     ...createdPosition,
+    //     journal_entry_ids: [journalEntry.id]
+    //   }
+    //   await positionService.update(updatedPosition)
+    // }
+
     navigate(`/position/${createdPosition.id}`)
   }
 
@@ -336,7 +360,32 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
     )
   }
 
+  const handleJournalSave = (fields: JournalField[]) => {
+    setJournalFields(fields)
+    setCurrentStep(4)
+  }
+
+  const handleJournalCancel = () => {
+    // For now, just go back to previous step
+    setCurrentStep(2)
+  }
+
   const renderStep3 = () => (
+    <div className="p-5 pb-32">
+      <h2 className="text-2xl font-semibold mb-2">Position Journal</h2>
+      <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+        Document your reasoning and strategy. This journal entry helps build trading discipline.
+      </p>
+
+      <JournalEntryForm
+        entryType="position_plan"
+        onSave={handleJournalSave}
+        onCancel={handleJournalCancel}
+      />
+    </div>
+  )
+
+  const renderStep4 = () => (
     <div className="p-5 pb-32">
       <h2 className="text-2xl font-semibold mb-2">Confirmation</h2>
       <p className="text-sm text-gray-500 mb-6 leading-relaxed">
@@ -393,38 +442,40 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
     </div>
   )
 
-  const renderBottomActions = () => (
-    <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 p-4">
-      <div className="flex gap-3">
-        {currentStep > 1 && (
-          <Button
-            variant="outline"
-            onClick={handlePrevStep}
-            className="flex-1"
-          >
-            {currentStep === 2 ? 'Back to Position Plan' : 'Back to Risk Assessment'}
-          </Button>
-        )}
+  const renderBottomActions = () => {
+    return (
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 p-4">
+        <div className="flex gap-3">
+          {currentStep > 1 && (
+            <Button
+              variant="outline"
+              onClick={handlePrevStep}
+              className="flex-1"
+            >
+              {currentStep === 2 ? 'Back to Position Plan' : 'Back to Risk Assessment'}
+            </Button>
+          )}
 
-        {currentStep < 3 ? (
-          <Button
-            onClick={handleNextStep}
-            className="flex-1 bg-blue-600 hover:bg-blue-500"
-          >
-            {currentStep === 1 ? 'Next: Risk Assessment' : 'Next: Confirmation'}
-          </Button>
-        ) : (
-          <Button
-            onClick={handleCreatePosition}
-            disabled={!immutableConfirmed}
-            className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300"
-          >
-            Create Position Plan
-          </Button>
-        )}
+          {currentStep < 3 ? (
+            <Button
+              onClick={handleNextStep}
+              className="flex-1 bg-blue-600 hover:bg-blue-500"
+            >
+              {currentStep === 1 ? 'Next: Risk Assessment' : 'Next: Confirmation'}
+            </Button>
+          ) : (
+            <Button
+              onClick={handleCreatePosition}
+              disabled={!immutableConfirmed}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300"
+            >
+              Create Position Plan
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div className="max-w-sm mx-auto min-h-screen bg-white">
@@ -445,7 +496,7 @@ export function PositionCreate({ positionService: injectedPositionService }: Pos
       <main>
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
-        {currentStep === 3 && renderStep3()}
+        {currentStep === 3 && renderStep4()}
       </main>
 
       {renderBottomActions()}

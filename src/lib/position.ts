@@ -10,12 +10,13 @@ export interface Position {
   position_thesis: string
   created_date: Date
   status: 'planned'
+  journal_entry_ids: string[]
 }
 
 // Position Service - IndexedDB CRUD operations
 export class PositionService {
   private dbName = 'TradingJournalDB'
-  private version = 1
+  private version = 2
   private positionStore = 'positions'
 
   private async getDB(): Promise<IDBDatabase> {
@@ -34,6 +35,15 @@ export class PositionService {
           store.createIndex('symbol', 'symbol', { unique: false })
           store.createIndex('status', 'status', { unique: false })
           store.createIndex('created_date', 'created_date', { unique: false })
+        }
+
+        // Create journal_entries object store
+        if (!db.objectStoreNames.contains('journal_entries')) {
+          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
+          journalStore.createIndex('position_id', 'position_id', { unique: false })
+          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
+          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
+          journalStore.createIndex('created_at', 'created_at', { unique: false })
         }
       }
     })
@@ -59,6 +69,11 @@ export class PositionService {
         !position.profit_target || !position.stop_loss ||
         !position.position_thesis || !position.created_date || !position.status) {
       throw new Error('Invalid position data')
+    }
+
+    // Ensure journal_entry_ids is an array (for backwards compatibility)
+    if (position.journal_entry_ids !== undefined && !Array.isArray(position.journal_entry_ids)) {
+      throw new Error('journal_entry_ids must be an array')
     }
   }
 
@@ -89,6 +104,10 @@ export class PositionService {
         if (result) {
           // Convert stored date strings back to Date objects
           result.created_date = new Date(result.created_date)
+          // Migrate existing positions to include journal_entry_ids
+          if (!result.journal_entry_ids) {
+            result.journal_entry_ids = []
+          }
           resolve(result)
         } else {
           resolve(null)
@@ -107,9 +126,13 @@ export class PositionService {
       request.onerror = () => reject(request.error)
       request.onsuccess = () => {
         const positions = request.result || []
-        // Convert stored date strings back to Date objects
+        // Convert stored date strings back to Date objects and migrate schema
         positions.forEach(position => {
           position.created_date = new Date(position.created_date)
+          // Migrate existing positions to include journal_entry_ids
+          if (!position.journal_entry_ids) {
+            position.journal_entry_ids = []
+          }
         })
         resolve(positions)
       }

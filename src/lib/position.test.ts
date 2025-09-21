@@ -23,7 +23,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Bullish on Q4 earnings and iPhone cycle',
         created_date: new Date('2024-01-15'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       // Test that all required fields are present
@@ -37,6 +38,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
       expect(mockPosition.position_thesis).toBeDefined()
       expect(mockPosition.created_date).toBeDefined()
       expect(mockPosition.status).toBeDefined()
+      expect(mockPosition.journal_entry_ids).toBeDefined()
+      expect(Array.isArray(mockPosition.journal_entry_ids)).toBe(true)
     })
 
     it('should only accept "Long Stock" strategy_type in Phase 1A', () => {
@@ -50,7 +53,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Test thesis',
         created_date: new Date(),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       expect(validPosition.strategy_type).toBe('Long Stock')
@@ -67,7 +71,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Test thesis',
         created_date: new Date(),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       expect(plannedPosition.status).toBe('planned')
@@ -86,7 +91,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Bullish on Q4 earnings',
         created_date: new Date('2024-01-15'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await positionService.create(position)
@@ -110,7 +116,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Bullish on earnings',
         created_date: new Date('2024-01-15'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       const position2: Position = {
@@ -123,7 +130,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 270.00,
         position_thesis: 'Cloud growth momentum',
         created_date: new Date('2024-01-16'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await positionService.create(position1)
@@ -146,7 +154,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Original thesis',
         created_date: new Date('2024-01-15'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await positionService.create(originalPosition)
@@ -173,7 +182,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Test position',
         created_date: new Date('2024-01-15'),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await positionService.create(position)
@@ -207,7 +217,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Test thesis',
         created_date: new Date(),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await expect(positionService.create(invalidPosition))
@@ -225,7 +236,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: 'Test thesis',
         created_date: new Date(),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await expect(positionService.create(invalidPosition))
@@ -243,7 +255,8 @@ describe('Position - Phase 1A: Basic Position Planning', () => {
         stop_loss: 135.00,
         position_thesis: '', // Invalid empty thesis
         created_date: new Date(),
-        status: 'planned'
+        status: 'planned',
+        journal_entry_ids: []
       }
 
       await expect(positionService.create(invalidPosition))

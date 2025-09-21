@@ -101,17 +101,50 @@ The application uses a **Position vs Trade separation architecture** with **trad
 - Future-proof design accommodating options without architectural changes
 - Clean separation between position planning and trade execution
 
+### Import Guidelines
+**CRITICAL: TypeScript Interface Import Rules**
+
+❌ **NEVER import interfaces as runtime values:**
+```typescript
+import { MyInterface } from './types'  // WRONG - will fail in browser
+```
+
+✅ **ALWAYS use type-only imports for interfaces:**
+```typescript
+import type { MyInterface } from './types'  // CORRECT - compile-time only
+```
+
+✅ **Runtime values (classes, functions, objects) use regular imports:**
+```typescript
+import { MyClass, myFunction, MY_CONSTANT } from './module'  // CORRECT
+```
+
+**Why this matters:**
+- TypeScript interfaces are erased during compilation and don't exist at runtime
+- Browser module resolution will fail when trying to import non-existent interface exports
+- Tests may pass in Node.js but fail in browser due to different module resolution
+
 ### Testing Approach
 Uses Vitest + React Testing Library + fake-indexeddb for comprehensive testing coverage.
 
 **Key Testing Principles:**
 - **Test-Driven Development (TDD)**: Write failing tests first, then implement code to pass
 - **Integration Tests**: Test complete user journeys end-to-end without mocks
+- **Import Path Consistency**: Tests MUST use same import paths as application code
+  - ❌ Tests using `../types/module` while app uses `@/types/module` will hide import issues
+  - ✅ All test imports must use `@/` path aliases to match browser behavior
+  - ✅ Create integration tests that verify actual module resolution works
 - **Element Visibility Validation**: Always verify elements are visible before interaction in tests
   - Use `expect(element).toBeVisible()` before clicking/interacting with elements
   - Catches layout conflicts, CSS hiding, and positioning issues
   - Example: `expect(nextButton).toBeVisible(); fireEvent.click(nextButton)`
 - **Real Data Persistence**: Integration tests use actual IndexedDB (via fake-indexeddb) for realistic testing
+
+**Integration Test Requirements:**
+- Must test actual component imports work: `const { Component } = await import('@/components/Component')`
+- Must test full user workflows from start to finish
+- Must use same module resolution as browser environment
+- Component tests that hang/timeout indicate real integration problems
 
 ### Mockups and Design
 - **All mockups must be stored in `/mockups` directory structure**
