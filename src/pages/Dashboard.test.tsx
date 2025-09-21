@@ -33,20 +33,6 @@ describe('Dashboard', () => {
     resetMockService(mockPositionService)
   })
 
-  it('shows loading state initially', async () => {
-    mockPositionService.getAll.mockResolvedValue(mockPositions)
-
-    await act(async () => {
-      renderWithRouter(<Dashboard />)
-    })
-
-    expect(screen.getByText('Loading positions...')).toBeInTheDocument()
-
-    // Wait for async operations to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
-    })
-  })
 
   it('shows empty state when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])

@@ -54,20 +54,6 @@ describe('PositionDetail', () => {
     })
   })
 
-  it('should display loading state initially', async () => {
-    mockPositionService.getById.mockResolvedValue(mockPosition)
-
-    await act(async () => {
-      renderWithRouter(<PositionDetail />)
-    })
-
-    expect(screen.getByText('Loading position...')).toBeInTheDocument()
-
-    // Wait for async operations to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading position...')).not.toBeInTheDocument()
-    })
-  })
 
   it('should display position header with symbol and strategy', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)

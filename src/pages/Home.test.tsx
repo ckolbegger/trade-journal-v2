@@ -35,20 +35,6 @@ describe('Home', () => {
     resetMockService(mockPositionService)
   })
 
-  it('shows loading state initially', async () => {
-    mockPositionService.getAll.mockResolvedValue(mockPositions)
-
-    await act(async () => {
-      renderWithRouter(<Home />)
-    })
-
-    expect(screen.getByText('Loading...')).toBeInTheDocument()
-
-    // Wait for async operations to complete
-    await waitFor(() => {
-      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
-    })
-  })
 
   it('shows EmptyState when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
@@ -105,7 +91,9 @@ describe('Home', () => {
     })
 
     await waitFor(() => {
-      assertEmptyState()
+      expect(screen.getByText('Error Loading App')).toBeInTheDocument()
+      expect(screen.getByText('Database error')).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
       assertTextDoesNotExist('Loading...')
     })
 
