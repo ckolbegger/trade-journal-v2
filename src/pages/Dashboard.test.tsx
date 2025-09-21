@@ -1,4 +1,4 @@
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Dashboard } from './Dashboard'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
@@ -33,19 +33,27 @@ describe('Dashboard', () => {
     resetMockService(mockPositionService)
   })
 
-  it('shows loading state initially', () => {
+  it('shows loading state initially', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
-    render
-    renderWithRouter(<Dashboard />)
+
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     expect(screen.getByText('Loading positions...')).toBeInTheDocument()
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
+    })
   })
 
   it('shows empty state when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       expect(screen.getByText('No positions yet')).toBeInTheDocument()
@@ -57,8 +65,9 @@ describe('Dashboard', () => {
   it('displays positions when they exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
@@ -72,8 +81,9 @@ describe('Dashboard', () => {
   it('shows formatted currency values', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       assertPositionDetails('AAPL', { stopLoss: '140.00' })
@@ -84,8 +94,9 @@ describe('Dashboard', () => {
   it('displays TODO placeholders for unimplemented features', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       assertTextExists('TODO', { count: 4 })
@@ -96,8 +107,9 @@ describe('Dashboard', () => {
   it('shows formatted dates', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       // Check that dates are displayed (format may vary by timezone)
@@ -113,8 +125,9 @@ describe('Dashboard', () => {
   it('displays planned status badges', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       assertTextExists('Planned', { count: 2 })
@@ -124,8 +137,9 @@ describe('Dashboard', () => {
   it('shows floating action button', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       assertFabButtonVisible()
@@ -136,8 +150,9 @@ describe('Dashboard', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
-    render
-    renderWithRouter(<Dashboard />)
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
 
     await waitFor(() => {
       expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
@@ -150,7 +165,10 @@ describe('Dashboard', () => {
   describe('Position Hover Effects', () => {
     it('should apply hover highlighting to position cards on mouseover', async () => {
       mockPositionService.getAll.mockResolvedValue(mockPositions)
-      renderWithRouter(<Dashboard />)
+
+      await act(async () => {
+        renderWithRouter(<Dashboard />)
+      })
 
       await waitFor(() => {
         const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
@@ -171,7 +189,10 @@ describe('Dashboard', () => {
 
     it('should remove hover highlighting when mouse leaves position card', async () => {
       mockPositionService.getAll.mockResolvedValue(mockPositions)
-      renderWithRouter(<Dashboard />)
+
+      await act(async () => {
+        renderWithRouter(<Dashboard />)
+      })
 
       await waitFor(() => {
         const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')

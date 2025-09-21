@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { Home } from './Home'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
@@ -35,18 +35,27 @@ describe('Home', () => {
     resetMockService(mockPositionService)
   })
 
-  it('shows loading state initially', () => {
+  it('shows loading state initially', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
-    render
-    renderWithRouter(<Home />)
+
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     expect(screen.getByText('Loading...')).toBeInTheDocument()
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+    })
   })
 
   it('shows EmptyState when no positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertEmptyState()
@@ -58,7 +67,9 @@ describe('Home', () => {
   it('shows Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertTextExists('Positions')
@@ -70,7 +81,9 @@ describe('Home', () => {
   it('shows EmptyState features when no positions', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertTextExists(/Immutable trade plans with forced journaling/)
@@ -87,7 +100,9 @@ describe('Home', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertEmptyState()
@@ -100,7 +115,9 @@ describe('Home', () => {
   it('shows Create Position button in EmptyState', async () => {
     mockPositionService.getAll.mockResolvedValue([])
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertButtonState('Create Your First Position', true)
@@ -110,7 +127,9 @@ describe('Home', () => {
   it('shows floating action button in Dashboard when positions exist', async () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
-    renderWithRouter(<Home />)
+    await act(async () => {
+      renderWithRouter(<Home />)
+    })
 
     await waitFor(() => {
       assertFabButtonVisible()

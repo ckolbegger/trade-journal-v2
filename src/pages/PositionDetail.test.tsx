@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react'
 import { PositionDetail } from './PositionDetail'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { TEST_POSITIONS } from '@/test/data-factories'
@@ -44,23 +44,37 @@ describe('PositionDetail', () => {
 
   it('should display position not found when position does not exist', async () => {
     mockPositionService.getById.mockResolvedValue(null)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Position not found')).toBeInTheDocument()
     })
   })
 
-  it('should display loading state initially', () => {
+  it('should display loading state initially', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     expect(screen.getByText('Loading position...')).toBeInTheDocument()
+
+    // Wait for async operations to complete
+    await waitFor(() => {
+      expect(screen.queryByText('Loading position...')).not.toBeInTheDocument()
+    })
   })
 
   it('should display position header with symbol and strategy', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       assertTextExists('AAPL')
@@ -70,7 +84,10 @@ describe('PositionDetail', () => {
 
   it('should display performance section with current price and P&L stats', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       assertTextExists('Avg Cost')
@@ -81,7 +98,10 @@ describe('PositionDetail', () => {
 
   it('should display trade plan with immutability notice', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       assertTextExists('Trade Plan')
@@ -96,7 +116,10 @@ describe('PositionDetail', () => {
 
   it('should display trade history section without Add Trade button', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       assertTextExists('Trade History')
@@ -111,7 +134,10 @@ describe('PositionDetail', () => {
 
   it('should display journal entries section', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       assertTextExists('Journal Entries')
@@ -120,7 +146,10 @@ describe('PositionDetail', () => {
 
   it('should display bottom action buttons', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       // Look for the bottom action bar specifically
@@ -137,7 +166,10 @@ describe('PositionDetail', () => {
 
   it('should navigate back when back button is clicked', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       // Find the first button which should be the back button
@@ -151,7 +183,10 @@ describe('PositionDetail', () => {
   it('should handle error when loading position fails', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     mockPositionService.getById.mockRejectedValue(new Error('Database error'))
-    renderWithRouter(<PositionDetail />)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
 
     await waitFor(() => {
       expect(screen.getByText('Position not found')).toBeInTheDocument()
