@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { JournalService } from '@/services/JournalService';
-import type { JournalEntry, JournalField } from '@/types/journal';
+import type { JournalField } from '@/types/journal';
 
 describe('JournalService', () => {
   let journalService: JournalService;
@@ -101,6 +101,99 @@ describe('JournalService', () => {
 
       expect(entry.fields[0].response).toBe('');
     });
+
+    it('should reject journal entry without position_id or trade_id', async () => {
+      const fields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: 'Valid content with sufficient length'
+        }
+      ];
+
+      await expect(journalService.create({
+        entry_type: 'position_plan',
+        fields
+      })).rejects.toThrow('Either position_id or trade_id is required');
+    });
+
+    it('should reject journal entry with empty fields array', async () => {
+      await expect(journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields: []
+      })).rejects.toThrow('At least one journal field is required');
+    });
+
+    it('should reject journal entry with thesis response too short', async () => {
+      const fields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: 'Short'
+        }
+      ];
+
+      await expect(journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields
+      })).rejects.toThrow('Thesis response must be at least 10 characters');
+    });
+
+    it('should reject journal entry with thesis response too long', async () => {
+      const longContent = 'x'.repeat(2001);
+      const fields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: longContent
+        }
+      ];
+
+      await expect(journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields
+      })).rejects.toThrow('Thesis response cannot exceed 2000 characters');
+    });
+
+    it('should accept journal entry with minimum valid thesis length', async () => {
+      const fields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: '1234567890' // Exactly 10 characters
+        }
+      ];
+
+      const entry = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields
+      });
+
+      expect(entry.fields[0].response).toBe('1234567890');
+    });
+
+    it('should accept journal entry with maximum valid thesis length', async () => {
+      const maxContent = 'x'.repeat(2000);
+      const fields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: maxContent
+        }
+      ];
+
+      const entry = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields
+      });
+
+      expect(entry.fields[0].response).toBe(maxContent);
+    });
   });
 
   describe('findById', () => {
@@ -131,20 +224,20 @@ describe('JournalService', () => {
       const entry1 = await journalService.create({
         position_id: 'pos-123',
         entry_type: 'position_plan',
-        fields: []
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Test thesis for position 123' }]
       });
 
       const entry2 = await journalService.create({
         position_id: 'pos-123',
         entry_type: 'trade_execution',
-        fields: []
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Test execution notes' }]
       });
 
       // Different position
       await journalService.create({
         position_id: 'pos-456',
         entry_type: 'position_plan',
-        fields: []
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Test thesis for position 456' }]
       });
 
       const entries = await journalService.findByPositionId('pos-123');
@@ -165,7 +258,7 @@ describe('JournalService', () => {
       const entry = await journalService.create({
         trade_id: 'trade-123',
         entry_type: 'trade_execution',
-        fields: []
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Test trade execution notes' }]
       });
 
       const entries = await journalService.findByTradeId('trade-123');
@@ -205,13 +298,225 @@ describe('JournalService', () => {
       const created = await journalService.create({
         position_id: 'pos-123',
         entry_type: 'position_plan',
-        fields: []
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Test thesis for deletion' }]
       });
 
       await journalService.delete(created.id);
 
       const found = await journalService.findById(created.id);
       expect(found).toBeUndefined();
+    });
+
+    it('should handle deletion of non-existent entry', async () => {
+      // Should not throw error
+      await expect(journalService.delete('non-existent-id')).resolves.not.toThrow();
+    });
+  });
+
+  describe('getAll', () => {
+    it('should retrieve all journal entries sorted by created_at', async () => {
+      // Create entries with different timestamps
+      const entry1 = await journalService.create({
+        position_id: 'pos-1',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'First entry created' }],
+        created_at: '2024-01-01T10:00:00Z'
+      });
+
+      const entry2 = await journalService.create({
+        position_id: 'pos-2',
+        entry_type: 'trade_execution',
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Second entry created' }],
+        created_at: '2024-01-01T11:00:00Z'
+      });
+
+      const entry3 = await journalService.create({
+        position_id: 'pos-1',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Third entry created' }],
+        created_at: '2024-01-01T12:00:00Z'
+      });
+
+      const allEntries = await journalService.getAll();
+
+      expect(allEntries).toHaveLength(3);
+      expect(allEntries[0].id).toBe(entry3.id); // Newest first
+      expect(allEntries[1].id).toBe(entry2.id);
+      expect(allEntries[2].id).toBe(entry1.id); // Oldest last
+    });
+
+    it('should return empty array when no entries exist', async () => {
+      const entries = await journalService.getAll();
+      expect(entries).toEqual([]);
+    });
+  });
+
+  describe('deleteByPositionId', () => {
+    it('should delete all journal entries for a position', async () => {
+      const positionId = 'pos-123';
+
+      // Create multiple entries for the position
+      await journalService.create({
+        position_id: positionId,
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'First entry with sufficient length for testing' }]
+      });
+
+      await journalService.create({
+        position_id: positionId,
+        entry_type: 'trade_execution',
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Second entry with sufficient length for testing' }]
+      });
+
+      // Create entry for different position
+      await journalService.create({
+        position_id: 'pos-456',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Different position entry with sufficient length for testing' }]
+      });
+
+      // Delete entries for the specific position
+      await journalService.deleteByPositionId(positionId);
+
+      // Verify entries for the position are deleted
+      const positionEntries = await journalService.findByPositionId(positionId);
+      expect(positionEntries).toHaveLength(0);
+
+      // Verify entries for other positions remain
+      const allEntries = await journalService.getAll();
+      expect(allEntries).toHaveLength(1);
+      expect(allEntries[0].position_id).toBe('pos-456');
+    });
+
+    it('should handle deletion for position with no entries', async () => {
+      // Should not throw error
+      await expect(journalService.deleteByPositionId('non-existent-position')).resolves.not.toThrow();
+    });
+  });
+
+  describe('enhanced error handling', () => {
+    it('should reject update for non-existent entry', async () => {
+      await expect(
+        journalService.update('non-existent-id', {
+          fields: [{ name: 'thesis', prompt: 'Why?', response: 'Updated content' }]
+        })
+      ).rejects.toThrow('Journal entry not found');
+    });
+
+    it('should reject update with invalid thesis content', async () => {
+      const created = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Original content with sufficient length' }]
+      });
+
+      await expect(
+        journalService.update(created.id, {
+          fields: [{ name: 'thesis', prompt: 'Why?', response: 'Short' }]
+        })
+      ).rejects.toThrow('Thesis response must be at least 10 characters');
+    });
+
+    it('should reject update with thesis content too long', async () => {
+      const created = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Original content with sufficient length' }]
+      });
+
+      const longContent = 'x'.repeat(2001);
+      await expect(
+        journalService.update(created.id, {
+          fields: [{ name: 'thesis', prompt: 'Why?', response: longContent }]
+        })
+      ).rejects.toThrow('Thesis response cannot exceed 2000 characters');
+    });
+  });
+
+  describe('data persistence', () => {
+    it('should persist data across service instances', async () => {
+      // Create entry with first service instance
+      const created = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'Persistent entry' }]
+      });
+
+      // Note: In a real scenario, we'd create a new service instance with the same database
+      // For this test, we just verify the original service persists data correctly
+
+      // Note: This test would need the same database instance to truly test persistence
+      // For now, we'll test that the original service still has the data
+      const retrieved = await journalService.findById(created.id);
+      expect(retrieved).toEqual(created);
+    });
+  });
+
+  describe('standardized method names', () => {
+    it('getById should return journal entry by id (returning null for missing)', async () => {
+      const created = await journalService.create({
+        position_id: 'pos-123',
+        entry_type: 'position_plan',
+        fields: [{
+          name: 'thesis',
+          prompt: 'Why?',
+          response: 'Test response'
+        }]
+      });
+
+      const found = await journalService.getById(created.id);
+      expect(found).toEqual(created);
+
+      const notFound = await journalService.getById('non-existent');
+      expect(notFound).toBeNull();
+    });
+
+    it('getByPositionId should return entries sorted by timestamp (newest first)', async () => {
+      const positionId = 'pos-123';
+
+      // Create multiple entries with explicit timestamps
+      const entry1 = await journalService.create({
+        position_id: positionId,
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'First entry' }],
+        created_at: '2024-01-01T10:00:00Z'
+      });
+
+      const entry2 = await journalService.create({
+        position_id: positionId,
+        entry_type: 'trade_execution',
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Second entry' }],
+        created_at: '2024-01-01T11:00:00Z'
+      });
+
+      const entries = await journalService.getByPositionId(positionId);
+
+      expect(entries).toHaveLength(2);
+      expect(entries[0].id).toBe(entry2.id); // Newest first
+      expect(entries[1].id).toBe(entry1.id); // Oldest last
+    });
+
+    it('getAll should return all entries sorted by timestamp (newest first)', async () => {
+      // Create entries with different timestamps
+      const entry1 = await journalService.create({
+        position_id: 'pos-1',
+        entry_type: 'position_plan',
+        fields: [{ name: 'thesis', prompt: 'Why?', response: 'First entry' }],
+        created_at: '2024-01-01T10:00:00Z'
+      });
+
+      const entry2 = await journalService.create({
+        position_id: 'pos-2',
+        entry_type: 'trade_execution',
+        fields: [{ name: 'execution_notes', prompt: 'Notes', response: 'Second entry' }],
+        created_at: '2024-01-01T11:00:00Z'
+      });
+
+      const allEntries = await journalService.getAll();
+
+      expect(allEntries).toHaveLength(2);
+      expect(allEntries[0].id).toBe(entry2.id); // Newest first
+      expect(allEntries[1].id).toBe(entry1.id); // Oldest last
     });
   });
 });

@@ -22,8 +22,51 @@ export class JournalService {
     this.db = db;
   }
 
+  private validateJournalRequest(request: CreateJournalEntryRequest): void {
+    // Must have either position_id or trade_id
+    if (!request.position_id && !request.trade_id) {
+      throw new Error('Either position_id or trade_id is required');
+    }
+
+    // Must have at least one field
+    if (!request.fields || request.fields.length === 0) {
+      throw new Error('At least one journal field is required');
+    }
+
+    // Validate thesis field if present
+    const thesisField = request.fields.find(field => field.name === 'thesis');
+    if (thesisField) {
+      this.validateThesisContent(thesisField.response);
+    }
+  }
+
+  private validateUpdateRequest(updates: UpdateJournalEntryRequest): void {
+    if (updates.fields) {
+      const thesisField = updates.fields.find(field => field.name === 'thesis');
+      if (thesisField) {
+        this.validateThesisContent(thesisField.response);
+      }
+    }
+  }
+
+  private validateThesisContent(content: string): void {
+    if (content.trim().length > 0 && content.trim().length < 10) {
+      throw new Error('Thesis response must be at least 10 characters');
+    }
+    if (content.length > 2000) {
+      throw new Error('Thesis response cannot exceed 2000 characters');
+    }
+  }
+
   async create(request: CreateJournalEntryRequest): Promise<JournalEntry> {
     return new Promise((resolve, reject) => {
+      try {
+        this.validateJournalRequest(request);
+      } catch (error) {
+        reject(error);
+        return;
+      }
+
       const transaction = this.db.transaction(['journal_entries'], 'readwrite');
       const store = transaction.objectStore('journal_entries');
 
@@ -65,6 +108,12 @@ export class JournalService {
     });
   }
 
+  // Standardized method name alias for consistency with glm-code branch
+  async getById(id: string): Promise<JournalEntry | null> {
+    const result = await this.findById(id);
+    return result || null;
+  }
+
   async findByPositionId(positionId: string): Promise<JournalEntry[]> {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction(['journal_entries'], 'readonly');
@@ -80,6 +129,13 @@ export class JournalService {
         reject(new Error('Failed to find journal entries by position'));
       };
     });
+  }
+
+  // Standardized method name alias for consistency with glm-code branch
+  async getByPositionId(positionId: string): Promise<JournalEntry[]> {
+    const entries = await this.findByPositionId(positionId);
+    // Sort by created_at descending (newest first) to match glm-code behavior
+    return entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   }
 
   async findByTradeId(tradeId: string): Promise<JournalEntry[]> {
@@ -101,6 +157,13 @@ export class JournalService {
 
   async update(id: string, updates: UpdateJournalEntryRequest): Promise<JournalEntry> {
     return new Promise(async (resolve, reject) => {
+      try {
+        this.validateUpdateRequest(updates);
+      } catch (error) {
+        reject(error);
+        return;
+      }
+
       const existing = await this.findById(id);
       if (!existing) {
         reject(new Error('Journal entry not found'));
@@ -140,6 +203,55 @@ export class JournalService {
       request.onerror = () => {
         reject(new Error('Failed to delete journal entry'));
       };
+    });
+  }
+
+  async getAll(): Promise<JournalEntry[]> {
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['journal_entries'], 'readonly');
+      const store = transaction.objectStore('journal_entries');
+      const index = store.index('created_at');
+      const request = index.getAll();
+
+      request.onsuccess = () => {
+        const entries = request.result || [];
+        // Sort by created_at descending (newest first)
+        entries.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        resolve(entries);
+      };
+
+      request.onerror = () => {
+        reject(new Error('Failed to get all journal entries'));
+      };
+    });
+  }
+
+  async deleteByPositionId(positionId: string): Promise<void> {
+    // First, get all entries for the position
+    const entries = await this.findByPositionId(positionId);
+
+    if (entries.length === 0) {
+      return;
+    }
+
+    return new Promise((resolve, reject) => {
+      const transaction = this.db.transaction(['journal_entries'], 'readwrite');
+      const store = transaction.objectStore('journal_entries');
+
+      let deletedCount = 0;
+
+      entries.forEach(entry => {
+        const deleteRequest = store.delete(entry.id);
+        deleteRequest.onsuccess = () => {
+          deletedCount++;
+          if (deletedCount === entries.length) {
+            resolve();
+          }
+        };
+        deleteRequest.onerror = () => {
+          reject(new Error('Failed to delete journal entries by position'));
+        };
+      });
     });
   }
 

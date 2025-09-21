@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
+import { JournalService } from '@/services/JournalService'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
@@ -13,11 +14,17 @@ import {
 
 describe('Integration: Position Creation Flow', () => {
   let positionService: PositionService
+  let journalService: JournalService
 
   beforeEach(async () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
+
+    // Initialize JournalService with the same database
+    const db = await positionService['getDB']() // Access private method for testing
+    journalService = new JournalService(db)
+    await journalService.clearAll()
   })
 
   afterEach(() => {
@@ -106,7 +113,30 @@ describe('Integration: Position Creation Flow', () => {
     expect(savedPosition.created_date).toBeInstanceOf(Date)
     expect(savedPosition.id).toMatch(/^pos-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/) // UUID format
 
-    // 15. BONUS: Test position retrieval by ID
+    // 15. INTEGRATION VERIFY: Journal entry was created during position creation
+    const journalEntries = await journalService.findByPositionId(savedPosition.id)
+    expect(journalEntries).toHaveLength(1)
+
+    const journalEntry = journalEntries[0]
+    expect(journalEntry.position_id).toBe(savedPosition.id)
+    expect(journalEntry.entry_type).toBe('position_plan')
+    expect(journalEntry.fields).toBeDefined()
+    expect(journalEntry.fields.length).toBeGreaterThan(0)
+
+    // Verify thesis field exists and contains the expected content from journal form
+    const thesisField = journalEntry.fields.find(field => field.name === 'thesis')
+    expect(thesisField).toBeDefined()
+    expect(thesisField?.response).toBe('Strong technical support at current levels with bullish momentum')
+
+    // Verify journal entry has proper timestamps
+    expect(journalEntry.created_at).toBeDefined()
+    expect(new Date(journalEntry.created_at)).toBeInstanceOf(Date)
+
+    // 16. INTEGRATION VERIFY: PositionService and JournalService data consistency
+    expect(savedPosition.journal_entry_ids).toBeDefined()
+    expect(savedPosition.journal_entry_ids).toContain(journalEntry.id)
+
+    // 17. BONUS: Test position retrieval by ID
     const retrievedPosition = await positionService.getById(savedPosition.id)
     expect(retrievedPosition).toEqual(savedPosition)
   })

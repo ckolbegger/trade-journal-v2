@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
+import { JournalService } from '@/services/JournalService'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
@@ -20,11 +21,17 @@ import {
 
 describe('Integration: Position Dashboard Display Flow', () => {
   let positionService: PositionService
+  let journalService: JournalService
 
   beforeEach(async () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
+
+    // Initialize JournalService with the same database
+    const db = await positionService['getDB']() // Access private method for testing
+    journalService = new JournalService(db)
+    await journalService.clearAll()
   })
 
   afterEach(() => {
@@ -121,7 +128,23 @@ describe('Integration: Position Dashboard Display Flow', () => {
     expect(savedPosition.created_date).toBeInstanceOf(Date)
     expect(savedPosition.id).toMatch(/^pos-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/) // UUID format
 
-    // 17. BONUS: Test position retrieval by ID
+    // 17. INTEGRATION VERIFY: Journal entry was created and linked properly
+    const journalEntries = await journalService.findByPositionId(savedPosition.id)
+    expect(journalEntries).toHaveLength(1)
+
+    const journalEntry = journalEntries[0]
+    expect(journalEntry.position_id).toBe(savedPosition.id)
+    expect(journalEntry.entry_type).toBe('position_plan')
+
+    // Verify journal content matches what was entered in the journal form
+    const thesisField = journalEntry.fields.find(field => field.name === 'thesis')
+    expect(thesisField?.response).toBe('Strong technical support at current levels with bullish momentum')
+
+    // 18. INTEGRATION VERIFY: Database schema consistency
+    expect(savedPosition.journal_entry_ids).toBeDefined()
+    expect(savedPosition.journal_entry_ids).toContain(journalEntry.id)
+
+    // 19. BONUS: Test position retrieval by ID
     const retrievedPosition = await positionService.getById(savedPosition.id)
     expect(retrievedPosition).toEqual(savedPosition)
   })
@@ -184,6 +207,138 @@ describe('Integration: Position Dashboard Display Flow', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
       expect(screen.getByText('TSLA')).toBeInTheDocument()
+    })
+  })
+
+  describe('Database Schema Integration', () => {
+    it('should verify JournalService database schema is properly set up', async () => {
+      // Verify database connection and object stores exist
+      const db = await positionService['getDB']() // Access private method for testing
+
+      expect(db.objectStoreNames.contains('positions')).toBe(true)
+      expect(db.objectStoreNames.contains('journal_entries')).toBe(true)
+
+      // Test transaction creation for both stores
+      const transaction = db.transaction(['positions', 'journal_entries'], 'readonly')
+      const positionStore = transaction.objectStore('positions')
+      const journalStore = transaction.objectStore('journal_entries')
+
+      expect(positionStore).toBeDefined()
+      expect(journalStore).toBeDefined()
+
+      // Verify journal store indexes
+      expect(journalStore.indexNames.contains('position_id')).toBe(true)
+      expect(journalStore.indexNames.contains('trade_id')).toBe(true)
+      expect(journalStore.indexNames.contains('entry_type')).toBe(true)
+      expect(journalStore.indexNames.contains('created_at')).toBe(true)
+    })
+
+    it('should verify data consistency between PositionService and JournalService', async () => {
+      // Create test data using services directly
+      const testPosition = {
+        id: 'test-pos-123',
+        symbol: 'TEST',
+        strategy_type: 'Long Stock' as const,
+        target_entry_price: 100,
+        target_quantity: 50,
+        profit_target: 110,
+        stop_loss: 90,
+        position_thesis: 'Test integration thesis',
+        created_date: new Date(),
+        status: 'planned' as const,
+        journal_entry_ids: [] as string[]
+      }
+
+      // Create position first
+      await positionService.create(testPosition)
+
+      // Create journal entry linked to position
+      const journalEntry = await journalService.create({
+        position_id: testPosition.id,
+        entry_type: 'position_plan',
+        fields: [
+          { name: 'thesis', prompt: 'Why?', response: 'Test integration thesis' },
+          { name: 'emotional_state', prompt: 'How do you feel?', response: 'confident' }
+        ]
+      })
+
+      // Verify bidirectional consistency
+      const retrievedPosition = await positionService.getById(testPosition.id)
+      const retrievedJournalEntries = await journalService.findByPositionId(testPosition.id)
+
+      expect(retrievedPosition).toBeDefined()
+      expect(retrievedJournalEntries).toHaveLength(1)
+      expect(retrievedJournalEntries[0].id).toBe(journalEntry.id)
+      expect(retrievedJournalEntries[0].position_id).toBe(testPosition.id)
+
+      // Verify cross-service data integrity
+      const allPositions = await positionService.getAll()
+      const allJournalEntries = await journalService.getAll()
+
+      expect(allPositions).toHaveLength(1)
+      expect(allJournalEntries).toHaveLength(1)
+      expect(allJournalEntries[0].position_id).toBe(allPositions[0].id)
+    })
+
+    it('should handle concurrent operations between services', async () => {
+      // Test concurrent creation and deletion operations
+      const position1 = {
+        id: 'concurrent-pos-1',
+        symbol: 'CONC1',
+        strategy_type: 'Long Stock' as const,
+        target_entry_price: 100,
+        target_quantity: 50,
+        profit_target: 110,
+        stop_loss: 90,
+        position_thesis: 'Concurrent test 1',
+        created_date: new Date(),
+        status: 'planned' as const,
+        journal_entry_ids: [] as string[]
+      }
+
+      const position2 = {
+        id: 'concurrent-pos-2',
+        symbol: 'CONC2',
+        strategy_type: 'Long Stock' as const,
+        target_entry_price: 200,
+        target_quantity: 25,
+        profit_target: 220,
+        stop_loss: 180,
+        position_thesis: 'Concurrent test 2',
+        created_date: new Date(),
+        status: 'planned' as const,
+        journal_entry_ids: [] as string[]
+      }
+
+      // Create positions and journal entries concurrently
+      await Promise.all([
+        positionService.create(position1),
+        positionService.create(position2),
+        journalService.create({
+          position_id: position1.id,
+          entry_type: 'position_plan',
+          fields: [{ name: 'thesis', prompt: 'Why?', response: 'Concurrent thesis 1' }]
+        }),
+        journalService.create({
+          position_id: position2.id,
+          entry_type: 'position_plan',
+          fields: [{ name: 'thesis', prompt: 'Why?', response: 'Concurrent thesis 2' }]
+        })
+      ])
+
+      // Verify all data was created correctly
+      const allPositions = await positionService.getAll()
+      const allJournalEntries = await journalService.getAll()
+
+      expect(allPositions).toHaveLength(2)
+      expect(allJournalEntries).toHaveLength(2)
+
+      // Verify each position has its corresponding journal entry
+      for (const position of allPositions) {
+        const positionJournalEntries = await journalService.findByPositionId(position.id)
+        expect(positionJournalEntries).toHaveLength(1)
+        expect(positionJournalEntries[0].position_id).toBe(position.id)
+      }
     })
   })
 })
