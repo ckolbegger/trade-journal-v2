@@ -106,7 +106,8 @@ describe('Integration: Position Dashboard Display Flow', () => {
     // 14. VERIFY: Position Detail displays correct position information
     expect(screen.getByText('No trades executed yet')).toBeInTheDocument()
     expect(screen.getAllByText('$135.00')).toHaveLength(2) // Stop Loss appears in performance section and trade plan
-    expect(screen.getAllByText('Integration test: Bullish on Q4 earnings and iPhone cycle')).toHaveLength(2) // Position thesis appears in Trade Plan and Journal Entries
+    expect(screen.getByText('Integration test: Bullish on Q4 earnings and iPhone cycle')).toBeInTheDocument() // Position thesis appears in Trade Plan
+    expect(screen.getByText('Strong technical support at current levels with bullish momentum')).toBeInTheDocument() // Journal entry content appears in Journal Entries
 
     // 15. VERIFY: Bottom action buttons are present
     expect(screen.getByText('Add Trade')).toBeInTheDocument()

@@ -2,24 +2,45 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
+import { JournalService } from '@/services/JournalService'
+import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 
 interface PositionDetailProps {
   positionService?: PositionService
+  journalService?: JournalService
 }
 
-export function PositionDetail({ positionService: injectedPositionService }: PositionDetailProps = {}) {
+export function PositionDetail({ positionService: injectedPositionService, journalService: injectedJournalService }: PositionDetailProps = {}) {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [journalLoading, setJournalLoading] = useState(true)
+  const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
   const positionService = injectedPositionService || new PositionService()
 
+  const getJournalService = async (): Promise<JournalService> => {
+    if (injectedJournalService) {
+      return injectedJournalService
+    }
+
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('TradingJournalDB', 2)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+    })
+
+    return new JournalService(db)
+  }
+
   useEffect(() => {
     loadPosition()
+    loadJournalEntries()
   }, [id])
 
   const loadPosition = async () => {
@@ -39,6 +60,29 @@ export function PositionDetail({ positionService: injectedPositionService }: Pos
     }
   }
 
+  const loadJournalEntries = async () => {
+    if (!id) return
+
+    try {
+      setJournalLoading(true)
+      setJournalError(null)
+      const journalService = await getJournalService()
+      const entries = await journalService.getByPositionId(id)
+
+      // Sort entries chronologically (oldest first)
+      const sortedEntries = entries.sort((a, b) =>
+        new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+
+      setJournalEntries(sortedEntries)
+    } catch (error) {
+      console.error('Failed to load journal entries:', error)
+      setJournalError('Error loading journal entries')
+    } finally {
+      setJournalLoading(false)
+    }
+  }
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       year: 'numeric',
@@ -52,6 +96,17 @@ export function PositionDetail({ positionService: injectedPositionService }: Pos
       style: 'currency',
       currency: 'USD'
     }).format(amount)
+  }
+
+  const formatEntryType = (entryType: string) => {
+    switch (entryType) {
+      case 'position_plan':
+        return 'Position Plan'
+      case 'trade_execution':
+        return 'Trade Execution'
+      default:
+        return entryType
+    }
   }
 
   const handlePriceUpdate = () => {
@@ -305,15 +360,46 @@ export function PositionDetail({ positionService: injectedPositionService }: Pos
             </div>
 
             <div className="bg-white">
-              <div className="p-4 border-b border-gray-100">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="text-xs text-gray-600 uppercase tracking-wide">Position Plan</div>
-                  <div className="text-xs text-gray-500">{formatDate(position.created_date)}</div>
+              {journalLoading ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  Loading journal entries...
                 </div>
-                <div className="text-sm text-gray-700 leading-relaxed">
-                  {position.position_thesis}
+              ) : journalError ? (
+                <div className="p-4 text-center text-red-500 text-sm">
+                  {journalError}
                 </div>
-              </div>
+              ) : journalEntries.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No journal entries yet
+                </div>
+              ) : (
+                journalEntries.map((entry, index) => (
+                  <div key={entry.id} className={`p-4 ${index < journalEntries.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="text-xs text-gray-600 uppercase tracking-wide">
+                        {formatEntryType(entry.entry_type)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {formatDate(new Date(entry.executed_at || entry.created_at))}
+                      </div>
+                    </div>
+
+                    {/* Display all journal fields */}
+                    <div className="space-y-3">
+                      {entry.fields.map((field, fieldIndex) => (
+                        <div key={fieldIndex}>
+                          <div className="text-xs text-gray-600 mb-1 font-medium">
+                            {field.prompt}
+                          </div>
+                          <div className="text-sm text-gray-700 leading-relaxed">
+                            {field.response}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </section>
