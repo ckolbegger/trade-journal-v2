@@ -15,11 +15,12 @@ export interface EnhancedJournalEntryFormProps {
   isLoading?: boolean
 }
 
-interface FormData {
-  content: string
-  emotional_state: string
-  market_conditions: string
-  execution_strategy: string
+// Helper function to title-case field names for display
+const titleCase = (str: string): string => {
+  return str
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ')
 }
 
 export function EnhancedJournalEntryForm({
@@ -30,17 +31,31 @@ export function EnhancedJournalEntryForm({
   submitButtonText = 'Save Journal Entry',
   isLoading = false
 }: EnhancedJournalEntryFormProps) {
-  // Initialize form data from initial fields or empty values
-  const getInitialValue = (fieldName: string): string => {
-    const field = initialFields.find(f => f.name === fieldName)
-    return field?.response || ''
+  // Get field definitions - use initialFields if provided, otherwise current JOURNAL_PROMPTS
+  const getFieldDefinitions = (): JournalField[] => {
+    if (initialFields.length > 0) {
+      return initialFields
+    }
+
+    // Create fields from current JOURNAL_PROMPTS for new entries
+    const promptDefinitions = JOURNAL_PROMPTS[entryType]
+    return promptDefinitions.map(definition => ({
+      name: definition.name,
+      prompt: definition.prompt,
+      response: '', // Empty for new entry
+      required: definition.required
+    }))
   }
 
-  const [formData, setFormData] = useState<FormData>({
-    content: getInitialValue('thesis') || getInitialValue('execution_notes'),
-    emotional_state: getInitialValue('emotional_state'),
-    market_conditions: getInitialValue('market_conditions'),
-    execution_strategy: getInitialValue('execution_strategy')
+  const fieldDefinitions = getFieldDefinitions()
+
+  // Initialize form data dynamically from field definitions
+  const [formData, setFormData] = useState<Record<string, string>>(() => {
+    const initialData: Record<string, string> = {}
+    fieldDefinitions.forEach(field => {
+      initialData[field.name] = field.response || ''
+    })
+    return initialData
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -48,13 +63,19 @@ export function EnhancedJournalEntryForm({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {}
 
-    if (!formData.content.trim()) {
-      newErrors.content = 'Journal content is required'
-    } else if (formData.content.trim().length < 10) {
-      newErrors.content = 'Journal content must be at least 10 characters'
-    } else if (formData.content.length > 2000) {
-      newErrors.content = 'Journal content cannot exceed 2000 characters'
-    }
+    // Validate each field using stored required values
+    fieldDefinitions.forEach(field => {
+      const isRequired = field.required ?? false
+      const value = formData[field.name] || ''
+
+      if (isRequired && !value.trim()) {
+        newErrors[field.name] = 'This field is required'
+      } else if (value.trim().length > 0 && value.trim().length < 10) {
+        newErrors[field.name] = 'Content must be at least 10 characters'
+      } else if (value.length > 2000) {
+        newErrors[field.name] = 'Content cannot exceed 2000 characters'
+      }
+    })
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -64,59 +85,86 @@ export function EnhancedJournalEntryForm({
     e.preventDefault()
 
     if (validateForm()) {
-      // Convert structured form data to field-based format
-      const prompts = JOURNAL_PROMPTS[entryType]
-      const fields: JournalField[] = prompts.map(prompt => {
-        let response = ''
-        switch (prompt.name) {
-          case 'thesis':
-          case 'execution_notes':
-            response = formData.content
-            break
-          case 'emotional_state':
-            response = formData.emotional_state
-            break
-          case 'market_conditions':
-            response = formData.market_conditions
-            break
-          case 'execution_strategy':
-            response = formData.execution_strategy
-            break
-          default:
-            response = ''
-        }
-
-        return {
-          name: prompt.name,
-          prompt: prompt.prompt,
-          response: response.trim()
-        }
-      })
+      // Convert form data back to field format, preserving stored prompts and required values
+      const fields: JournalField[] = fieldDefinitions.map(field => ({
+        name: field.name,
+        prompt: field.prompt, // Use stored prompt
+        response: (formData[field.name] || '').trim(),
+        required: field.required // Preserve stored required value
+      }))
 
       onSave(fields)
     }
   }
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (fieldName: string, value: string) => {
+    setFormData(prev => ({ ...prev, [fieldName]: value }))
     // Clear error when user starts typing
-    if (field === 'content' && errors.content) {
-      setErrors(prev => ({ ...prev, content: '' }))
+    if (errors[fieldName]) {
+      setErrors(prev => ({ ...prev, [fieldName]: '' }))
     }
   }
 
-  const getCharacterCount = () => {
-    return formData.content.length
+  // Helper functions for dynamic rendering
+  const getCharacterCount = (fieldName: string) => {
+    return (formData[fieldName] || '').length
   }
 
-  const getCharacterCountColor = () => {
-    const count = getCharacterCount()
+  const getCharacterCountColor = (fieldName: string) => {
+    const count = getCharacterCount(fieldName)
     if (count > 1800) return 'text-red-600'
     if (count > 1500) return 'text-yellow-600'
     return 'text-gray-500'
   }
 
   const isPositionPlan = entryType === 'position_plan'
+
+  // Render field component dynamically
+  const renderField = (field: JournalField, index: number) => {
+    const fieldValue = formData[field.name] || ''
+    const isRequired = field.required ?? false
+    const fieldError = errors[field.name]
+    const isTextArea = field.name === 'thesis' || field.name === 'rationale' ||
+                       field.name === 'execution_notes' || field.name === 'market_conditions' ||
+                       field.name === 'execution_strategy'
+
+    return (
+      <div key={field.name}>
+        <Label htmlFor={field.name} className="block text-sm font-medium mb-1.5 text-gray-700">
+          {titleCase(field.name)}{isRequired ? ' *' : ''}
+        </Label>
+        {isTextArea ? (
+          <Textarea
+            id={field.name}
+            value={fieldValue}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.prompt}
+            className="w-full p-3 border border-gray-300 rounded-md text-base min-h-20 resize-y"
+            rows={field.name === 'thesis' || field.name === 'rationale' ? 4 : 2}
+          />
+        ) : (
+          <Input
+            id={field.name}
+            value={fieldValue}
+            onChange={(e) => handleInputChange(field.name, e.target.value)}
+            placeholder={field.prompt}
+            className="w-full p-3 border border-gray-300 rounded-md text-base"
+          />
+        )}
+        {fieldError && <p className="text-red-600 text-xs mt-1">{fieldError}</p>}
+        {isTextArea && (
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-gray-500">
+              {field.prompt}
+            </p>
+            <p className={`text-xs ${getCharacterCountColor(field.name)}`}>
+              {getCharacterCount(field.name)}/2000 characters
+            </p>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -133,107 +181,9 @@ export function EnhancedJournalEntryForm({
         </p>
       </div>
 
-      {/* Main Content Field */}
+      {/* Dynamic Field Rendering */}
       <div className="space-y-3">
-        <div>
-          <Label htmlFor="content" className="block text-sm font-medium mb-1.5 text-gray-700">
-            {isPositionPlan ? 'Position Thesis' : 'Trade Notes'} *
-          </Label>
-          <Textarea
-            id="content"
-            value={formData.content}
-            onChange={(e) => handleInputChange('content', e.target.value)}
-            placeholder={
-              isPositionPlan
-                ? 'Why are you planning this position? What\'s your market outlook and strategy?'
-                : 'Describe the trade execution, what worked well, what could be improved?'
-            }
-            className="w-full p-3 border border-gray-300 rounded-md text-base min-h-24 resize-y"
-            rows={4}
-          />
-          {errors.content && <p className="text-red-600 text-xs mt-1">{errors.content}</p>}
-          <div className="flex justify-between items-center mt-1">
-            <p className="text-xs text-gray-500">
-              {isPositionPlan ? 'Required for every position plan' : 'Required for every trade execution'}
-            </p>
-            <p className={`text-xs ${getCharacterCountColor()}`}>
-              {getCharacterCount()}/2000 characters
-            </p>
-          </div>
-        </div>
-
-        {/* Emotional State */}
-        <div>
-          <Label htmlFor="emotional_state" className="block text-sm font-medium mb-1.5 text-gray-700">
-            {isPositionPlan
-              ? 'How are you feeling about this trade? (Optional)'
-              : 'How did you feel during execution? (Optional)'
-            }
-          </Label>
-          <Input
-            id="emotional_state"
-            value={formData.emotional_state}
-            onChange={(e) => handleInputChange('emotional_state', e.target.value)}
-            placeholder="e.g., Confident, Cautious, Anxious, etc."
-            className="w-full p-3 border border-gray-300 rounded-md text-base"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            {isPositionPlan
-              ? 'Describe your emotional state in your own words'
-              : 'Describe your emotional state during execution'
-            }
-          </p>
-        </div>
-
-        {/* Market Conditions */}
-        <div>
-          <Label htmlFor="market_conditions" className="block text-sm font-medium mb-1.5 text-gray-700">
-            {isPositionPlan
-              ? 'Market Conditions (Optional)'
-              : 'Market Conditions During Execution (Optional)'
-            }
-          </Label>
-          <Textarea
-            id="market_conditions"
-            value={formData.market_conditions}
-            onChange={(e) => handleInputChange('market_conditions', e.target.value)}
-            placeholder={
-              isPositionPlan
-                ? 'Describe current market environment and how it affects this trade'
-                : 'Describe market conditions when you executed this trade'
-            }
-            className="w-full p-3 border border-gray-300 rounded-md text-base min-h-20 resize-y"
-            rows={2}
-          />
-          {isPositionPlan && (
-            <p className="text-xs text-gray-500 mt-1">Consider volatility, trends, news events</p>
-          )}
-        </div>
-
-        {/* Execution Strategy/Details */}
-        <div>
-          <Label htmlFor="execution_strategy" className="block text-sm font-medium mb-1.5 text-gray-700">
-            {isPositionPlan
-              ? 'Execution Strategy (Optional)'
-              : 'Execution Details (Optional)'
-            }
-          </Label>
-          <Textarea
-            id="execution_strategy"
-            value={formData.execution_strategy}
-            onChange={(e) => handleInputChange('execution_strategy', e.target.value)}
-            placeholder={
-              isPositionPlan
-                ? 'How will you enter and exit this position?'
-                : 'Fill quality, slippage, timing, any execution challenges?'
-            }
-            className="w-full p-3 border border-gray-300 rounded-md text-base min-h-20 resize-y"
-            rows={2}
-          />
-          {isPositionPlan && (
-            <p className="text-xs text-gray-500 mt-1">Entry timing, order types, exit conditions</p>
-          )}
-        </div>
+        {fieldDefinitions.map((field, index) => renderField(field, index))}
       </div>
 
       {/* Actions */}

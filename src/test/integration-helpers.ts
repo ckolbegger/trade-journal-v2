@@ -78,8 +78,8 @@ export const proceedToTradingJournal = async () => {
   })
 
   // Verify enhanced journal form is displayed
-  expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
-  expect(screen.getByLabelText(/How are you feeling about this trade/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+  expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
   expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
   expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
 }
@@ -89,10 +89,10 @@ export const proceedToTradingJournal = async () => {
  */
 export const fillTradingJournal = async () => {
   // Fill out journal form
-  fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+  fireEvent.change(screen.getByLabelText(/Rationale/i), {
     target: { value: 'Strong technical support at current levels with bullish momentum' }
   })
-  fireEvent.change(screen.getByLabelText(/How are you feeling about this trade/i), {
+  fireEvent.change(screen.getByLabelText(/Emotional State/i), {
     target: { value: 'Confident' }
   })
   fireEvent.change(screen.getByLabelText(/Market Conditions/i), {

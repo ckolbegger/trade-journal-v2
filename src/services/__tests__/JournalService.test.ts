@@ -519,4 +519,66 @@ describe('JournalService', () => {
       expect(allEntries[1].id).toBe(entry1.id); // Oldest last
     });
   });
+
+  describe('createEmptyJournalEntry', () => {
+    it('should create empty journal entry from position_plan field definitions', async () => {
+      const entry = await journalService.createEmptyJournalEntry('position_plan', 'pos-123')
+
+      expect(entry.id).toBeDefined()
+      expect(entry.position_id).toBe('pos-123')
+      expect(entry.entry_type).toBe('position_plan')
+      expect(entry.fields).toHaveLength(4) // rationale, emotional_state, market_conditions, execution_strategy
+
+      // Check rationale field copied from JOURNAL_PROMPTS
+      const rationaleField = entry.fields.find(f => f.name === 'rationale')
+      expect(rationaleField).toBeDefined()
+      expect(rationaleField?.prompt).toBe('Why this trade? Why now?')
+      expect(rationaleField?.response).toBe('')
+      expect(rationaleField?.required).toBe(true)
+    })
+
+    it('should create empty journal entry from trade_execution field definitions', async () => {
+      const entry = await journalService.createEmptyJournalEntry('trade_execution', undefined, 'trade-456')
+
+      expect(entry.id).toBeDefined()
+      expect(entry.trade_id).toBe('trade-456')
+      expect(entry.entry_type).toBe('trade_execution')
+      expect(entry.fields).toHaveLength(4) // execution_notes, emotional_state, market_conditions, execution_strategy
+
+      // Check execution_notes field copied from JOURNAL_PROMPTS
+      const notesField = entry.fields.find(f => f.name === 'execution_notes')
+      expect(notesField).toBeDefined()
+      expect(notesField?.prompt).toBe('Describe the execution')
+      expect(notesField?.response).toBe('')
+      expect(notesField?.required).toBe(false)
+    })
+
+    it('should copy name, prompt, and required from JOURNAL_PROMPTS', async () => {
+      const entry = await journalService.createEmptyJournalEntry('position_plan', 'pos-123')
+
+      entry.fields.forEach(field => {
+        expect(field.name).toBeDefined()
+        expect(field.prompt).toBeDefined()
+        expect(field.response).toBe('')
+        expect(typeof field.required).toBe('boolean')
+      })
+    })
+
+    it('should generate unique IDs for each empty journal entry', async () => {
+      const entry1 = await journalService.createEmptyJournalEntry('position_plan', 'pos-123')
+      const entry2 = await journalService.createEmptyJournalEntry('position_plan', 'pos-456')
+
+      expect(entry1.id).not.toBe(entry2.id)
+    })
+
+    it('should set created_at timestamp', async () => {
+      const beforeCreate = new Date().toISOString()
+      const entry = await journalService.createEmptyJournalEntry('position_plan', 'pos-123')
+      const afterCreate = new Date().toISOString()
+
+      expect(entry.created_at).toBeDefined()
+      expect(entry.created_at >= beforeCreate).toBe(true)
+      expect(entry.created_at <= afterCreate).toBe(true)
+    })
+  })
 });

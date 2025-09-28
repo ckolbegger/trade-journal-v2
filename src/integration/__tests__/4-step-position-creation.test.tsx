@@ -140,17 +140,17 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       })
 
       // Verify enhanced journal form is displayed
-      expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/How are you feeling about this trade/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
 
       // Fill out journal form
       await runInAct(() => {
-        fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+        fireEvent.change(screen.getByLabelText(/Rationale/i), {
           target: { value: 'Strong technical support at current levels with bullish momentum' }
         })
-        fireEvent.change(screen.getByLabelText(/How are you feeling about this trade/i), {
+        fireEvent.change(screen.getByLabelText(/Emotional State/i), {
           target: { value: 'Confident' }
         })
         fireEvent.change(screen.getByLabelText(/Market Conditions/i), {
@@ -282,7 +282,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       })
 
       // Form should be pre-populated with position thesis, so clear it to test validation
-      const contentField = screen.getByLabelText(/Position Thesis/i)
+      const contentField = screen.getByLabelText(/Rationale/i)
       await runInAct(() => {
         fireEvent.change(contentField, { target: { value: '' } })
       })

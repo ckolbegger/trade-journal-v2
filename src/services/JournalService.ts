@@ -1,4 +1,5 @@
 import type { JournalEntry, JournalField } from '@/types/journal';
+import { JOURNAL_PROMPTS } from '@/types/journal';
 
 export interface CreateJournalEntryRequest {
   id?: string;
@@ -269,6 +270,38 @@ export class JournalService {
         reject(new Error('Failed to clear journal entries'));
       };
     });
+  }
+
+  async createEmptyJournalEntry(
+    entryType: 'position_plan' | 'trade_execution',
+    positionId?: string,
+    tradeId?: string
+  ): Promise<JournalEntry> {
+    // Generate unique ID
+    const id = `journal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    // Get field definitions from current JOURNAL_PROMPTS
+    const promptDefinitions = JOURNAL_PROMPTS[entryType];
+
+    // Create empty fields from current definitions
+    const fields: JournalField[] = promptDefinitions.map(definition => ({
+      name: definition.name,
+      prompt: definition.prompt,
+      response: '', // Empty response for new entry
+      required: definition.required
+    }));
+
+    // Create the journal entry
+    const entry: JournalEntry = {
+      id,
+      position_id: positionId,
+      trade_id: tradeId,
+      entry_type: entryType,
+      fields,
+      created_at: new Date().toISOString()
+    };
+
+    return entry;
   }
 
   close(): void {

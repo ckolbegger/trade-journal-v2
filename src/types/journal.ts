@@ -2,6 +2,7 @@ export interface JournalField {
   name: string;
   prompt: string;
   response: string;
+  required?: boolean;
 }
 
 export interface JournalEntry {
@@ -17,8 +18,8 @@ export interface JournalEntry {
 export const JOURNAL_PROMPTS = {
   position_plan: [
     {
-      name: 'thesis',
-      prompt: 'Why are you planning this position? What\'s your market outlook and strategy?',
+      name: 'rationale',
+      prompt: 'Why this trade? Why now?',
       required: true
     },
     {

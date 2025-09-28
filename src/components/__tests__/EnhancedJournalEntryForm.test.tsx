@@ -23,16 +23,16 @@ describe('EnhancedJournalEntryForm', () => {
       )
 
       // Verify structured form elements are present
-      expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/How are you feeling about this trade/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
 
       // Verify required field indicator
-      expect(screen.getByText(/Position Thesis \*/)).toBeInTheDocument()
+      expect(screen.getByText(/Rationale \*/)).toBeInTheDocument()
 
-      // Verify character count display
-      expect(screen.getByText(/0\/2000 characters/i)).toBeInTheDocument()
+      // Verify character count display (multiple fields have this, so just check it exists)
+      expect(screen.getAllByText(/0\/2000 characters/i)).toHaveLength(3)
     })
 
     it('should show validation errors for required fields', async () => {
@@ -67,7 +67,7 @@ describe('EnhancedJournalEntryForm', () => {
       )
 
       // Enter content that's too short
-      const contentField = screen.getByLabelText(/Position Thesis/i)
+      const contentField = screen.getByLabelText(/Rationale/i)
       fireEvent.change(contentField, { target: { value: 'short' } })
 
       const submitButton = screen.getByRole('button', { name: /Save Journal Entry/i })
@@ -90,10 +90,12 @@ describe('EnhancedJournalEntryForm', () => {
         />
       )
 
-      const contentField = screen.getByLabelText(/Position Thesis/i)
+      const contentField = screen.getByLabelText(/Rationale/i)
       fireEvent.change(contentField, { target: { value: 'This is a test entry with some content' } })
 
-      expect(screen.getByText(/38\/2000 characters/i)).toBeInTheDocument()
+      // Check that the character count updates (looking in the rationale field's container)
+      const rationaleContainer = contentField.closest('div')
+      expect(rationaleContainer).toHaveTextContent('38/2000 characters')
     })
 
     it('should convert structured form data to field-based format on save', async () => {
@@ -107,10 +109,10 @@ describe('EnhancedJournalEntryForm', () => {
       )
 
       // Fill out form with structured data
-      fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
         target: { value: 'AAPL showing strong technical support levels' }
       })
-      fireEvent.change(screen.getByLabelText(/How are you feeling about this trade/i), {
+      fireEvent.change(screen.getByLabelText(/Emotional State/i), {
         target: { value: 'Confident' }
       })
       fireEvent.change(screen.getByLabelText(/Market Conditions/i), {
@@ -126,8 +128,8 @@ describe('EnhancedJournalEntryForm', () => {
       await waitFor(() => {
         expect(mockOnSave).toHaveBeenCalledWith([
           {
-            name: 'thesis',
-            prompt: 'Why are you planning this position? What\'s your market outlook and strategy?',
+            name: 'rationale',
+            prompt: 'Why this trade? Why now?',
             response: 'AAPL showing strong technical support levels'
           },
           {
@@ -190,10 +192,10 @@ describe('EnhancedJournalEntryForm', () => {
       )
 
       // Verify trade execution specific fields
-      expect(screen.getByLabelText(/Trade Notes/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/How did you feel during execution/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Market Conditions During Execution/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Execution Details/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Execution Notes/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
     })
 
     it('should convert trade execution data to field-based format', async () => {
@@ -206,10 +208,10 @@ describe('EnhancedJournalEntryForm', () => {
         />
       )
 
-      fireEvent.change(screen.getByLabelText(/Trade Notes/i), {
+      fireEvent.change(screen.getByLabelText(/Execution Notes/i), {
         target: { value: 'Filled at $149.48, better than expected' }
       })
-      fireEvent.change(screen.getByLabelText(/How did you feel during execution/i), {
+      fireEvent.change(screen.getByLabelText(/Emotional State/i), {
         target: { value: 'Calm and focused' }
       })
 
@@ -287,6 +289,164 @@ describe('EnhancedJournalEntryForm', () => {
 
       const submitButton = screen.getByRole('button', { name: /Saving.../i })
       expect(submitButton).toBeDisabled()
+    })
+  })
+
+  describe('Flexible Journal Display (Migration Support)', () => {
+    it('should title-case field names for display', () => {
+      const legacyFields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: 'Legacy thesis content'
+        }
+      ]
+
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          initialFields={legacyFields}
+        />
+      )
+
+      // Should display title-cased field name
+      expect(screen.getByText('Thesis')).toBeInTheDocument()
+    })
+
+    it('should display stored prompts exactly as-is from legacy entries', () => {
+      const legacyFields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?', // Old prompt
+          response: 'Legacy response'
+        }
+      ]
+
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          initialFields={legacyFields}
+        />
+      )
+
+      // Should display stored prompt, not current JOURNAL_PROMPTS
+      expect(screen.getByText('Why are you planning this position?')).toBeInTheDocument()
+    })
+
+    it('should validate using stored required values from fields', async () => {
+      const fieldsWithRequiredInfo: JournalField[] = [
+        {
+          name: 'rationale',
+          prompt: 'Why this trade? Why now?',
+          response: '',
+          required: true
+        },
+        {
+          name: 'emotional_state',
+          prompt: 'How are you feeling?',
+          response: '',
+          required: false
+        }
+      ]
+
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          initialFields={fieldsWithRequiredInfo}
+        />
+      )
+
+      // Try to submit with empty required field
+      const submitButton = screen.getByRole('button', { name: /Save Journal Entry/i })
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
+      })
+    })
+
+    it('should handle legacy entries without required field (defaults to false)', async () => {
+      const legacyFieldsWithoutRequired: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?',
+          response: ''
+          // No required property - should default to false
+        }
+      ]
+
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          initialFields={legacyFieldsWithoutRequired}
+        />
+      )
+
+      // Should be able to submit with empty field since it defaults to optional
+      const submitButton = screen.getByRole('button', { name: /Save Journal Entry/i })
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(mockOnSave).toHaveBeenCalled()
+      })
+    })
+
+    it('should display mixed old and new field types correctly', () => {
+      const mixedFields: JournalField[] = [
+        {
+          name: 'thesis',
+          prompt: 'Why are you planning this position?', // Old style
+          response: 'Old thesis response'
+        },
+        {
+          name: 'rationale',
+          prompt: 'Why this trade? Why now?', // New style
+          response: 'New rationale response',
+          required: true
+        }
+      ]
+
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+          initialFields={mixedFields}
+        />
+      )
+
+      // Should display both field types with title-cased names
+      expect(screen.getByText('Thesis')).toBeInTheDocument()
+      // Use getByLabelText to find the rationale field by its label
+      expect(screen.getByLabelText(/Rationale/)).toBeInTheDocument()
+
+      // Should display their respective prompts
+      expect(screen.getByText('Why are you planning this position?')).toBeInTheDocument()
+      expect(screen.getByText('Why this trade? Why now?')).toBeInTheDocument()
+    })
+
+    it('should work with form when no initialFields provided (uses current JOURNAL_PROMPTS)', () => {
+      render(
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={mockOnSave}
+          onCancel={mockOnCancel}
+        />
+      )
+
+      // Should still work with current prompt definitions, showing title-cased field names
+      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
     })
   })
 })

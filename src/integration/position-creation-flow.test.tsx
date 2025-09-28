@@ -233,7 +233,7 @@ describe('Integration: Position Creation Flow', () => {
     })
 
     // Fill journal form quickly
-    fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+    fireEvent.change(screen.getByLabelText(/Rationale/i), {
       target: { value: 'Cloud growth analysis' }
     })
 

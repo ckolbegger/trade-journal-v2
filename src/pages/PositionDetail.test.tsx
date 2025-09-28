@@ -57,8 +57,8 @@ describe('PositionDetail', () => {
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
 
-    // Reset JournalService mock
-    mockJournalService.getByPositionId.mockReset()
+    // Reset JournalService mock with default return values
+    mockJournalService.getByPositionId.mockReset().mockResolvedValue([])
     mockJournalService.create.mockReset()
     mockJournalService.getById.mockReset()
     mockJournalService.update.mockReset()

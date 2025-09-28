@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -46,6 +46,17 @@ export function PositionCreate({
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
   const [journalFields, setJournalFields] = useState<JournalField[]>([])
   const [isCreating, setIsCreating] = useState(false)
+
+  // Initialize journal fields with current prompts when component mounts
+  useEffect(() => {
+    const initializeJournalFields = async () => {
+      const journalService = await initJournalService()
+      const emptyEntry = await journalService.createEmptyJournalEntry('position_plan')
+      setJournalFields(emptyEntry.fields)
+    }
+
+    initializeJournalFields()
+  }, [])
 
   // Initialize services
   const positionService = injectedPositionService || new PositionService()
@@ -386,23 +397,25 @@ export function PositionCreate({
     )
   }
 
-  const renderStep3 = () => (
-    <div className="p-5 pb-32">
-      <EnhancedJournalEntryForm
-        entryType="position_plan"
-        onSave={handleJournalSave}
-        onCancel={handleJournalCancel}
-        submitButtonText="Next: Confirmation"
-        initialFields={[
-          {
-            name: 'thesis',
-            prompt: 'Why are you planning this position?',
-            response: formData.position_thesis
-          }
-        ]}
-      />
-    </div>
-  )
+  const renderStep3 = () => {
+    // Pre-populate the rationale field with position_thesis from formData
+    const initialFieldsWithData = journalFields.map(field => ({
+      ...field,
+      response: field.name === 'rationale' ? formData.position_thesis : field.response
+    }))
+
+    return (
+      <div className="p-5 pb-32">
+        <EnhancedJournalEntryForm
+          entryType="position_plan"
+          onSave={handleJournalSave}
+          onCancel={handleJournalCancel}
+          submitButtonText="Next: Confirmation"
+          initialFields={initialFieldsWithData}
+        />
+      </div>
+    )
+  }
 
   const renderStep4 = () => (
     <div className="p-5 pb-32">

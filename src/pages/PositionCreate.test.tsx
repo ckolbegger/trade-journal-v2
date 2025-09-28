@@ -201,8 +201,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertStepVisible('📝 Position Plan')
 
       // Should show journal form fields
-      expect(screen.getByLabelText(/Position Thesis/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/How are you feeling about this trade/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
     })
@@ -216,7 +216,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
     it('should proceed to confirmation when journal is submitted', async () => {
       // Fill required journal field
-      fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
         target: { value: 'Strong bullish thesis' }
       })
 
@@ -249,7 +249,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       await waitFor(() => assertStepVisible('📝 Position Plan'))
 
       // Fill journal form
-      fireEvent.change(screen.getByLabelText(/Position Thesis/i), {
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
         target: { value: 'Strong bullish thesis' }
       })
 
