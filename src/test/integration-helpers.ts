@@ -46,33 +46,14 @@ export const fillPositionForm = async (data: PositionFormData = {}) => {
 }
 
 /**
- * Navigate from Position Plan to Risk Assessment (Step 1 → Step 2)
+ * Navigate from Position Plan to Trading Journal (Step 1 → Step 2)
  */
-export const proceedToRiskAssessment = async () => {
-  const nextButton = screen.getByText('Next: Risk Assessment')
+export const proceedToTradingJournal = async () => {
+  const nextButton = screen.getByText('Next: Trading Journal')
   expect(nextButton).toBeVisible()
   fireEvent.click(nextButton)
 
   // Verify Step 2 displays
-  await waitFor(() => {
-    expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-  })
-
-  // Verify risk calculations are displayed
-  expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
-  expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
-  expect(screen.getByText('1:1')).toBeInTheDocument()        // Risk/reward ratio
-}
-
-/**
- * Navigate from Risk Assessment to Trading Journal (Step 2 → Step 3)
- */
-export const proceedToTradingJournal = async () => {
-  const nextToJournalButton = screen.getByText('Next: Trading Journal')
-  expect(nextToJournalButton).toBeVisible()
-  fireEvent.click(nextToJournalButton)
-
-  // Verify Step 3 displays
   await waitFor(() => {
     expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
   })
@@ -82,6 +63,25 @@ export const proceedToTradingJournal = async () => {
   expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
   expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
   expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
+}
+
+/**
+ * Navigate from Trading Journal to Risk Assessment (Step 2 → Step 3)
+ */
+export const proceedToRiskAssessment = async () => {
+  const nextToRiskButton = screen.getByRole('button', { name: /Next: Risk Assessment/i })
+  expect(nextToRiskButton).toBeVisible()
+  fireEvent.click(nextToRiskButton)
+
+  // Verify Step 3 displays
+  await waitFor(() => {
+    expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+  })
+
+  // Verify risk calculations are displayed
+  expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
+  expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
+  expect(screen.getByText('1:1')).toBeInTheDocument()        // Risk/reward ratio
 }
 
 /**
@@ -104,13 +104,13 @@ export const fillTradingJournal = async () => {
 }
 
 /**
- * Navigate from Trading Journal to Confirmation (Step 3 → Step 4)
+ * Navigate from Risk Assessment to Confirmation (Step 3 → Step 4)
  */
 export const proceedToConfirmation = async () => {
-  // Submit journal form
-  const submitJournal = screen.getByRole('button', { name: /Next: Confirmation/i })
-  expect(submitJournal).toBeVisible()
-  fireEvent.click(submitJournal)
+  // Navigate from Risk Assessment to Confirmation
+  const nextToConfirmationButton = screen.getByText('Next: Confirmation')
+  expect(nextToConfirmationButton).toBeVisible()
+  fireEvent.click(nextToConfirmationButton)
 
   // Verify Step 4 displays
   await waitFor(() => {
@@ -131,14 +131,14 @@ export const completePositionCreationFlow = async (formData?: PositionFormData) 
   // Step 1: Fill position form
   await fillPositionForm(formData)
 
-  // Step 1 → Step 2: Risk Assessment
-  await proceedToRiskAssessment()
-
-  // Step 2 → Step 3: Trading Journal
+  // Step 1 → Step 2: Trading Journal
   await proceedToTradingJournal()
 
-  // Step 3: Fill Trading Journal
+  // Step 2: Fill Trading Journal
   await fillTradingJournal()
+
+  // Step 2 → Step 3: Risk Assessment
+  await proceedToRiskAssessment()
 
   // Step 3 → Step 4: Confirmation
   await proceedToConfirmation()

@@ -160,9 +160,9 @@ export function PositionCreate({
   const handleNextStep = () => {
     if (currentStep === 1 && validateStep1()) {
       setCurrentStep(2)
-    } else if (currentStep === 2) {
+    } else if (currentStep === 2 && journalFields.length > 0) {
       setCurrentStep(3)
-    } else if (currentStep === 3 && journalFields.length > 0) {
+    } else if (currentStep === 3) {
       setCurrentStep(4)
     }
   }
@@ -175,11 +175,11 @@ export function PositionCreate({
 
   const handleJournalSave = (fields: JournalField[]) => {
     setJournalFields(fields)
-    setCurrentStep(4)
+    setCurrentStep(3)
   }
 
   const handleJournalCancel = () => {
-    setCurrentStep(2)
+    setCurrentStep(1)
   }
 
   const handleCreatePosition = async () => {
@@ -397,25 +397,17 @@ export function PositionCreate({
     )
   }
 
-  const renderStep3 = () => {
-    // Pre-populate the rationale field with position_thesis from formData
-    const initialFieldsWithData = journalFields.map(field => ({
-      ...field,
-      response: field.name === 'rationale' ? formData.position_thesis : field.response
-    }))
-
-    return (
-      <div className="p-5 pb-32">
-        <EnhancedJournalEntryForm
-          entryType="position_plan"
-          onSave={handleJournalSave}
-          onCancel={handleJournalCancel}
-          submitButtonText="Next: Confirmation"
-          initialFields={initialFieldsWithData}
-        />
-      </div>
-    )
-  }
+  const renderStep3 = () => (
+    <div className="p-5 pb-32">
+      <EnhancedJournalEntryForm
+        entryType="position_plan"
+        onSave={handleJournalSave}
+        onCancel={handleJournalCancel}
+        submitButtonText="Next: Risk Assessment"
+        initialFields={journalFields}
+      />
+    </div>
+  )
 
   const renderStep4 = () => (
     <div className="p-5 pb-32">
@@ -475,8 +467,8 @@ export function PositionCreate({
   )
 
   const renderBottomActions = () => {
-    // Step 3 (journal form) handles its own actions, so don't render bottom actions
-    if (currentStep === 3) {
+    // Step 2 (journal form) handles its own actions, so don't render bottom actions
+    if (currentStep === 2) {
       return null
     }
 
@@ -491,7 +483,7 @@ export function PositionCreate({
               disabled={isCreating}
             >
               {currentStep === 2 ? 'Back to Position Plan' :
-               currentStep === 4 ? 'Back to Trading Journal' : 'Back to Risk Assessment'}
+               currentStep === 3 ? 'Back to Trading Journal' : 'Back to Risk Assessment'}
             </Button>
           )}
 
@@ -500,8 +492,8 @@ export function PositionCreate({
               onClick={handleNextStep}
               className="flex-1 bg-blue-600 hover:bg-blue-500"
             >
-              {currentStep === 1 ? 'Next: Risk Assessment' :
-               'Next: Trading Journal'}
+              {currentStep === 1 ? 'Next: Trading Journal' :
+               currentStep === 2 ? 'Next: Risk Assessment' : 'Next: Confirmation'}
             </Button>
           ) : (
             <Button
@@ -535,8 +527,8 @@ export function PositionCreate({
       {/* Step Content */}
       <main>
         {currentStep === 1 && renderStep1()}
-        {currentStep === 2 && renderStep2()}
-        {currentStep === 3 && renderStep3()}
+        {currentStep === 2 && renderStep3()}
+        {currentStep === 3 && renderStep2()}
         {currentStep === 4 && renderStep4()}
       </main>
 

@@ -65,14 +65,14 @@ describe('Integration: Position Dashboard Display Flow', () => {
     // 4. ACTION: Fill out Step 1 - Position Plan
     await fillPositionForm()
 
-    // 5. ACTION: Proceed to Step 2 - Risk Assessment
-    await proceedToRiskAssessment()
-
-    // 6. ACTION: Proceed to Step 3 - Trading Journal
+    // 5. ACTION: Proceed to Step 2 - Trading Journal
     await proceedToTradingJournal()
 
-    // 7. ACTION: Fill Trading Journal
+    // 6. ACTION: Fill Trading Journal
     await fillTradingJournal()
+
+    // 7. ACTION: Proceed to Step 3 - Risk Assessment
+    await proceedToRiskAssessment()
 
     // 8. ACTION: Proceed to Step 4 - Confirmation
     await proceedToConfirmation()

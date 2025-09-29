@@ -59,14 +59,14 @@ describe('Integration: Position Creation Flow', () => {
     // 4. ACTION: Fill out Step 1 - Position Plan
     await fillPositionForm()
 
-    // 5. ACTION: Proceed to Step 2 - Risk Assessment
-    await proceedToRiskAssessment()
-
-    // 6. ACTION: Proceed to Step 3 - Trading Journal
+    // 5. ACTION: Proceed to Step 2 - Trading Journal
     await proceedToTradingJournal()
 
-    // 7. ACTION: Fill Trading Journal
+    // 6. ACTION: Fill Trading Journal
     await fillTradingJournal()
+
+    // 7. ACTION: Proceed to Step 3 - Risk Assessment
+    await proceedToRiskAssessment()
 
     // 8. ACTION: Proceed to Step 4 - Confirmation
     await proceedToConfirmation()
@@ -158,7 +158,7 @@ describe('Integration: Position Creation Flow', () => {
     })
 
     // Try to proceed without filling required fields
-    const nextButton = screen.getByText('Next: Risk Assessment')
+    const nextButton = screen.getByText('Next: Trading Journal')
     expect(nextButton).toBeVisible()
     fireEvent.click(nextButton)
 
@@ -175,7 +175,7 @@ describe('Integration: Position Creation Flow', () => {
     fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
     fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '0' } })
 
-    const nextButton2 = screen.getByText('Next: Risk Assessment')
+    const nextButton2 = screen.getByText('Next: Trading Journal')
     expect(nextButton2).toBeVisible()
     fireEvent.click(nextButton2)
 
@@ -214,19 +214,10 @@ describe('Integration: Position Creation Flow', () => {
     fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '270' } })
     fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Cloud growth' } })
 
-    // Go to Step 2
-    const nextToStep2Button = screen.getByText('Next: Risk Assessment')
+    // Go to Step 2 (Trading Journal)
+    const nextToStep2Button = screen.getByText('Next: Trading Journal')
     expect(nextToStep2Button).toBeVisible()
     fireEvent.click(nextToStep2Button)
-
-    await waitFor(() => {
-      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-    })
-
-    // Go to Step 3 (Trading Journal)
-    const nextToStep3Button = screen.getByText('Next: Trading Journal')
-    expect(nextToStep3Button).toBeVisible()
-    fireEvent.click(nextToStep3Button)
 
     await waitFor(() => {
       expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
@@ -237,8 +228,17 @@ describe('Integration: Position Creation Flow', () => {
       target: { value: 'Cloud growth analysis' }
     })
 
+    // Go to Step 3 (Risk Assessment)
+    const nextToStep3Button = screen.getByRole('button', { name: /Next: Risk Assessment/i })
+    expect(nextToStep3Button).toBeVisible()
+    fireEvent.click(nextToStep3Button)
+
+    await waitFor(() => {
+      expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+    })
+
     // Go to Step 4 (Confirmation)
-    const nextToStep4Button = screen.getByRole('button', { name: /Next: Confirmation/i })
+    const nextToStep4Button = screen.getByText('Next: Confirmation')
     expect(nextToStep4Button).toBeVisible()
     fireEvent.click(nextToStep4Button)
 
@@ -246,26 +246,26 @@ describe('Integration: Position Creation Flow', () => {
       expect(screen.getByText('Confirmation')).toBeInTheDocument()
     })
 
-    // Go back to Step 3 (Trading Journal)
-    const backToStep3Button = screen.getByText('Back to Trading Journal')
+    // Go back to Step 3 (Risk Assessment)
+    const backToStep3Button = screen.getByText('Back to Risk Assessment')
     expect(backToStep3Button).toBeVisible()
     fireEvent.click(backToStep3Button)
-
-    await waitFor(() => {
-      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
-    })
-
-    // Go back to Step 2 (using Cancel button in journal form)
-    const backToStep2Button = screen.getByText('Cancel')
-    expect(backToStep2Button).toBeVisible()
-    fireEvent.click(backToStep2Button)
 
     await waitFor(() => {
       expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
     })
 
-    // Go back to Step 1
-    const backToStep1Button = screen.getByText('Back to Position Plan')
+    // Go back to Step 2 (Trading Journal)
+    const backToStep2Button = screen.getByText('Back to Trading Journal')
+    expect(backToStep2Button).toBeVisible()
+    fireEvent.click(backToStep2Button)
+
+    await waitFor(() => {
+      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
+    })
+
+    // Go back to Step 1 (using Cancel button in journal form)
+    const backToStep1Button = screen.getByText('Cancel')
     expect(backToStep1Button).toBeVisible()
     fireEvent.click(backToStep1Button)
 

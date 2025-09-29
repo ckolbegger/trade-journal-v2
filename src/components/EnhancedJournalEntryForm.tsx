@@ -133,12 +133,14 @@ export function EnhancedJournalEntryForm({
         <Label htmlFor={field.name} className="block text-sm font-medium mb-1.5 text-gray-700">
           {titleCase(field.name)}{isRequired ? ' *' : ''}
         </Label>
+        <p className="text-xs text-gray-500 mb-2">
+          {field.prompt}
+        </p>
         {isTextArea ? (
           <Textarea
             id={field.name}
             value={fieldValue}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
-            placeholder={field.prompt}
             className="w-full p-3 border border-gray-300 rounded-md text-base min-h-20 resize-y"
             rows={field.name === 'thesis' || field.name === 'rationale' ? 4 : 2}
           />
@@ -147,16 +149,12 @@ export function EnhancedJournalEntryForm({
             id={field.name}
             value={fieldValue}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
-            placeholder={field.prompt}
             className="w-full p-3 border border-gray-300 rounded-md text-base"
           />
         )}
         {fieldError && <p className="text-red-600 text-xs mt-1">{fieldError}</p>}
         {isTextArea && (
-          <div className="flex justify-between items-center mt-1">
-            <p className="text-xs text-gray-500">
-              {field.prompt}
-            </p>
+          <div className="flex justify-end mt-1">
             <p className={`text-xs ${getCharacterCountColor(field.name)}`}>
               {getCharacterCount(field.name)}/2000 characters
             </p>

@@ -111,30 +111,14 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         })
       })
 
-      // Navigate to Step 2
-      const nextToStep2 = screen.getByText('Next: Risk Assessment')
+      // Navigate to Step 2: NEW ORDER - Journal comes before Risk Assessment
+      const nextToStep2 = screen.getByText('Next: Trading Journal')
       expect(nextToStep2).toBeVisible()
       await runInAct(() => {
         fireEvent.click(nextToStep2)
       })
 
-      // 3. STEP 2: Risk Assessment
-      await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-      })
-
-      // Verify risk calculations are displayed
-      expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
-      expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
-
-      // Navigate to Step 3
-      const nextToStep3 = screen.getByText('Next: Trading Journal')
-      expect(nextToStep3).toBeVisible()
-      await runInAct(() => {
-        fireEvent.click(nextToStep3)
-      })
-
-      // 4. STEP 3: Trading Journal (NEW STEP)
+      // 3. STEP 2: Trading Journal (NEW ORDER)
       await waitFor(() => {
         expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
       })
@@ -161,11 +145,27 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         })
       })
 
-      // Submit journal form
-      const submitJournal = screen.getByRole('button', { name: /Next: Confirmation/i })
-      expect(submitJournal).toBeVisible()
+      // Navigate to Step 3: Risk Assessment (after journal)
+      const nextToStep3 = screen.getByRole('button', { name: /Next: Risk Assessment/i })
+      expect(nextToStep3).toBeVisible()
       await runInAct(() => {
-        fireEvent.click(submitJournal)
+        fireEvent.click(nextToStep3)
+      })
+
+      // 4. STEP 3: Risk Assessment (NEW ORDER)
+      await waitFor(() => {
+        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+      })
+
+      // Verify risk calculations are displayed
+      expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
+      expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
+
+      // Navigate to Step 4: Confirmation
+      const nextToStep4 = screen.getByText('Next: Confirmation')
+      expect(nextToStep4).toBeVisible()
+      await runInAct(() => {
+        fireEvent.click(nextToStep4)
       })
 
       // 5. STEP 4: Confirmation
@@ -265,18 +265,10 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       })
 
       await runInAct(() => {
-        fireEvent.click(screen.getByText('Next: Risk Assessment'))
-      })
-
-      await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-      })
-
-      await runInAct(() => {
         fireEvent.click(screen.getByText('Next: Trading Journal'))
       })
 
-      // Now at Step 3: Journal form
+      // Now at Step 2: Journal form (NEW ORDER)
       await waitFor(() => {
         expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
       })
@@ -288,17 +280,31 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       })
 
       // Try to submit without required content
-      const submitButton = screen.getByRole('button', { name: /Next: Confirmation/i })
+      const submitButton = screen.getByRole('button', { name: /Next: Risk Assessment/i })
       await runInAct(() => {
         fireEvent.click(submitButton)
       })
 
-      // Should show validation error and stay on Step 3
+      // Should show validation error and stay on Step 2 (Journal)
       await waitFor(() => {
         expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
       })
 
-      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument() // Still on Step 3
+      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument() // Still on Step 2 (Journal)
+
+      // Fill the required field and then proceed past journal to show we're actually on step 2
+      await runInAct(() => {
+        fireEvent.change(contentField, { target: { value: 'Valid rationale content' } })
+      })
+
+      await runInAct(() => {
+        fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
+      })
+
+      // Now at Step 3: Risk Assessment
+      await waitFor(() => {
+        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
+      })
     })
 
   })

@@ -73,7 +73,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       render
     renderWithRouterAndProps(<PositionCreate />)
 
-      const nextButton = screen.getByText('Next: Risk Assessment')
+      const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
       // Should show validation errors and stay on step 1
@@ -96,7 +96,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '0' } })
 
-      const nextButton = screen.getByText('Next: Risk Assessment')
+      const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
       await waitFor(() => {
@@ -118,7 +118,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
 
-      const nextButton = screen.getByText('Next: Risk Assessment')
+      const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
       await waitFor(() => {
@@ -127,9 +127,9 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
   })
 
-  describe('Step 2: Risk Assessment', () => {
+  describe('Step 2: Trading Journal', () => {
     beforeEach(async () => {
-      // Fill out step 1 completely first
+      // Fill out step 1 completely first, then navigate to step 2 (Journal)
       render
     renderWithRouterAndProps(<PositionCreate />)
 
@@ -140,12 +140,70 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
-      const nextButton = screen.getByText('Next: Risk Assessment')
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      await waitFor(() => {
+        assertStepVisible('📝 Position Plan')
+      })
+    })
+
+    it('should display journal form fields', () => {
+      assertStepVisible('📝 Position Plan')
+
+      // Should show journal form fields
+      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
+    })
+
+    it('should allow navigation back to step 1 via Cancel', () => {
+      const cancelButton = screen.getByText('Cancel')
+      fireEvent.click(cancelButton)
+
+      assertStepVisible('Position Plan')
+    })
+
+    it('should proceed to risk assessment when journal is filled and submitted', async () => {
+      // Fill required journal field
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
+        target: { value: 'Strong technical support at current levels' }
+      })
+
+      const nextButton = screen.getByRole('button', { name: /Next: Risk Assessment/i })
       fireEvent.click(nextButton)
 
       await waitFor(() => {
         assertStepVisible('Risk Assessment')
       })
+    })
+  })
+
+  describe('Step 3: Risk Assessment', () => {
+    beforeEach(async () => {
+      // Navigate to step 3 (Risk Assessment)
+      render
+    renderWithRouterAndProps(<PositionCreate />)
+
+      // Fill step 1
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Go to step 2 (Journal)
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+      await waitFor(() => assertStepVisible('📝 Position Plan'))
+
+      // Fill journal and go to step 3 (Risk Assessment)
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
+        target: { value: 'Test trading rationale content' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
+      await waitFor(() => assertStepVisible('Risk Assessment'))
     })
 
     it('should display risk calculation based on position plan', () => {
@@ -160,67 +218,15 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       })
     })
 
-    it('should allow navigation back to step 1', () => {
-      const backButton = screen.getByText('Back to Position Plan')
+    it('should allow navigation back to step 2 (Journal)', () => {
+      const backButton = screen.getByText('Back to Trading Journal')
       fireEvent.click(backButton)
 
-      assertStepVisible('Position Plan')
-    })
-
-    it('should proceed to journal when Next is clicked', () => {
-      const nextButton = screen.getByText('Next: Trading Journal')
-      fireEvent.click(nextButton)
-
       assertStepVisible('📝 Position Plan')
     })
-  })
 
-  describe('Step 3: Trading Journal', () => {
-    beforeEach(async () => {
-      // Navigate to step 3
-      renderWithRouterAndProps(<PositionCreate />, { positionService: mockPositionService })
-
-      // Fill step 1
-      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
-      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
-      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
-      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
-
-      // Go to step 2
-      fireEvent.click(screen.getByText('Next: Risk Assessment'))
-      await waitFor(() => assertStepVisible('Risk Assessment'))
-
-      // Go to step 3
-      fireEvent.click(screen.getByText('Next: Trading Journal'))
-      await waitFor(() => assertStepVisible('📝 Position Plan'))
-    })
-
-    it('should display journal form', () => {
-      assertStepVisible('📝 Position Plan')
-
-      // Should show journal form fields
-      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
-    })
-
-    it('should allow navigation back to step 2', () => {
-      const cancelButton = screen.getByText('Cancel')
-      fireEvent.click(cancelButton)
-
-      assertStepVisible('Risk Assessment')
-    })
-
-    it('should proceed to confirmation when journal is submitted', async () => {
-      // Fill required journal field
-      fireEvent.change(screen.getByLabelText(/Rationale/i), {
-        target: { value: 'Strong bullish thesis' }
-      })
-
-      const nextButton = screen.getByRole('button', { name: /Next: Confirmation/i })
+    it('should proceed to confirmation when Next is clicked', async () => {
+      const nextButton = screen.getByText('Next: Confirmation')
       fireEvent.click(nextButton)
 
       await waitFor(() => assertStepVisible('Confirmation'))
@@ -240,11 +246,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
-      // Go to step 2
-      fireEvent.click(screen.getByText('Next: Risk Assessment'))
-      await waitFor(() => assertStepVisible('Risk Assessment'))
-
-      // Go to step 3
+      // Go to step 2 (Journal)
       fireEvent.click(screen.getByText('Next: Trading Journal'))
       await waitFor(() => assertStepVisible('📝 Position Plan'))
 
@@ -252,6 +254,10 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Rationale/i), {
         target: { value: 'Strong bullish thesis' }
       })
+
+      // Go to step 3 (Risk Assessment)
+      fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
+      await waitFor(() => assertStepVisible('Risk Assessment'))
 
       // Go to step 4
       fireEvent.click(screen.getByRole('button', { name: /Next: Confirmation/i }))
@@ -310,7 +316,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
-      fireEvent.click(screen.getByText('Next: Risk Assessment'))
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
 
       await waitFor(() => {
         assertStepDotsStatus({ active: 1, completed: [0] })
