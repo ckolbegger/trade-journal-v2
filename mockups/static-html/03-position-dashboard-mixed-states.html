@@ -508,8 +508,8 @@
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
-                        <div class="pl-amount theoretical">+$1,155</div>
-                        <div class="pl-percent">(Theoretical)</div>
+                        <div class="pl-amount theoretical">—</div>
+                        <div class="pl-percent">—</div>
                     </div>
                 </div>
                 <div class="position-metrics">
@@ -607,8 +607,8 @@
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
-                        <div class="pl-amount theoretical">-$240</div>
-                        <div class="pl-percent">(Theoretical)</div>
+                        <div class="pl-amount theoretical">—</div>
+                        <div class="pl-percent">—</div>
                     </div>
                 </div>
                 <div class="position-metrics">
@@ -832,11 +832,11 @@
             document.querySelectorAll('.count-item')[2].querySelector('.count-value').textContent = closedCount;
             document.querySelectorAll('.count-item')[3].querySelector('.count-value').textContent = visibleCards.length;
 
-            // Calculate filtered P&L (excluding theoretical)
+            // Calculate filtered P&L (excluding placeholders)
             let totalPL = 0;
             visibleCards.forEach(card => {
                 const plText = card.querySelector('.pl-amount').textContent;
-                if (!plText.includes('Theoretical')) {
+                if (plText !== '—') {
                     const plValue = parseFloat(plText.replace(/[$+,]/g, ''));
                     totalPL += plValue;
                 }
