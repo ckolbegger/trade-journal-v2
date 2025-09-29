@@ -70,7 +70,7 @@ export function EnhancedJournalEntryForm({
 
       if (isRequired && !value.trim()) {
         newErrors[field.name] = 'This field is required'
-      } else if (value.trim().length > 0 && value.trim().length < 10) {
+      } else if (isRequired && value.trim().length > 0 && value.trim().length < 10) {
         newErrors[field.name] = 'Content must be at least 10 characters'
       } else if (value.length > 2000) {
         newErrors[field.name] = 'Content cannot exceed 2000 characters'

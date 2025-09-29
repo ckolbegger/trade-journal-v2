@@ -138,8 +138,8 @@ describe('Integration: Position Dashboard Display Flow', () => {
     expect(journalEntry.entry_type).toBe('position_plan')
 
     // Verify journal content matches what was entered in the journal form
-    const thesisField = journalEntry.fields.find(field => field.name === 'thesis')
-    expect(thesisField?.response).toBe('Strong technical support at current levels with bullish momentum')
+    const rationaleField = journalEntry.fields.find(field => field.name === 'rationale')
+    expect(rationaleField?.response).toBe('Strong technical support at current levels with bullish momentum')
 
     // 18. INTEGRATION VERIFY: Database schema consistency
     expect(savedPosition.journal_entry_ids).toBeDefined()

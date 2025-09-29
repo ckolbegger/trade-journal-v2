@@ -50,7 +50,7 @@ describe('EnhancedJournalEntryForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/Journal content is required/i)).toBeInTheDocument()
+        expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
       })
 
       expect(mockOnSave).not.toHaveBeenCalled()
@@ -74,7 +74,7 @@ describe('EnhancedJournalEntryForm', () => {
       fireEvent.click(submitButton)
 
       await waitFor(() => {
-        expect(screen.getByText(/Journal content must be at least 10 characters/i)).toBeInTheDocument()
+        expect(screen.getByText(/Content must be at least 10 characters/i)).toBeInTheDocument()
       })
 
       expect(mockOnSave).not.toHaveBeenCalled()

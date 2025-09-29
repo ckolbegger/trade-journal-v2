@@ -123,10 +123,10 @@ describe('Integration: Position Creation Flow', () => {
     expect(journalEntry.fields).toBeDefined()
     expect(journalEntry.fields.length).toBeGreaterThan(0)
 
-    // Verify thesis field exists and contains the expected content from journal form
-    const thesisField = journalEntry.fields.find(field => field.name === 'thesis')
-    expect(thesisField).toBeDefined()
-    expect(thesisField?.response).toBe('Strong technical support at current levels with bullish momentum')
+    // Verify rationale field exists and contains the expected content from journal form
+    const rationaleField = journalEntry.fields.find(field => field.name === 'rationale')
+    expect(rationaleField).toBeDefined()
+    expect(rationaleField?.response).toBe('Strong technical support at current levels with bullish momentum')
 
     // Verify journal entry has proper timestamps
     expect(journalEntry.created_at).toBeDefined()

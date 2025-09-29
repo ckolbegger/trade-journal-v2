@@ -222,8 +222,8 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       expect(journalEntry.entry_type).toBe('position_plan')
 
       // Verify journal fields contain the data from the enhanced form
-      const thesisField = journalEntry.fields.find(f => f.name === 'thesis')
-      expect(thesisField?.response).toBe('Strong technical support at current levels with bullish momentum')
+      const rationaleField = journalEntry.fields.find(f => f.name === 'rationale')
+      expect(rationaleField?.response).toBe('Strong technical support at current levels with bullish momentum')
 
       const emotionalField = journalEntry.fields.find(f => f.name === 'emotional_state')
       expect(emotionalField?.response).toBe('Confident')
@@ -295,7 +295,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
 
       // Should show validation error and stay on Step 3
       await waitFor(() => {
-        expect(screen.getByText(/Journal content is required/i)).toBeInTheDocument()
+        expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
       })
 
       expect(screen.getByText('📝 Position Plan')).toBeInTheDocument() // Still on Step 3
