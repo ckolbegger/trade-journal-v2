@@ -218,15 +218,15 @@
         }
 
         .position-status-badge {
-            position: absolute;
-            top: 12px;
-            right: 16px;
+            display: inline-block;
+            margin-left: 8px;
             padding: 2px 6px;
             border-radius: 8px;
             font-size: 10px;
             font-weight: 500;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            vertical-align: middle;
         }
 
         .status-planned {
@@ -255,6 +255,8 @@
             font-size: 18px;
             font-weight: 600;
             color: #1f2937;
+            display: flex;
+            align-items: center;
         }
 
         .position-strategy {
@@ -501,10 +503,12 @@
 
             <!-- Position 1: NVDA Planned Position -->
             <div class="position-card planned" onclick="window.location.href='04-position-detail-planned-state.html'">
-                <div class="position-status-badge status-planned">Planned</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">NVDA</div>
+                        <div class="position-symbol">
+                            NVDA
+                            <span class="position-status-badge status-planned">Planned</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -534,10 +538,12 @@
 
             <!-- Position 2: Tesla Long Stock (Needs Attention - Near Stop) -->
             <div class="position-card needs-attention" onclick="window.location.href='04-position-detail-view.html'">
-                <div class="position-status-badge status-open">Open</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">TSLA</div>
+                        <div class="position-symbol">
+                            TSLA
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -567,10 +573,12 @@
 
             <!-- Position 3: Apple Covered Call (Profitable) -->
             <div class="position-card profitable" onclick="window.location.href='04a-covered-call-detail-view.html'">
-                <div class="position-status-badge status-open">Open</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">AAPL</div>
+                        <div class="position-symbol">
+                            AAPL
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Covered Call</div>
                     </div>
                     <div class="position-pl">
@@ -600,10 +608,12 @@
 
             <!-- Position 4: MSFT Planned Position -->
             <div class="position-card planned" onclick="alert('Navigate to MSFT planned position detail')">
-                <div class="position-status-badge status-planned">Planned</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">MSFT</div>
+                        <div class="position-symbol">
+                            MSFT
+                            <span class="position-status-badge status-planned">Planned</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -633,10 +643,12 @@
 
             <!-- Position 5: Google (Profitable, Open) -->
             <div class="position-card profitable" onclick="alert('Navigate to GOOGL position detail')">
-                <div class="position-status-badge status-open">Open</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">GOOGL</div>
+                        <div class="position-symbol">
+                            GOOGL
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -666,10 +678,12 @@
 
             <!-- Position 6: AMD (Closed, Profitable) -->
             <div class="position-card closed profitable" onclick="alert('Navigate to AMD closed position detail')">
-                <div class="position-status-badge status-closed">Closed</div>
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">AMD</div>
+                        <div class="position-symbol">
+                            AMD
+                            <span class="position-status-badge status-closed">Closed</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -697,12 +711,14 @@
                 </div>
             </div>
 
-            <!-- Position 7: NVDA (Closed, Loss) -->
-            <div class="position-card closed losing" onclick="alert('Navigate to NVDA closed position detail')">
-                <div class="position-status-badge status-closed">Closed</div>
+            <!-- Position 7: AMZN (Closed, Loss) -->
+            <div class="position-card closed losing" onclick="alert('Navigate to AMZN closed position detail')">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">AMZN</div>
+                        <div class="position-symbol">
+                            AMZN
+                            <span class="position-status-badge status-closed">Closed</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
