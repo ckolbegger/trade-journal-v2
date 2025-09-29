@@ -106,14 +106,19 @@ export function Dashboard({ positionService: injectedPositionService }: Dashboar
             {/* Position Header */}
             <div className="flex items-start justify-between mb-3">
               <div>
-                <div className="text-lg font-semibold text-gray-900">{position.symbol}</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-lg font-semibold text-gray-900">{position.symbol}</div>
+                  <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    Planned
+                  </div>
+                </div>
                 <div className="text-xs text-gray-600 uppercase tracking-wide">{position.strategy_type}</div>
               </div>
 
               {/* P&L Display */}
               <div className="text-right">
-                <div className="text-base font-semibold">No trades executed</div>
-                <div className="text-xs text-gray-500">TODO: Current P&L</div>
+                <div className="text-base font-semibold text-gray-500">—</div>
+                <div className="text-xs text-gray-500">P&L</div>
               </div>
             </div>
 
@@ -137,9 +142,6 @@ export function Dashboard({ positionService: injectedPositionService }: Dashboar
             <div className="flex items-center justify-between">
               <div className="text-xs text-gray-500">
                 Updated {formatDate(position.created_date)}
-              </div>
-              <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                Planned
               </div>
             </div>
           </div>

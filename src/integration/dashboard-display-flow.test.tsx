@@ -104,9 +104,18 @@ describe('Integration: Position Dashboard Display Flow', () => {
     }, { timeout: 3000 })
 
     // 14. VERIFY: Position Detail displays correct position information
+    // Expand Trade History accordion to see the content
+    const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+    fireEvent.click(tradeHistoryButton!)
+
     expect(screen.getByText('No trades executed yet')).toBeInTheDocument()
     expect(screen.getAllByText('$135.00')).toHaveLength(2) // Stop Loss appears in performance section and trade plan
     expect(screen.getByText('Integration test: Bullish on Q4 earnings and iPhone cycle')).toBeInTheDocument() // Position thesis appears in Trade Plan
+
+    // Expand Journal Entries accordion to see the content
+    const journalEntriesButton = screen.getByText('Journal Entries').closest('button')
+    fireEvent.click(journalEntriesButton!)
+
     expect(screen.getByText('Strong technical support at current levels with bullish momentum')).toBeInTheDocument() // Journal entry content appears in Journal Entries
 
     // 15. VERIFY: Bottom action buttons are present
@@ -169,7 +178,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     // Verify both positions are displayed with correct data
     expect(screen.getAllByText('Long Stock')).toHaveLength(2)
-    expect(screen.getAllByText('No trades executed')).toHaveLength(2)
+    expect(screen.getAllByText('—')).toHaveLength(2) // P&L placeholders for planned positions
     expect(screen.getByText('$135.00')).toBeInTheDocument() // AAPL stop loss
     expect(screen.getByText('$270.00')).toBeInTheDocument() // MSFT stop loss
     expect(screen.getAllByText('TODO')).toHaveLength(4) // 2 positions × 2 TODO fields each

@@ -60,7 +60,7 @@ describe('Dashboard', () => {
       assertPositionInDashboard('AAPL', 1)
       assertPositionInDashboard('TSLA', 1)
       assertTextExists('Long Stock', { count: 2 })
-      assertTextExists('No trades executed', { count: 2 })
+      assertTextExists('—', { count: 2 }) // P&L placeholders for planned positions
     })
   })
 
@@ -85,8 +85,31 @@ describe('Dashboard', () => {
     })
 
     await waitFor(() => {
-      assertTextExists('TODO', { count: 4 })
-      assertTextExists('TODO: Current P&L', { count: 2 })
+      assertTextExists('TODO', { count: 4 }) // Avg Cost and Current for each of 2 positions
+      assertTextExists('—', { count: 2 }) // P&L should show em dash for planned positions
+    })
+  })
+
+  it('displays em dash for P&L placeholders on planned positions', async () => {
+    mockPositionService.getAll.mockResolvedValue(mockPositions)
+
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
+
+    await waitFor(() => {
+      // Check that P&L section shows em dash instead of "No trades executed"
+      const plElements = screen.getAllByText('—')
+      expect(plElements.length).toBe(2) // One for each position
+
+      // Verify the em dash is in the P&L section
+      mockPositions.forEach(position => {
+        const positionCard = screen.getByText(position.symbol).closest('div[class*="bg-white"]')
+        if (positionCard) {
+          const plSection = positionCard.querySelector('.text-right')
+          expect(plSection).toHaveTextContent('—')
+        }
+      })
     })
   })
 
@@ -116,7 +139,29 @@ describe('Dashboard', () => {
     })
 
     await waitFor(() => {
-      assertTextExists('Planned', { count: 2 })
+      assertTextExists('Planned', { count: 2 }) // 2 positions × 1 instance each (badge only)
+      assertTextExists('P&L', { count: 2 }) // P&L labels for each position
+    })
+  })
+
+  it('displays status badges inline with symbol', async () => {
+    mockPositionService.getAll.mockResolvedValue(mockPositions)
+
+    await act(async () => {
+      renderWithRouter(<Dashboard />)
+    })
+
+    await waitFor(() => {
+      // Check that status badges are displayed inline with symbols
+      const aaplSymbol = screen.getByText('AAPL')
+      const aaplParent = aaplSymbol.parentElement
+      expect(aaplParent).toBeInTheDocument()
+      expect(aaplParent).toHaveTextContent('AAPLPlanned')
+
+      const tslaSymbol = screen.getByText('TSLA')
+      const tslaParent = tslaSymbol.parentElement
+      expect(tslaParent).toBeInTheDocument()
+      expect(tslaParent).toHaveTextContent('TSLAPlanned')
     })
   })
 

@@ -22,6 +22,11 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
+  const [expandedSections, setExpandedSections] = useState({
+    plan: true,
+    history: false,
+    journal: false
+  })
   const positionService = injectedPositionService || new PositionService()
 
   const getJournalService = async (): Promise<JournalService> => {
@@ -125,6 +130,13 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   const handleClosePosition = () => {
     // Will be implemented in Position Closing Workflow
     console.log('Close Position clicked')
+  }
+
+  const toggleAccordion = (section: 'plan' | 'history' | 'journal') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
   }
 
   if (loading) {
@@ -249,17 +261,14 @@ export function PositionDetail({ positionService: injectedPositionService, journ
             <div className="mb-4">
               <div className="flex justify-between text-xs text-gray-600 mb-2">
                 <span>Stop {formatCurrency(stopLoss)}</span>
-                <span>Current {formatCurrency(parseFloat(currentPrice))}</span>
-                <span className="text-red-600">Near Stop</span>
+                <span>Pending opening trade</span>
+                <span>Target {formatCurrency(profitTarget)}</span>
               </div>
               <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                {/* Empty progress bar for planned positions */}
                 <div
-                  className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                  style={{ width: '35%' }}
-                ></div>
-                <div
-                  className="absolute top-[-2px] w-3 h-3 bg-gray-800 border-2 border-white rounded-full shadow-md"
-                  style={{ left: '35%' }}
+                  className="h-full bg-transparent"
+                  style={{ width: '0%' }}
                 ></div>
               </div>
             </div>
@@ -267,140 +276,179 @@ export function PositionDetail({ positionService: injectedPositionService, journ
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">To Stop</div>
-                <div className="text-lg font-semibold text-red-600">
-                  -{formatCurrency(parseFloat(currentPrice) - stopLoss)}
+                <div className="text-lg font-semibold text-gray-500">
+                  —
                 </div>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Risk Amount</div>
-                <div className="text-lg font-semibold text-red-600">
-                  -{formatCurrency((parseFloat(currentPrice) - stopLoss) * (position.target_quantity || 0))}
+                <div className="text-lg font-semibold text-gray-500">
+                  —
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Trade Plan */}
-        <section className="mb-6">
-          <div className="px-4 py-3">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-base font-semibold text-gray-900">Trade Plan</h3>
-              <button className="text-blue-600 text-sm hover:text-blue-700">
-                View Full
-              </button>
-            </div>
-
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-              <div className="flex items-center bg-red-50 border border-red-200 rounded-lg p-2 mb-3 text-xs text-red-800">
-                <span className="mr-2">🔒</span>
-                This trade plan is immutable and cannot be modified
+        {/* Accordion Sections */}
+        <section className="bg-white border-t border-gray-200">
+          {/* Trade Plan Accordion */}
+          <div className="border-b border-gray-200">
+            <button
+              onClick={() => toggleAccordion('plan')}
+              className={`w-full px-5 py-4 bg-white border-none text-left flex justify-between items-center transition-colors ${
+                expandedSections.plan ? 'active bg-gray-50 border-b border-gray-200' : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>🎯</span>
+                <span className="text-base font-semibold text-gray-900">Trade Plan</span>
+                <span className="text-xs text-gray-500 font-normal">(Immutable)</span>
               </div>
+              <span className={`text-xs text-gray-500 transition-transform ${expandedSections.plan ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
 
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Target Entry Price</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(targetEntryPrice)}
+            {expandedSections.plan && (
+              <div className="px-5 pb-4 bg-gray-50">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center bg-red-50 border border-red-200 rounded-lg p-2 mb-3 text-xs text-red-800">
+                    <span className="mr-2">🔒</span>
+                    This trade plan is immutable and cannot be modified
                   </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Target Quantity</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {position.target_quantity} shares
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Profit Target</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(profitTarget)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-600 mb-1">Stop Loss</div>
-                  <div className="text-sm font-medium text-gray-900">
-                    {formatCurrency(stopLoss)}
-                  </div>
-                </div>
-              </div>
 
-              <div>
-                <div className="text-xs text-gray-600 mb-1">Position Thesis</div>
-                <div className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded border border-gray-200">
-                  {position.position_thesis}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Trade History */}
-        <section className="mb-6">
-          <div className="px-4 py-3">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-base font-semibold text-gray-900">Trade History</h3>
-            </div>
-
-            <div className="bg-white">
-              <div className="p-4 text-center text-gray-500 text-sm">
-                No trades executed yet
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Journal Entries */}
-        <section className="mb-6">
-          <div className="px-4 py-3">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-base font-semibold text-gray-900">Journal Entries</h3>
-              <button className="text-blue-600 text-sm hover:text-blue-700">
-                Add Entry
-              </button>
-            </div>
-
-            <div className="bg-white">
-              {journalLoading ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  Loading journal entries...
-                </div>
-              ) : journalError ? (
-                <div className="p-4 text-center text-red-500 text-sm">
-                  {journalError}
-                </div>
-              ) : journalEntries.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No journal entries yet
-                </div>
-              ) : (
-                journalEntries.map((entry, index) => (
-                  <div key={entry.id} className={`p-4 ${index < journalEntries.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs text-gray-600 uppercase tracking-wide">
-                        {formatEntryType(entry.entry_type)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(new Date(entry.executed_at || entry.created_at))}
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Target Entry Price</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(targetEntryPrice)}
                       </div>
                     </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Target Quantity</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {position.target_quantity} shares
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Profit Target</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(profitTarget)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-600 mb-1">Stop Loss</div>
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatCurrency(stopLoss)}
+                      </div>
+                    </div>
+                  </div>
 
-                    {/* Display all journal fields */}
-                    <div className="space-y-3">
-                      {entry.fields.map((field, fieldIndex) => (
-                        <div key={fieldIndex}>
-                          <div className="text-xs text-gray-600 mb-1 font-medium">
-                            {field.prompt}
+                  <div>
+                    <div className="text-xs text-gray-600 mb-1">Position Thesis</div>
+                    <div className="text-sm text-gray-700 leading-relaxed bg-white p-3 rounded border border-gray-200">
+                      {position.position_thesis}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Trade History Accordion */}
+          <div className="border-b border-gray-200">
+            <button
+              onClick={() => toggleAccordion('history')}
+              className={`w-full px-5 py-4 bg-white border-none text-left flex justify-between items-center transition-colors ${
+                expandedSections.history ? 'active bg-gray-50 border-b border-gray-200' : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>📊</span>
+                <span className="text-base font-semibold text-gray-900">Trade History</span>
+                <span className="text-xs text-gray-500 font-normal">(Empty)</span>
+              </div>
+              <span className={`text-xs text-gray-500 transition-transform ${expandedSections.history ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+
+            {expandedSections.history && (
+              <div className="px-5 pb-4 bg-gray-50">
+                <div className="bg-white">
+                  <div className="p-4 text-center text-gray-500 text-sm">
+                    No trades executed yet
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Journal Entries Accordion */}
+          <div>
+            <button
+              onClick={() => toggleAccordion('journal')}
+              className={`w-full px-5 py-4 bg-white border-none text-left flex justify-between items-center transition-colors ${
+                expandedSections.journal ? 'active bg-gray-50 border-b border-gray-200' : 'hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span>📝</span>
+                <span className="text-base font-semibold text-gray-900">Journal Entries</span>
+                <span className="text-xs text-gray-500 font-normal">({journalEntries.length})</span>
+              </div>
+              <span className={`text-xs text-gray-500 transition-transform ${expandedSections.journal ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+
+            {expandedSections.journal && (
+              <div className="px-5 pb-4 bg-gray-50">
+                <div className="bg-white">
+                  {journalLoading ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      Loading journal entries...
+                    </div>
+                  ) : journalError ? (
+                    <div className="p-4 text-center text-red-500 text-sm">
+                      {journalError}
+                    </div>
+                  ) : journalEntries.length === 0 ? (
+                    <div className="p-4 text-center text-gray-500 text-sm">
+                      No journal entries yet
+                    </div>
+                  ) : (
+                    journalEntries.map((entry, index) => (
+                      <div key={entry.id} className={`p-4 ${index < journalEntries.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="text-xs text-gray-600 uppercase tracking-wide">
+                            {formatEntryType(entry.entry_type)}
                           </div>
-                          <div className="text-sm text-gray-700 leading-relaxed">
-                            {field.response}
+                          <div className="text-xs text-gray-500">
+                            {formatDate(new Date(entry.executed_at || entry.created_at))}
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+
+                        {/* Display all journal fields */}
+                        <div className="space-y-3">
+                          {entry.fields.map((field, fieldIndex) => (
+                            <div key={fieldIndex}>
+                              <div className="text-xs text-gray-600 mb-1 font-medium">
+                                {field.prompt}
+                              </div>
+                              <div className="text-sm text-gray-700 leading-relaxed">
+                                {field.response}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       </main>
