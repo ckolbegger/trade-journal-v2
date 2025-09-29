@@ -468,6 +468,375 @@
 
 ---
 
+## 📱 **Phase 1A Completion Workplan** (October 2024)
+
+**Objective**: Complete Phase 1A by implementing trade execution functionality and updating UI to match mobile-optimized accordion mockups, while maintaining all existing functionality and 145/145 test coverage.
+
+**Current Gap Analysis**: Our implementation has a solid position planning foundation with 4-step workflow and journal integration, but is missing the trade execution layer that converts planned positions to executed trades with P&L tracking.
+
+---
+
+## **Slice 0: Baseline UI Alignment** 🎨
+
+**Description**: Update existing UI components to match the new mobile-optimized accordion mockups while preserving all current functionality and tests.
+
+**Acceptance Criteria**:
+- All existing functionality preserved (145/145 tests remain passing)
+- Position detail views use accordion layout (Trade Plan, Trade History, Journal Entries)
+- Dashboard shows consistent status badges inline with ticker symbols
+- Planned positions show "—" placeholders for P&L (not theoretical calculations)
+- Mobile-first design with reduced vertical scrolling
+- All visual states match mockups exactly
+
+### **0.1 Position Detail Accordion Conversion (TDD)**
+**Write failing tests** for accordion layout functionality:
+- **Component tests**: Accordion expand/collapse behavior, section visibility
+- **Integration tests**: User can navigate accordion sections while maintaining state
+- **Visual regression tests**: Ensure accordion matches mockup design
+
+**Implementation Tasks**:
+- Convert `PositionDetail.tsx` to use accordion layout with sections:
+  - Trade Plan (expanded by default, shows "(Immutable)" indicator)
+  - Trade History (collapsed by default, shows count or "(Empty)")
+  - Journal Entries (collapsed by default, shows count)
+- Add accordion CSS with mobile-optimized touch targets
+- Preserve all existing functionality while updating layout
+- Ensure seamless integration with existing JournalService
+
+### **0.2 Dashboard Status Badge Integration (TDD)**
+**Write failing tests** for status badge positioning:
+- **Component tests**: Status badges render inline with ticker symbols
+- **Integration tests**: Status badges don't overlap P&L data
+- **Responsive tests**: Layout works correctly on 414px screens
+
+**Implementation Tasks**:
+- Update `PositionDashboard.tsx` to add status badges inline with symbols
+- Modify position card CSS to prevent overlapping elements
+- Add status badge styling matching mockups
+- Ensure P&L data has full visibility and readability
+
+### **0.3 Planned Position P&L Placeholder System (TDD)**
+**Write failing tests** for P&L placeholder handling:
+- **Unit tests**: Planned positions return "—" for P&L calculations
+- **Component tests**: Dashboard and detail views show placeholders correctly
+- **Integration tests**: P&L calculations exclude placeholder positions
+
+**Implementation Tasks**:
+- Update P&L calculation logic to return "—" for planned positions
+- Modify dashboard filtering to exclude placeholder P&L from totals
+- Ensure consistent placeholder display across all views
+- Maintain existing calculated P&L for executed positions (none exist yet)
+
+**Timeline**: 3-4 days
+**Expected Outcome**: All current functionality preserved with mockup-aligned UI
+
+---
+
+## **Slice 1: Trade Data Foundation** 📊
+
+**Description**: Implement core trade entity and service layer to support single opening trade execution tracking with embedded trades in Position objects. Focus on foundation for single trades only (Phase 1A limitation).
+
+**Acceptance Criteria**:
+- Position interface updated to include `trades: Trade[]` array (future-proof for multiple trades)
+- TradeService created for single trade operations within positions
+- Simple cost basis = first trade price (no FIFO complexity)
+- Position status computed from trade data ('planned' | 'open' only)
+- All existing position creation flow continues to work
+- Database schema maintains backward compatibility
+
+### **1.1 Trade Data Model Integration (TDD)**
+**Write failing tests** for Trade interface and Position integration:
+- **Unit tests**: Trade interface validation, Position.trades array handling
+- **Unit tests**: Backward compatibility with existing positions (empty trades array)
+- **Service tests**: PositionService handles embedded trades array correctly
+
+**Implementation Tasks**:
+```typescript
+// Add to Position interface
+interface Position {
+  // ... existing fields
+  trades: Trade[]  // New field for embedded trades (future-proof array)
+}
+
+interface Trade {
+  id: string
+  trade_type: 'buy' | 'sell'
+  quantity: number
+  price: number
+  timestamp: Date
+  notes?: string
+}
+```
+
+- Update `src/lib/position.ts` with Trade interface and Position.trades field
+- Ensure backward compatibility with existing positions (empty trades array)
+- Update PositionService to handle embedded trades array
+- **Phase 1A Planning Note**: Only one trade per position, but data structure supports multiple
+
+### **1.2 TradeService Implementation (TDD)**
+**Write failing tests** for single trade operations:
+- **Unit tests**: addTrade() method for single opening trades
+- **Unit tests**: Simple cost basis calculation (trades[0].price)
+- **Validation tests**: Trade quantity, price, timestamp validation
+- **Edge case tests**: Prevent adding multiple trades in Phase 1A context
+
+**Implementation Tasks**:
+- Create `src/services/TradeService.ts` for trade operations within positions
+- Implement `addTrade()` method (no `removeTrade()` needed)
+- Add simple cost basis calculation: `costBasis = trades[0]?.price ?? 0`
+- Add trade validation (positive quantities, valid prices, reasonable timestamps)
+- Ensure atomic updates to position.trades array via PositionService
+- **No FIFO**: Defer complex cost basis calculations to Phase 2
+
+### **1.3 Position Status Computation (TDD)**
+**Write failing tests** for status calculation logic:
+- **Unit tests**: `computePositionStatus()` function with direct inputs/outputs
+  - Input: `trades.length === 0` → Output: `'planned'`
+  - Input: `trades.length > 0` → Output: `'open'`
+- **Service tests**: PositionService computes status dynamically
+- **Integration tests**: Position status updates propagate to UI components
+
+**Implementation Tasks**:
+- Create `computePositionStatus()` utility function with simple logic
+- Implement status logic: no trades = 'planned', has trades = 'open'
+- **No 'closed' status**: Defer position closing to Phase 2
+- Update PositionService to compute status dynamically from trades array
+- Ensure status updates trigger appropriate UI refreshes
+
+**Timeline**: 3-5 days (simplified scope)
+**Expected Outcome**: Solid foundation for single trade tracking with future-proof data structures
+
+---
+
+## **Slice 2: Trade Execution Flow** ⚡
+
+**Description**: Implement the "Add Trade" user flow that allows users to execute trades against their position plans, transitioning positions from 'planned' to 'open' status.
+
+**Acceptance Criteria**:
+- New "Execute Opening Trade" flow accessible from planned position detail
+- Trade execution form matches `02b-add-trade-flow.html` mockup
+- Mandatory journal entry during trade execution (trade_execution entry type)
+- Position status transitions from 'planned' to 'open' after first trade
+- Trade history displays actual executed trades
+- Progress tracking shows plan vs actual execution
+- All trades are atomic (position + trade + journal created together)
+
+### **2.1 Trade Execution UI Component (TDD)**
+**Write failing tests** for trade execution form:
+- **Component tests**: Form validation, price/quantity inputs, trade type selection
+- **User interaction tests**: Form submission, navigation, error handling
+- **Integration tests**: Form integrates with TradeService and JournalService
+
+**Implementation Tasks**:
+- Create `src/pages/TradeExecution.tsx` matching `02b-add-trade-flow.html` mockup
+- Implement form with:
+  - Trade type selector (Buy/Sell)
+  - Quantity and price inputs with validation
+  - Execution date/time picker
+  - Plan vs actual comparison display
+  - Real-time trade calculation preview
+- Add navigation from position detail "Execute Opening Trade" button
+- Implement form validation and error handling
+
+### **2.2 Trade-Journal Transaction Service (TDD)**
+**Write failing tests** for atomic trade creation:
+- **Unit tests**: Transactional trade + journal entry creation
+- **Error handling tests**: Rollback on journal creation failure
+- **Integration tests**: Complete flow from form submission to database persistence
+
+**Implementation Tasks**:
+- Create `src/services/TradeJournalTransaction.ts` for atomic operations
+- Implement `executeTradeWithJournal()` method
+- Ensure rollback capability if any step fails
+- Integrate with existing PositionJournalTransaction patterns
+- Add mandatory journal entry with 'trade_execution' entry type
+
+### **2.3 Position Status Transition Integration (TDD)**
+**Write failing tests** for status updates:
+- **Integration tests**: Position dashboard shows 'open' after trade execution
+- **UI state tests**: Position detail shows trade history after execution
+- **Navigation tests**: User returns to position detail with updated state
+
+**Implementation Tasks**:
+- Update position detail to show trade execution button for planned positions
+- Implement position status transitions in UI components
+- Update dashboard filtering to handle mixed position states
+- Ensure status badges reflect computed status from trade data
+
+**Timeline**: 7-9 days
+**Expected Outcome**: Complete trade execution flow with position status transitions
+
+---
+
+## **Slice 3: P&L Calculation & Display** 💰
+
+**Description**: Implement real-time P&L calculations with manual price updates, showing actual vs theoretical P&L based on position status.
+
+**Acceptance Criteria**:
+- Manual price update system for current market prices
+- Real P&L for open positions: (current_price - avg_cost) × quantity
+- Position detail shows current P&L with color coding
+- Dashboard shows P&L summaries with proper filtering
+- Price updates persist and affect P&L calculations
+- Progress bars show position relative to stop loss and profit targets
+- Unrealized vs realized P&L tracking
+
+### **3.1 Price Update System (TDD)**
+**Write failing tests** for price management:
+- **Unit tests**: Price validation, persistence, timestamp tracking
+- **Service tests**: Price update service with position integration
+- **UI tests**: Price update form, real-time P&L updates
+
+**Implementation Tasks**:
+- Create `src/services/PriceService.ts` for current price management
+- Add `current_price` and `price_updated_at` to Position interface
+- Implement manual price update UI (matching mockup price update card)
+- Add price validation (reasonable ranges, positive values)
+- Persist price updates with timestamps
+
+### **3.2 P&L Calculation Engine (TDD)**
+**Write failing tests** for P&L calculations:
+- **Unit tests**: FIFO cost basis calculations with multiple trades
+- **P&L tests**: Unrealized P&L for open positions, realized P&L for closed
+- **Edge case tests**: Partial fills, average cost calculations, zero positions
+
+**Implementation Tasks**:
+- Create `src/services/PLCalculationService.ts`
+- Implement FIFO cost basis calculation from trades array
+- Calculate unrealized P&L: (current_price - avg_cost) × net_quantity
+- Calculate realized P&L from completed buy/sell pairs
+- Handle partial fills and complex trade sequences
+
+### **3.3 P&L Display Integration (TDD)**
+**Write failing tests** for P&L UI integration:
+- **Component tests**: P&L display formatting, color coding, percentage calculations
+- **Integration tests**: Dashboard P&L summaries, position detail P&L sections
+- **Real-time tests**: P&L updates when prices change
+
+**Implementation Tasks**:
+- Update position detail to show current P&L with progress indicators
+- Add P&L color coding (green profit, red loss)
+- Implement dashboard P&L aggregation and filtering
+- Add progress bars showing position relative to targets/stops
+- Ensure P&L updates propagate across all UI components
+
+**Timeline**: 6-8 days
+**Expected Outcome**: Complete P&L tracking with real-time updates and visual indicators
+
+---
+
+## **Slice 4: Position Lifecycle Completion** 🏁
+
+**Description**: Implement position closing workflow and closed position states, completing the full position lifecycle from plan to execution to closure.
+
+**Acceptance Criteria**:
+- Position closing flow matches `05-position-closing-flow.html` mockup
+- 4-step closing process: Details → Reason → Reflection → Confirmation
+- Mandatory closing journal entry with plan vs execution analysis
+- Position status transitions to 'closed' with final P&L calculation
+- Closed positions display differently in dashboard and detail views
+- Complete position lifecycle: planned → open → closed
+
+### **4.1 Position Closing UI Flow (TDD)**
+**Write failing tests** for closing workflow:
+- **Component tests**: 4-step closing form, step validation, progress indicators
+- **User flow tests**: Complete closing workflow from position detail
+- **Integration tests**: Closing integrates with TradeService and JournalService
+
+**Implementation Tasks**:
+- Create `src/pages/PositionClosing.tsx` matching `05-position-closing-flow.html`
+- Implement 4-step wizard:
+  1. Closing trade details (price, quantity, date)
+  2. Closing reason selection (target hit, stop loss, time-based, etc.)
+  3. Plan vs execution analysis with calculated metrics
+  4. Confirmation with mandatory journal entry
+- Add navigation from open position detail "Close Position" button
+- Implement step validation and progress tracking
+
+### **4.2 Closing Transaction Service (TDD)**
+**Write failing tests** for position closing:
+- **Unit tests**: Closing trade creation, final P&L calculation
+- **Transaction tests**: Atomic closing trade + journal + status update
+- **Validation tests**: Closing quantity validation, final trade requirements
+
+**Implementation Tasks**:
+- Extend TradeJournalTransaction for closing operations
+- Implement `closePositionWithJournal()` method
+- Calculate final realized P&L from complete buy/sell pairs
+- Update position status to 'closed' when net quantity reaches zero
+- Ensure atomic transaction for closing trade + mandatory journal
+
+### **4.3 Closed Position Display States (TDD)**
+**Write failing tests** for closed position UI:
+- **Component tests**: Closed position detail view, disabled actions
+- **Dashboard tests**: Closed positions filter, visual indicators
+- **State management tests**: Closed positions don't accept new trades/updates
+
+**Implementation Tasks**:
+- Update position detail for closed positions (different actions, final P&L)
+- Add closed position filtering to dashboard
+- Implement visual indicators for closed positions
+- Disable trade execution and price updates for closed positions
+- Show final performance metrics and trade history
+
+**Timeline**: 5-7 days
+**Expected Outcome**: Complete position lifecycle with proper state management
+
+---
+
+## **Integration & Polish Phase** ✨
+
+**Description**: Final integration testing, performance optimization, and user experience polish to ensure seamless end-to-end functionality.
+
+**Acceptance Criteria**:
+- All vertical slices work together seamlessly
+- Complete user journeys tested end-to-end
+- Performance requirements met (load <3s, operations <500ms)
+- Mobile responsiveness verified across all flows
+- Error handling and edge cases covered
+- Test coverage maintains 145+ tests with no regressions
+
+### **Integration Testing**
+- **End-to-end user journeys**: Empty state → position creation → trade execution → P&L tracking → position closing
+- **Cross-slice integration**: Data consistency across position states and UI views
+- **Performance testing**: Load times, operation speed, memory usage
+- **Mobile testing**: Touch interactions, responsive design, offline behavior
+
+### **Bug Fixes & Polish**
+- **UI/UX refinement**: Loading states, error messages, visual polish
+- **Edge case handling**: Network failures, invalid data, concurrent updates
+- **Accessibility**: Keyboard navigation, screen reader support, color contrast
+- **Performance optimization**: Database queries, component rendering, memory leaks
+
+**Timeline**: 3-4 days
+**Expected Outcome**: Production-ready Phase 1A implementation
+
+---
+
+## **Overall Timeline Estimate**
+
+**Total Development Time**: 24-35 days (5-7 weeks)
+- **Slice 0** (UI Alignment): 3-4 days
+- **Slice 1** (Trade Foundation): 5-7 days
+- **Slice 2** (Trade Execution): 7-9 days
+- **Slice 3** (P&L System): 6-8 days
+- **Slice 4** (Position Closing): 5-7 days
+- **Integration & Polish**: 3-4 days
+
+**Key Milestones**:
+- **Week 1**: Mockup alignment complete, trade foundation ready
+- **Week 3**: Trade execution flow working end-to-end
+- **Week 5**: P&L calculations and position closing implemented
+- **Week 7**: Full Phase 1A functionality complete and polished
+
+**Risk Mitigation**:
+- **Preserve existing functionality**: All 145 tests must continue passing
+- **Incremental delivery**: Each slice delivers working functionality
+- **TDD approach**: Tests written first ensure quality and prevent regressions
+- **Integration focus**: Regular end-to-end testing prevents integration issues
+
+---
+
 ## Deferred Features (For Future Phases):
 
 ### Advanced Data Models & Storage
