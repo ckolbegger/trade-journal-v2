@@ -183,6 +183,30 @@
             font-size: 18px;
             font-weight: 600;
             color: #1f2937;
+            display: flex;
+            align-items: center;
+        }
+
+        .position-status-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            vertical-align: middle;
+        }
+
+        .status-open {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .status-closed {
+            background: #f3f4f6;
+            color: #374151;
         }
         
         .position-strategy {
@@ -444,7 +468,10 @@
             <div class="position-card needs-attention" onclick="window.location.href='04-position-detail-view.html'">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">TSLA</div>
+                        <div class="position-symbol">
+                            TSLA
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Long Stock</div>
                     </div>
                     <div class="position-pl">
@@ -476,7 +503,10 @@
             <div class="position-card profitable" onclick="window.location.href='04a-covered-call-detail-view.html'">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">AAPL</div>
+                        <div class="position-symbol">
+                            AAPL
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Covered Call</div>
                     </div>
                     <div class="position-pl">
@@ -511,7 +541,10 @@
             <div class="position-card losing" onclick="window.location.href='04b-bull-put-spread-detail-view.html'">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">MSFT</div>
+                        <div class="position-symbol">
+                            MSFT
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Bull Put Spread</div>
                     </div>
                     <div class="position-pl">
@@ -546,7 +579,10 @@
             <div class="position-card" onclick="window.location.href='04c-long-call-butterfly-detail-view.html'">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">GOOGL</div>
+                        <div class="position-symbol">
+                            GOOGL
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Long Call Butterfly</div>
                     </div>
                     <div class="position-pl">
@@ -582,7 +618,10 @@
             <div class="position-card profitable" onclick="window.location.href='04d-call-calendar-spread-detail-view.html'">
                 <div class="position-header">
                     <div>
-                        <div class="position-symbol">NVDA</div>
+                        <div class="position-symbol">
+                            NVDA
+                            <span class="position-status-badge status-open">Open</span>
+                        </div>
                         <div class="position-strategy">Call Calendar Spread</div>
                     </div>
                     <div class="position-pl">
