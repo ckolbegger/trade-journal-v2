@@ -130,22 +130,26 @@ describe('EnhancedJournalEntryForm', () => {
           {
             name: 'rationale',
             prompt: 'Why this trade? Why now?',
-            response: 'AAPL showing strong technical support levels'
+            response: 'AAPL showing strong technical support levels',
+            required: true
           },
           {
             name: 'emotional_state',
             prompt: 'How are you feeling about this trade?',
-            response: 'Confident'
+            response: 'Confident',
+            required: false
           },
           {
             name: 'market_conditions',
             prompt: 'Describe current market environment and how it affects this trade',
-            response: 'Bullish trend with Fed pause expected'
+            response: 'Bullish trend with Fed pause expected',
+            required: false
           },
           {
             name: 'execution_strategy',
             prompt: 'How will you enter and exit this position?',
-            response: 'Limit order at support level'
+            response: 'Limit order at support level',
+            required: false
           }
         ])
       })
@@ -223,22 +227,26 @@ describe('EnhancedJournalEntryForm', () => {
           {
             name: 'execution_notes',
             prompt: 'Describe the execution',
-            response: 'Filled at $149.48, better than expected'
+            response: 'Filled at $149.48, better than expected',
+            required: false
           },
           {
             name: 'emotional_state',
             prompt: 'How do you feel about this execution?',
-            response: 'Calm and focused'
+            response: 'Calm and focused',
+            required: false
           },
           {
             name: 'market_conditions',
             prompt: 'Describe current market environment and how it affects this trade',
-            response: ''
+            response: '',
+            required: false
           },
           {
             name: 'execution_strategy',
             prompt: 'How will you enter and exit this position?',
-            response: ''
+            response: '',
+            required: false
           }
         ])
       })
