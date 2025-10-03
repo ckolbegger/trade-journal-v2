@@ -416,4 +416,302 @@ describe('TradeService', () => {
       expect(result.trades.length).toBe(1)
     })
   })
+
+  describe('Error Handling', () => {
+    it('[Unit] should throw error when position not found', async () => {
+      await expect(tradeService.addTrade('non-existent', {
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date()
+      })).rejects.toThrow('Position not found: non-existent')
+    })
+
+    it('[Service] should validate before persisting', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      // Invalid trade should not be persisted
+      await expect(tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: -100,
+        price: 150.50,
+        timestamp: new Date()
+      })).rejects.toThrow('quantity must be positive')
+
+      // Verify position was not modified
+      const retrieved = await positionService.getById('pos-123')
+      expect(retrieved!.trades.length).toBe(0)
+    })
+
+    it('[Service] should provide detailed error messages', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      try {
+        await tradeService.addTrade('pos-123', {
+          trade_type: 'buy',
+          quantity: 0,
+          price: 150.50,
+          timestamp: new Date()
+        })
+        throw new Error('Should have thrown validation error')
+      } catch (error: any) {
+        expect(error.message).toBe('quantity must be positive')
+      }
+    })
+  })
+
+  describe('Service Integration', () => {
+    it('[Service] should persist trade through PositionService', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date()
+      })
+
+      // Verify persisted via PositionService
+      const retrieved = await positionService.getById('pos-123')
+      expect(retrieved!.trades.length).toBe(1)
+      expect(retrieved!.trades[0].price).toBe(150.50)
+    })
+
+    it('[Service] should retrieve position with trades', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: [{
+          id: 'trade-existing',
+          trade_type: 'buy',
+          quantity: 50,
+          price: 149.00,
+          timestamp: new Date('2024-10-03T09:00:00Z')
+        }]
+      }
+      await positionService.create(position)
+
+      const retrieved = await positionService.getById('pos-123')
+      expect(retrieved!.trades.length).toBe(1)
+      expect(retrieved!.trades[0].id).toBe('trade-existing')
+    })
+  })
+
+  describe('Edge Cases', () => {
+    it('[Unit] should handle fractional quantities correctly', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 100.5,
+        price: 150.50,
+        timestamp: new Date()
+      })
+
+      expect(result.trades[0].quantity).toBe(100.5)
+    })
+
+    it('[Unit] should handle very large prices', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 10,
+        price: 999999.99,
+        timestamp: new Date()
+      })
+
+      expect(result.trades[0].price).toBe(999999.99)
+    })
+
+    it('[Unit] should handle very small prices', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 1000,
+        price: 0.0001,
+        timestamp: new Date()
+      })
+
+      expect(result.trades[0].price).toBe(0.0001)
+    })
+
+    it('[Unit] should handle past timestamps correctly', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const pastDate = new Date('2024-10-03T10:00:00Z')
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: pastDate
+      })
+
+      expect(result.trades[0].timestamp).toEqual(pastDate)
+    })
+
+    it('[Unit] should handle empty notes field', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date()
+      })
+
+      expect(result.trades[0].notes).toBeUndefined()
+    })
+
+    it('[Unit] should handle notes with whitespace', async () => {
+      const position: Position = {
+        id: 'pos-123',
+        symbol: 'AAPL',
+        strategy_type: 'Long Stock',
+        target_entry_price: 150.00,
+        target_quantity: 100,
+        profit_target: 165.00,
+        stop_loss: 145.00,
+        position_thesis: 'Strong technical setup',
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+      await positionService.create(position)
+
+      const result = await tradeService.addTrade('pos-123', {
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date(),
+        notes: '  Good entry  '
+      })
+
+      // Notes should be preserved as-is (no trimming for now)
+      expect(result.trades[0].notes).toBe('  Good entry  ')
+    })
+  })
 })
