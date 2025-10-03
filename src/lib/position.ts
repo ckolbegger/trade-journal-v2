@@ -1,3 +1,6 @@
+import type { Trade } from './trade'
+import { computePositionStatus } from '@/utils/statusComputation'
+
 // Phase 1A Position Interface - Core trade planning entity
 export interface Position {
   id: string
@@ -9,8 +12,9 @@ export interface Position {
   stop_loss: number
   position_thesis: string
   created_date: Date
-  status: 'planned'
+  status: 'planned' | 'open'  // Dynamically computed from trades array
   journal_entry_ids: string[]
+  trades: Trade[]  // Embedded trades array for future-proof data structure
 }
 
 // Position Service - IndexedDB CRUD operations
@@ -82,6 +86,11 @@ export class PositionService {
     if (position.journal_entry_ids !== undefined && !Array.isArray(position.journal_entry_ids)) {
       throw new Error('journal_entry_ids must be an array')
     }
+
+    // Ensure trades is an array (for backwards compatibility)
+    if (position.trades !== undefined && !Array.isArray(position.trades)) {
+      throw new Error('trades must be an array')
+    }
   }
 
   async create(position: Position): Promise<Position> {
@@ -115,6 +124,12 @@ export class PositionService {
           if (!result.journal_entry_ids) {
             result.journal_entry_ids = []
           }
+          // Migrate existing positions to include trades array
+          if (!result.trades) {
+            result.trades = []
+          }
+          // Compute status dynamically from trades array (not stored)
+          result.status = computePositionStatus(result.trades)
           resolve(result)
         } else {
           resolve(null)
@@ -140,6 +155,12 @@ export class PositionService {
           if (!position.journal_entry_ids) {
             position.journal_entry_ids = []
           }
+          // Migrate existing positions to include trades array
+          if (!position.trades) {
+            position.trades = []
+          }
+          // Compute status dynamically from trades array (not stored)
+          position.status = computePositionStatus(position.trades)
         })
         resolve(positions)
       }
