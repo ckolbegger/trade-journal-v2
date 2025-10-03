@@ -1,6 +1,7 @@
 import type { Position } from '@/lib/position'
 import type { PositionService } from '@/lib/position'
 import type { Trade } from '@/lib/trade'
+import { computePositionStatus } from '@/utils/statusComputation'
 
 export class TradeService {
   constructor(private positionService: PositionService) {}
@@ -62,6 +63,9 @@ export class TradeService {
 
     // Add trade to position's trades array
     position.trades.push(trade)
+
+    // Recompute status after adding trade
+    position.status = computePositionStatus(position.trades)
 
     // Update position in database
     await this.positionService.update(position)
