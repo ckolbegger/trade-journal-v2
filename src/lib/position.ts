@@ -1,3 +1,14 @@
+// Trade Interface - Individual trade execution within a position
+export interface Trade {
+  id: string
+  position_id: string
+  trade_type: 'buy' | 'sell'
+  quantity: number
+  price: number
+  timestamp: Date
+  notes?: string
+}
+
 // Phase 1A Position Interface - Core trade planning entity
 export interface Position {
   id: string
@@ -9,8 +20,9 @@ export interface Position {
   stop_loss: number
   position_thesis: string
   created_date: Date
-  status: 'planned'
+  status: 'planned' | 'open'
   journal_entry_ids: string[]
+  trades: Trade[] // New field for embedded trades (future-proof array)
 }
 
 // Position Service - IndexedDB CRUD operations
@@ -82,6 +94,11 @@ export class PositionService {
     if (position.journal_entry_ids !== undefined && !Array.isArray(position.journal_entry_ids)) {
       throw new Error('journal_entry_ids must be an array')
     }
+
+    // Ensure trades is an array (for backwards compatibility)
+    if (position.trades !== undefined && !Array.isArray(position.trades)) {
+      throw new Error('trades must be an array')
+    }
   }
 
   async create(position: Position): Promise<Position> {
@@ -115,6 +132,10 @@ export class PositionService {
           if (!result.journal_entry_ids) {
             result.journal_entry_ids = []
           }
+          // Migrate existing positions to include trades array
+          if (!result.trades) {
+            result.trades = []
+          }
           resolve(result)
         } else {
           resolve(null)
@@ -139,6 +160,10 @@ export class PositionService {
           // Migrate existing positions to include journal_entry_ids
           if (!position.journal_entry_ids) {
             position.journal_entry_ids = []
+          }
+          // Migrate existing positions to include trades array
+          if (!position.trades) {
+            position.trades = []
           }
         })
         resolve(positions)
