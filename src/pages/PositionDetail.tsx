@@ -147,10 +147,21 @@ export function PositionDetail({ positionService: injectedPositionService, journ
     )
   }
 
-  // Calculate some basic metrics (will be enhanced with trade data)
+  // Calculate metrics from trade data
   const targetEntryPrice = position.target_entry_price || 0
   const stopLoss = position.stop_loss || 0
   const profitTarget = position.profit_target || 0
+
+  // Calculate average cost from trades
+  const avgCost = position.trades.length > 0
+    ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
+    : targetEntryPrice
+
+  // Calculate total quantity from trades
+  const totalQuantity = position.trades.reduce((sum, trade) => sum + trade.quantity, 0)
+
+  // Calculate total cost
+  const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto bg-white shadow-lg">
@@ -166,7 +177,7 @@ export function PositionDetail({ positionService: injectedPositionService, journ
         <div className="flex-1 ml-4">
           <div className="text-lg font-semibold">{position.symbol}</div>
           <div className="text-xs opacity-80">
-            {position.strategy_type} • {position.target_quantity || 0} shares
+            {position.strategy_type} • {totalQuantity || position.target_quantity || 0} shares
           </div>
         </div>
 
@@ -199,7 +210,7 @@ export function PositionDetail({ positionService: injectedPositionService, journ
         <div className="grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Avg Cost</div>
-            <div className="text-lg font-semibold">{formatCurrency(targetEntryPrice)}</div>
+            <div className="text-lg font-semibold">{formatCurrency(avgCost)}</div>
           </div>
           <div className="text-center">
             <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Current</div>
@@ -250,15 +261,19 @@ export function PositionDetail({ positionService: injectedPositionService, journ
             <div className="mb-4">
               <div className="flex justify-between text-xs text-gray-600 mb-2">
                 <span>Stop {formatCurrency(stopLoss)}</span>
-                <span>Pending opening trade</span>
+                <span>{totalQuantity > 0 ? `${totalQuantity} shares @ ${formatCurrency(avgCost)}` : 'Pending opening trade'}</span>
                 <span>Target {formatCurrency(profitTarget)}</span>
               </div>
               <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden relative">
-                {/* Empty progress bar for planned positions */}
-                <div
-                  className="h-full bg-transparent"
-                  style={{ width: '0%' }}
-                ></div>
+                {/* Progress indicator based on current price vs targets */}
+                {totalQuantity > 0 && (
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, Math.max(0, ((parseFloat(currentPrice) - avgCost) / (profitTarget - avgCost)) * 100))}%`
+                    }}
+                  ></div>
+                )}
               </div>
             </div>
 
@@ -266,13 +281,13 @@ export function PositionDetail({ positionService: injectedPositionService, journ
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">To Stop</div>
                 <div className="text-lg font-semibold text-gray-500">
-                  —
+                  {totalQuantity > 0 ? formatCurrency(stopLoss - avgCost) : '—'}
                 </div>
               </div>
               <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Risk Amount</div>
                 <div className="text-lg font-semibold text-gray-500">
-                  —
+                  {totalQuantity > 0 ? formatCurrency(Math.abs(avgCost - stopLoss) * totalQuantity) : '—'}
                 </div>
               </div>
             </div>
@@ -334,13 +349,58 @@ export function PositionDetail({ positionService: injectedPositionService, journ
           <Accordion
             title="Trade History"
             icon="📊"
-            indicator="(Empty)"
-            defaultOpen={false}
+            indicator={`(${position.trades.length})`}
+            defaultOpen={position.trades.length > 0}
           >
             <div className="bg-white">
-              <div className="p-4 text-center text-gray-500 text-sm">
-                No trades executed yet
-              </div>
+              {position.trades.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No trades executed yet
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {position.trades.map((trade, index) => (
+                    <div key={trade.id} className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                            trade.trade_type === 'buy'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {trade.trade_type.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {trade.quantity} shares
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatDate(trade.timestamp)}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <span className="text-gray-600">Price:</span>
+                          <span className="ml-2 font-medium">{formatCurrency(trade.price)}</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-600">Total:</span>
+                          <span className="ml-2 font-medium">
+                            {formatCurrency(trade.price * trade.quantity)}
+                          </span>
+                        </div>
+                      </div>
+
+                      {trade.notes && (
+                        <div className="mt-2 text-xs text-gray-600">
+                          <span className="font-medium">Notes:</span> {trade.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Accordion>
 

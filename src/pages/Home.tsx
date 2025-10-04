@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { EmptyState } from './EmptyState'
 import { Dashboard } from './Dashboard'
 import { PositionService } from '@/lib/position'
+import { TradeService } from '@/services/TradeService'
 
 interface HomeProps {
   positionService?: PositionService
@@ -12,6 +13,7 @@ export function Home({ positionService: injectedPositionService }: HomeProps = {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const positionService = injectedPositionService || new PositionService()
+  const tradeService = new TradeService(positionService)
 
   useEffect(() => {
     checkForPositions()
@@ -59,7 +61,7 @@ export function Home({ positionService: injectedPositionService }: HomeProps = {
   }
 
   if (hasPositions) {
-    return <Dashboard positionService={positionService} />
+    return <Dashboard positionService={positionService} tradeService={tradeService} />
   }
 
   return <EmptyState />
