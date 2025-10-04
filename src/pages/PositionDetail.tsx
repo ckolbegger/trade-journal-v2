@@ -23,8 +23,9 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
-  const positionService = injectedPositionService || new PositionService()
+  const positionServiceInstance = injectedPositionService || new PositionService()
 
+  
   const getJournalService = async (): Promise<JournalService> => {
     if (injectedJournalService) {
       return injectedJournalService
@@ -48,7 +49,7 @@ export function PositionDetail({ positionService: injectedPositionService, journ
     if (!id) return
 
     try {
-      const loadedPosition = await positionService.getById(id)
+      const loadedPosition = await positionServiceInstance.getById(id)
       setPosition(loadedPosition)
       if (loadedPosition) {
         setCurrentPrice(loadedPosition.target_entry_price?.toString() || '0')

@@ -1,6 +1,7 @@
 import React from 'react'
 import { describe, it, expect } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
+import { BrowserRouter } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position } from '@/lib/position'
 
@@ -50,7 +51,9 @@ describe('PositionDetail Component', () => {
 
     // Act - Render component with mocked service
     render(
-      React.createElement(PositionDetail, { positionService: mockPositionService })
+      React.createElement(BrowserRouter, {},
+        React.createElement(PositionDetail, { positionService: mockPositionService })
+      )
     )
 
     // Assert - Should show the position
@@ -79,7 +82,9 @@ describe('PositionDetail Component', () => {
 
     // Act
     render(
-      React.createElement(PositionDetail, { positionService: mockPositionService })
+      React.createElement(BrowserRouter, {},
+        React.createElement(PositionDetail, { positionService: mockPositionService })
+      )
     )
 
     // Assert

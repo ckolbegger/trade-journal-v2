@@ -43,7 +43,9 @@ export const createPosition = (overrides: Partial<Position> = {}): Position => {
     stop_loss,
     position_thesis,
     status: status || DEFAULT_POSITION_DATA.status,
-    created_date: created_date || DEFAULT_POSITION_DATA.created_date
+    created_date: created_date || DEFAULT_POSITION_DATA.created_date,
+    journal_entry_ids: [],
+    trades: []
   }
 }
 

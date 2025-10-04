@@ -255,13 +255,20 @@ describe('PositionDetail', () => {
         assertTextExists('Trade Plan')
         assertTextExists('(Immutable)')
 
-        // Trade History section should show count
+        // Trade History section should show count but be collapsed by default when no trades
         assertTextExists('Trade History')
-        assertTextExists('(Empty)')
+        assertTextExists('(0)')
 
         // Journal Entries section should show count
         assertTextExists('Journal Entries')
         assertTextExists('(2)')
+
+        // Expand Trade History accordion to see the content
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+        fireEvent.click(tradeHistoryButton!)
+
+        // Now should show "No trades executed yet"
+        assertTextExists(/No trades executed yet/)
       })
     })
 
@@ -339,8 +346,16 @@ describe('PositionDetail', () => {
       })
 
       await waitFor(() => {
-        // Should show "(Empty)" when no trades
-        assertTextExists('(Empty)')
+        // Should show "(0)" count for Trade History when no trades
+        // Need to be specific since both Trade History and Journal Entries might show (0)
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+        expect(tradeHistoryButton).toHaveTextContent('(0)')
+
+        // Expand Trade History accordion to see the content
+        fireEvent.click(tradeHistoryButton!)
+
+        // Now should show "No trades executed yet"
+        assertTextExists(/No trades executed yet/)
       })
     })
 
@@ -355,20 +370,12 @@ describe('PositionDetail', () => {
       })
 
       await waitFor(() => {
-        // Should show "(0)" when no entries
-        assertTextExists('(0)')
-      })
-
-      // Reset and test with entries
-      mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
-
-      await act(async () => {
-        renderWithRouter(<PositionDetail />)
-      })
-
-      await waitFor(() => {
-        // Should show "(2)" when 2 entries
-        assertTextExists('(2)')
+        // Should show "(0)" for Journal Entries when no entries
+        // Find all buttons with Journal Entries text and use the first one
+        const journalEntriesButtons = screen.getAllByText('Journal Entries').map(el => el.closest('button')).filter(Boolean)
+        expect(journalEntriesButtons.length).toBeGreaterThan(0)
+        const firstJournalButton = journalEntriesButtons[0]
+        expect(firstJournalButton).toHaveTextContent('(0)')
       })
     })
   })

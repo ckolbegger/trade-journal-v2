@@ -178,10 +178,11 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     // Verify both positions are displayed with correct data
     expect(screen.getAllByText('Long Stock')).toHaveLength(2)
-    expect(screen.getAllByText('—')).toHaveLength(2) // P&L placeholders for planned positions
+    expect(screen.getAllByText('Planned')).toHaveLength(2) // Status text for planned positions
     expect(screen.getByText('$135.00')).toBeInTheDocument() // AAPL stop loss
     expect(screen.getByText('$270.00')).toBeInTheDocument() // MSFT stop loss
-    expect(screen.getAllByText('TODO')).toHaveLength(4) // 2 positions × 2 TODO fields each
+    // The new component shows actual calculated values instead of TODO placeholders
+    expect(screen.getAllByText('No trades')).toHaveLength(2) // 2 positions × "No trades" status each
   })
 
   it('should handle Dashboard navigation and maintain position data', async () => {

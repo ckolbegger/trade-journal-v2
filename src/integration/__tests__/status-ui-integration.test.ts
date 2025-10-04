@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto'
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { PositionCard } from '@/components/PositionCard'
@@ -39,6 +39,16 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   let positionService: PositionService
   let tradeService: TradeService
   let testDbName: string
+
+  // Helper function to render Dashboard and wait for it to load
+  const renderDashboardAndWait = async (props: any) => {
+    await act(async () => {
+      render(React.createElement(Dashboard, props))
+    })
+    await waitFor(() => {
+      expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
+    })
+  }
 
   beforeEach(async () => {
     testDbName = `TradingJournalDB_StatusUI_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
@@ -183,12 +193,10 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       unmount()
       const allPositions = await positionService.getAll()
-      render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService
-        })
-      )
+      await renderDashboardAndWait({
+        positionService: positionService,
+        tradeService: tradeService
+      })
 
       const dashboardStatusBadges = screen.getAllByTestId('position-status-badge')
       const ourBadge = dashboardStatusBadges.find(badge =>
@@ -289,13 +297,11 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       const allPositions = await positionService.getAll()
 
-      render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "planned"
-        })
-      )
+      await renderDashboardAndWait({
+        positionService: positionService,
+        tradeService: tradeService,
+        filter: "planned"
+      })
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(2)
@@ -332,13 +338,11 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       const allPositions = await positionService.getAll()
 
-      render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "open"
-        })
-      )
+      await renderDashboardAndWait({
+        positionService: positionService,
+        tradeService: tradeService,
+        filter: "open"
+      })
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(1)
@@ -372,13 +376,11 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       const allPositions = await positionService.getAll()
 
-      render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "all"
-        })
-      )
+      await renderDashboardAndWait({
+        positionService: positionService,
+        tradeService: tradeService,
+        filter: "all"
+      })
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(3)
@@ -399,15 +401,27 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       await positionService.create(position)
 
       let allPositions = await positionService.getAll()
-      const { rerender } = render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "planned"
-        })
-      )
+      let rerender: any
+      await act(async () => {
+        const result = render(
+          React.createElement(Dashboard, {
+            positionService: positionService,
+            tradeService: tradeService,
+            filter: "planned"
+          })
+        )
+        rerender = result.rerender
+      })
 
-      expect(screen.getByTestId('position-card-filter-update-pos-123')).toBeVisible()
+      // Wait for Dashboard to finish loading
+      await waitFor(() => {
+        expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
+      })
+
+      // Find the position card with the specific position ID
+      const positionCard = screen.getByTestId('position-card')
+      expect(positionCard).toBeVisible()
+      expect(positionCard).toHaveAttribute('data-position-id', 'filter-update-pos-123')
 
       const trade = createTestTrade({
         position_id: 'filter-update-pos-123',
@@ -417,25 +431,37 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       await tradeService.addTrade(trade)
 
       allPositions = await positionService.getAll()
-      rerender(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "planned"
-        })
-      )
+      await act(async () => {
+        rerender(
+          React.createElement(Dashboard, {
+            positionService: positionService,
+            tradeService: tradeService,
+            filter: "planned"
+          })
+        )
+      })
 
       expect(screen.queryByTestId('position-card-filter-update-pos-123')).not.toBeInTheDocument()
 
-      rerender(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "open"
-        })
-      )
+      await act(async () => {
+        rerender(
+          React.createElement(Dashboard, {
+            positionService: positionService,
+            tradeService: tradeService,
+            filter: "open"
+          })
+        )
+      })
 
-      expect(screen.getByTestId('position-card-filter-update-pos-123')).toBeVisible()
+      // Wait for Dashboard to finish loading after rerender
+      await waitFor(() => {
+        expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
+      })
+
+      // Find the position card with the specific position ID
+      const updatedPositionCard = screen.getByTestId('position-card')
+      expect(updatedPositionCard).toBeVisible()
+      expect(updatedPositionCard).toHaveAttribute('data-position-id', 'filter-update-pos-123')
     })
   })
 
@@ -488,13 +514,11 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       const allPositions = await positionService.getAll()
 
       const startTime = performance.now()
-      render(
-        React.createElement(Dashboard, {
-          positionService: positionService,
-          tradeService: tradeService,
-          filter: "all"
-        })
-      )
+      await renderDashboardAndWait({
+        positionService: positionService,
+        tradeService: tradeService,
+        filter: "all"
+      })
       const endTime = performance.now()
 
       const renderTime = endTime - startTime
