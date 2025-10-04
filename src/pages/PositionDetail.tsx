@@ -119,8 +119,9 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   }
 
   const handleAddTrade = () => {
-    // Will be implemented in Trade Execution Flow
-    console.log('Add Trade clicked')
+    if (position) {
+      navigate(`/trade-execution/${position.id}`)
+    }
   }
 
   const handleClosePosition = () => {
@@ -334,13 +335,40 @@ export function PositionDetail({ positionService: injectedPositionService, journ
           <Accordion
             title="Trade History"
             icon="📊"
-            indicator="(Empty)"
+            indicator={position.trades.length > 0 ? `(${position.trades.length})` : "(Empty)"}
             defaultOpen={false}
           >
             <div className="bg-white">
-              <div className="p-4 text-center text-gray-500 text-sm">
-                No trades executed yet
-              </div>
+              {position.trades.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No trades executed yet
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-100">
+                  {position.trades.map((trade, index) => (
+                    <div key={trade.id} className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-sm font-semibold ${trade.trade_type === 'buy' ? 'text-green-600' : 'text-red-600'}`}>
+                            {trade.trade_type.toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-600">
+                            {trade.quantity} shares @ {formatCurrency(trade.price)}
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {formatDate(trade.timestamp)}
+                        </div>
+                      </div>
+                      {trade.notes && (
+                        <div className="text-sm text-gray-600 mt-2">
+                          {trade.notes}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Accordion>
 

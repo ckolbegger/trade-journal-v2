@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { Position } from '@/lib/position'
 import { PositionService } from '@/lib/position'
+import { TradeService } from '@/services/TradeService'
 
 interface FormErrors {
   quantity?: string
@@ -14,6 +15,7 @@ const TradeExecution = () => {
   const navigate = useNavigate()
   const [position, setPosition] = useState<Position | null>(null)
   const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
 
   // Form state
   const [tradeType, setTradeType] = useState<'buy' | 'sell'>('buy')
@@ -96,7 +98,7 @@ const TradeExecution = () => {
     return `$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Validate all fields
     const quantityError = validateQuantity(quantity)
     const priceError = validatePrice(price)
@@ -112,8 +114,35 @@ const TradeExecution = () => {
       return
     }
 
-    // Navigate to journal entry page (will be implemented in next phase)
-    console.log('Trade form submitted', { tradeType, quantity, price, executionDate, notes })
+    if (!positionId) {
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+      // Create TradeService
+      const positionService = new PositionService()
+      const tradeService = new TradeService(positionService)
+
+      // Submit trade
+      await tradeService.addTrade(positionId, {
+        trade_type: tradeType,
+        quantity: parseFloat(quantity),
+        price: parseFloat(price),
+        timestamp: new Date(executionDate),
+        notes: notes || undefined
+      })
+
+      positionService.close()
+
+      // Navigate back to position detail
+      navigate(`/position/${positionId}`)
+    } catch (error) {
+      console.error('Failed to add trade:', error)
+      alert(`Failed to add trade: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      setSubmitting(false)
+    }
   }
 
   if (loading) {
@@ -304,9 +333,10 @@ const TradeExecution = () => {
         </button>
         <button
           onClick={handleSubmit}
-          className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+          disabled={submitting}
+          className="flex-1 py-3 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Add Trade
+          {submitting ? 'Adding Trade...' : 'Add Trade'}
         </button>
       </div>
     </div>
