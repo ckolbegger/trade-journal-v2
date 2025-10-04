@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { EmptyState } from './EmptyState'
 import { Dashboard } from './Dashboard'
 import { PositionService } from '@/lib/position'
@@ -14,6 +15,11 @@ export function Home({ positionService: injectedPositionService }: HomeProps = {
   const [error, setError] = useState<string | null>(null)
   const positionService = injectedPositionService || new PositionService()
   const tradeService = new TradeService(positionService)
+  const navigate = useNavigate()
+
+  const handleViewDetails = (positionId: string) => {
+    navigate(`/position/${positionId}`)
+  }
 
   useEffect(() => {
     checkForPositions()
@@ -61,7 +67,7 @@ export function Home({ positionService: injectedPositionService }: HomeProps = {
   }
 
   if (hasPositions) {
-    return <Dashboard positionService={positionService} tradeService={tradeService} />
+    return <Dashboard positionService={positionService} tradeService={tradeService} onViewDetails={handleViewDetails} />
   }
 
   return <EmptyState />
