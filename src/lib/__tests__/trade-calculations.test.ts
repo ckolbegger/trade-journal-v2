@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import type { Trade, Position } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
+import { calculateCostBasis } from '@/utils/costBasis'
 
 // Test data factories
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
@@ -40,10 +41,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
       const position = createTestPosition({
         trades: [createTestTrade({ price: 150.25 })]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(150.25)
@@ -52,10 +52,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
     it('[Unit] should return zero cost basis for empty trades array', () => {
       // Arrange
       const position = createTestPosition({ trades: [] })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(0)
@@ -69,10 +68,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
           createTestTrade({ trade_type: 'sell', price: 160.50 })
         ]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(150.25) // Only the buy trade price
@@ -87,10 +85,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
           createTestTrade({ trade_type: 'sell', price: 160.75 })
         ]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(150.25) // First buy trade only
@@ -101,10 +98,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
       const position = createTestPosition({
         trades: [createTestTrade({ quantity: 50.5, price: 150.25 })]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(150.25) // Price should be used regardless of quantity
@@ -115,10 +111,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
       const position = createTestPosition({
         trades: [createTestTrade({ price: 999999.99 })]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(999999.99)
@@ -129,10 +124,9 @@ describe('Batch 3: Cost Basis Calculation', () => {
       const position = createTestPosition({
         trades: [createTestTrade({ price: 0.0001 })]
       })
-      const tradeService = new TradeService()
 
       // Act
-      const costBasis = tradeService.calculateSimpleCostBasis(position.trades)
+      const costBasis = calculateCostBasis(position.trades)
 
       // Assert
       expect(costBasis).toBe(0.0001)
@@ -141,12 +135,11 @@ describe('Batch 3: Cost Basis Calculation', () => {
     it('[Unit] should be consistent pure function with same output for same input', () => {
       // Arrange
       const trades = [createTestTrade({ price: 150.25 })]
-      const tradeService = new TradeService()
 
       // Act & Assert
-      expect(tradeService.calculateSimpleCostBasis(trades)).toBe(150.25)
-      expect(tradeService.calculateSimpleCostBasis(trades)).toBe(150.25)
-      expect(tradeService.calculateSimpleCostBasis(trades)).toBe(150.25)
+      expect(calculateCostBasis(trades)).toBe(150.25)
+      expect(calculateCostBasis(trades)).toBe(150.25)
+      expect(calculateCostBasis(trades)).toBe(150.25)
     })
 
     it('[Service] should calculate cost basis using TradeService data', async () => {

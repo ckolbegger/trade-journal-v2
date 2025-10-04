@@ -3,6 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import type { Position, Trade } from '@/lib/position'
+import { computePositionStatus } from '@/utils/statusComputation'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -477,7 +478,7 @@ describe('Batch 7: Integration & End-to-End Tests', () => {
 
     // Act & Assert - Direct computation should also work
     const retrievedPosition = await positionService.getById('empty-trades-pos-123')
-    const directStatus = tradeService.computePositionStatusFromTrades(retrievedPosition!.trades)
+    const directStatus = computePositionStatus(retrievedPosition!.trades)
     expect(directStatus).toBe('planned')
   })
 

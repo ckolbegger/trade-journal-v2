@@ -1,3 +1,5 @@
+import { computePositionStatus } from '@/utils/statusComputation'
+
 // Trade Interface - Individual trade execution within a position
 export interface Trade {
   id: string
@@ -136,6 +138,8 @@ export class PositionService {
           if (!result.trades) {
             result.trades = []
           }
+          // Compute status dynamically from trades
+          result.status = computePositionStatus(result.trades)
           resolve(result)
         } else {
           resolve(null)
@@ -165,6 +169,8 @@ export class PositionService {
           if (!position.trades) {
             position.trades = []
           }
+          // Compute status dynamically from trades
+          position.status = computePositionStatus(position.trades)
         })
         resolve(positions)
       }

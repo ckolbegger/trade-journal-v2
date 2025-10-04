@@ -1,5 +1,7 @@
 import type { Position, Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
+import { calculateCostBasis } from '@/utils/costBasis'
+import { computePositionStatus } from '@/utils/statusComputation'
 
 export class TradeService {
   private positionService: PositionService
@@ -74,10 +76,11 @@ export class TradeService {
     }
 
     // Add trade to position and update status
+    const updatedTrades = [...position.trades, trade]
     const updatedPosition = {
       ...position,
-      trades: [...position.trades, trade],
-      status: 'open' as const // Position becomes open when it has trades
+      trades: updatedTrades,
+      status: computePositionStatus(updatedTrades)
     }
 
     // Update position with new trade
@@ -103,17 +106,7 @@ export class TradeService {
    */
   async calculateCostBasis(positionId: string): Promise<number> {
     const trades = await this.getTradesByPositionId(positionId)
-    return this.calculateSimpleCostBasis(trades)
-  }
-
-  /**
-   * Simple cost basis calculation for Phase 1A
-   * Uses first buy trade price only (no FIFO complexity)
-   */
-  calculateSimpleCostBasis(trades: Trade[]): number {
-    // Phase 1A: Simple cost basis = first buy trade price
-    const firstBuyTrade = trades.find(trade => trade.trade_type === 'buy')
-    return firstBuyTrade ? firstBuyTrade.price : 0
+    return calculateCostBasis(trades)
   }
 
   /**
@@ -125,15 +118,7 @@ export class TradeService {
     if (!position) {
       throw new Error(`Position not found: ${positionId}`)
     }
-    return this.computePositionStatusFromTrades(position.trades)
-  }
-
-  /**
-   * Compute position status from trades array
-   */
-  computePositionStatusFromTrades(trades: Trade[]): 'planned' | 'open' {
-    // Phase 1A logic: planned (no trades) → open (has trades)
-    return trades.length > 0 ? 'open' : 'planned'
+    return computePositionStatus(position.trades)
   }
 
   /**
