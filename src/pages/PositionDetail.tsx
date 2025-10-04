@@ -153,6 +153,10 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   const stopLoss = position.stop_loss || 0
   const profitTarget = position.profit_target || 0
 
+  // Determine position status based on trades
+  const hasTrades = position.trades && position.trades.length > 0
+  const isPlannedPosition = !hasTrades
+
   // Calculate average cost from trades
   const avgCost = position.trades.length > 0
     ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
@@ -302,7 +306,7 @@ export function PositionDetail({ positionService: injectedPositionService, journ
             title="Trade Plan"
             icon="🎯"
             indicator="(Immutable)"
-            defaultOpen={true}
+            defaultOpen={isPlannedPosition}
           >
             <div className="bg-white border border-gray-200 rounded-lg p-4">
               <div className="flex items-center bg-red-50 border border-red-200 rounded-lg p-2 mb-3 text-xs text-red-800">
@@ -351,7 +355,7 @@ export function PositionDetail({ positionService: injectedPositionService, journ
             title="Trade History"
             icon="📊"
             indicator={`(${position.trades.length})`}
-            defaultOpen={position.trades.length > 0}
+            defaultOpen={hasTrades}
           >
             <div className="bg-white">
               {position.trades.length === 0 ? (

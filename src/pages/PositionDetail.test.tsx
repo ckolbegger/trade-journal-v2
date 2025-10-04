@@ -544,4 +544,150 @@ describe('PositionDetail', () => {
       })
     })
   })
+
+  describe('Conditional Section Display', () => {
+    it('should open Trade Plan section for planned positions (no trades)', async () => {
+      const plannedPosition = {
+        ...mockPosition,
+        trades: []
+      }
+      mockPositionService.getById.mockResolvedValue(plannedPosition)
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />)
+      })
+
+      await waitFor(() => {
+        // Trade Plan should be open (active class)
+        const tradePlanButton = screen.getByText('Trade Plan').closest('button')
+        expect(tradePlanButton).toHaveClass('active')
+
+        // Trade Plan content should be visible
+        assertTextExists('Target Entry Price')
+        assertTextExists('Position Thesis')
+
+        // Trade History should be closed (no active class)
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+        expect(tradeHistoryButton).not.toHaveClass('active')
+      })
+    })
+
+    it('should open Trade History section for open positions (has trades)', async () => {
+      const openPosition = {
+        ...mockPosition,
+        trades: [
+          {
+            id: 'trade-1',
+            position_id: 'pos-123',
+            trade_type: 'buy',
+            quantity: 50,
+            price: 150,
+            timestamp: new Date('2024-01-15T10:00:00.000Z'),
+            notes: 'Initial entry'
+          }
+        ]
+      }
+      mockPositionService.getById.mockResolvedValue(openPosition)
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />)
+      })
+
+      await waitFor(() => {
+        // Trade History should be open (active class)
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+        expect(tradeHistoryButton).toHaveClass('active')
+
+        // Trade History content should be visible
+        assertTextExists('BUY')
+        assertTextExists('50 shares')
+
+        // Trade Plan should be closed (no active class)
+        const tradePlanButton = screen.getByText('Trade Plan').closest('button')
+        expect(tradePlanButton).not.toHaveClass('active')
+      })
+    })
+
+    it('should handle positions with multiple trades correctly', async () => {
+      const positionWithMultipleTrades = {
+        ...mockPosition,
+        trades: [
+          {
+            id: 'trade-1',
+            position_id: 'pos-123',
+            trade_type: 'buy',
+            quantity: 50,
+            price: 150,
+            timestamp: new Date('2024-01-15T10:00:00.000Z'),
+            notes: 'Initial entry'
+          },
+          {
+            id: 'trade-2',
+            position_id: 'pos-123',
+            trade_type: 'buy',
+            quantity: 25,
+            price: 155,
+            timestamp: new Date('2024-01-16T11:00:00.000Z'),
+            notes: 'Scale in'
+          }
+        ]
+      }
+      mockPositionService.getById.mockResolvedValue(positionWithMultipleTrades)
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />)
+      })
+
+      await waitFor(() => {
+        // Trade History should be open (active class)
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+        expect(tradeHistoryButton).toHaveClass('active')
+
+        // Should show both trades (check within Trade History section)
+        const tradeHistorySection = screen.getByText('Trade History').closest('section')
+        if (tradeHistorySection) {
+          expect(within(tradeHistorySection).getAllByText('BUY')).toHaveLength(2)
+          expect(within(tradeHistorySection).getByText('50 shares')).toBeInTheDocument()
+          expect(within(tradeHistorySection).getByText('25 shares')).toBeInTheDocument()
+        }
+
+        // Trade Plan should be closed
+        const tradePlanButton = screen.getByText('Trade Plan').closest('button')
+        expect(tradePlanButton).not.toHaveClass('active')
+      })
+    })
+
+    it('should allow manual expansion/collapse regardless of position status', async () => {
+      const plannedPosition = {
+        ...mockPosition,
+        trades: []
+      }
+      mockPositionService.getById.mockResolvedValue(plannedPosition)
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />)
+      })
+
+      await waitFor(() => {
+        // Initially Trade Plan should be open, Trade History closed
+        const tradePlanButton = screen.getByText('Trade Plan').closest('button')
+        const tradeHistoryButton = screen.getByText('Trade History').closest('button')
+
+        expect(tradePlanButton).toHaveClass('active')
+        expect(tradeHistoryButton).not.toHaveClass('active')
+
+        // Collapse Trade Plan
+        fireEvent.click(tradePlanButton!)
+        expect(tradePlanButton).not.toHaveClass('active')
+
+        // Expand Trade History
+        fireEvent.click(tradeHistoryButton!)
+        expect(tradeHistoryButton).toHaveClass('active')
+
+        // Should be able to collapse Trade History too
+        fireEvent.click(tradeHistoryButton!)
+        expect(tradeHistoryButton).not.toHaveClass('active')
+      })
+    })
+  })
 })
