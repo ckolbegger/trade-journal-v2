@@ -1,13 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { PositionCard } from './PositionCard'
-import { TradeExecutionForm } from './TradeExecutionForm'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
-import type { Position, Trade } from '@/lib/position'
+import type { Position } from '@/lib/position'
 
 export interface DashboardProps {
   positionService: PositionService
-  tradeService: TradeService
   filter?: 'all' | 'planned' | 'open'
   onViewDetails?: (positionId: string) => void
 }
@@ -16,13 +13,11 @@ export interface DashboardProps {
  * Dashboard component displays all positions with filtering capabilities
  * Manages its own data using PositionService (Option A architecture)
  */
-export const Dashboard: React.FC<DashboardProps> = ({ positionService, tradeService, filter = 'all', onViewDetails }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 'all', onViewDetails }) => {
   const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open'>(filter)
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
-  const [showTradeModal, setShowTradeModal] = useState(false)
 
   // Load positions on mount and when positionService changes
   useEffect(() => {
@@ -50,35 +45,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, tradeServ
     if (currentFilter === 'open') return position.trades.length > 0
     return true
   })
-
-  const handleTradeClick = (positionId: string) => {
-    const position = positions.find(p => p.id === positionId)
-    if (position) {
-      setSelectedPosition(position)
-      setShowTradeModal(true)
-    }
-  }
-
-  const handleTradeAdded = async (trade: Trade) => {
-    try {
-      await tradeService.addTrade(trade)
-      setShowTradeModal(false)
-      setSelectedPosition(null)
-      await loadPositions() // Refresh positions after trade
-    } catch (err) {
-      // Error is handled by TradeExecutionForm
-      throw err
-    }
-  }
-
-  const handleTradeError = (errorMessage: string) => {
-    console.error('Trade execution error:', errorMessage)
-  }
-
-  const handleTradeCancel = () => {
-    setShowTradeModal(false)
-    setSelectedPosition(null)
-  }
 
   const handleViewDetails = (positionId: string) => {
     if (onViewDetails) {
@@ -176,24 +142,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, tradeServ
             <PositionCard
               key={position.id}
               position={position}
-              onTradeClick={handleTradeClick}
-              onViewDetails={handleViewDetails}
+              onClick={handleViewDetails}
             />
           ))}
-        </div>
-      )}
-
-      {/* Trade Execution Modal */}
-      {showTradeModal && selectedPosition && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="trade-execution-modal">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <TradeExecutionForm
-              position={selectedPosition}
-              onTradeAdded={handleTradeAdded}
-              onError={handleTradeError}
-              onCancel={handleTradeCancel}
-            />
-          </div>
         </div>
       )}
     </div>

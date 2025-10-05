@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
-import type { Position } from '@/lib/position'
+import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
+import type { Position, Trade } from '@/lib/position'
 import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
+import { TradeExecutionForm } from '@/components/TradeExecutionForm'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 
 interface PositionDetailProps {
   positionService?: PositionService
+  tradeService?: TradeService
   journalService?: JournalService
 }
 
-export function PositionDetail({ positionService: injectedPositionService, journalService: injectedJournalService }: PositionDetailProps = {}) {
+export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService }: PositionDetailProps = {}) {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
@@ -23,7 +26,9 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
+  const [showTradeModal, setShowTradeModal] = useState(false)
   const positionServiceInstance = injectedPositionService || new PositionService()
+  const tradeService = injectedTradeService || new TradeService(positionServiceInstance)
 
   
   const getJournalService = async (): Promise<JournalService> => {
@@ -120,13 +125,70 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   }
 
   const handleAddTrade = () => {
-    // Will be implemented in Trade Execution Flow
-    console.log('Add Trade clicked')
+    setShowTradeModal(true)
   }
 
-  const handleClosePosition = () => {
-    // Will be implemented in Position Closing Workflow
-    console.log('Close Position clicked')
+  const handleTradeAdded = async (trade: Trade) => {
+    try {
+      await tradeService.addTrade(trade)
+
+      // Create journal entry for the trade execution
+      await createTradeJournalEntry(trade)
+
+      setShowTradeModal(false)
+
+      // Reload position to get updated state
+      await loadPosition()
+
+      // Reload journal entries to get the new trade journal entry
+      await loadJournalEntries()
+    } catch (err) {
+      // Error is handled by TradeExecutionForm
+      throw err
+    }
+  }
+
+  const createTradeJournalEntry = async (trade: Trade): Promise<void> => {
+    if (!position) return
+
+    try {
+      // Get journal service
+      const journalService = await getJournalService()
+
+      // Create journal entry for trade execution
+      const journalEntry: Omit<JournalEntry, 'id' | 'created_at'> = {
+        position_id: position.id,
+        entry_type: 'trade_execution',
+        fields: [
+          {
+            prompt: 'What was your execution strategy and reasoning for this trade?',
+            response: trade.notes || 'Trade executed according to position plan.'
+          },
+          {
+            prompt: 'How did the actual execution compare to your original plan?',
+            response: `Executed ${trade.trade_type} ${trade.quantity} shares at $${trade.price.toFixed(2)}.`
+          },
+          {
+            prompt: 'Any deviations from your planned entry or observations during execution?',
+            response: trade.notes || 'No significant deviations from plan.'
+          }
+        ],
+        executed_at: trade.timestamp.toISOString()
+      }
+
+      await journalService.create(journalEntry)
+    } catch (error) {
+      console.error('Failed to create journal entry:', error)
+      // Don't throw here - the trade was still successful
+    }
+  }
+
+  const handleTradeError = (errorMessage: string) => {
+    console.error('Trade execution error:', errorMessage)
+  }
+
+  const handleTradeCancel = () => {
+    setShowTradeModal(false)
   }
 
   if (loading) {
@@ -464,21 +526,27 @@ export function PositionDetail({ positionService: injectedPositionService, journ
 
       {/* Bottom Actions */}
       <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 p-4">
-        <div className="flex gap-3">
-          <button
-            onClick={handleAddTrade}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-4 px-6 rounded-lg font-semibold transition-colors"
-          >
-            Add Trade
-          </button>
-          <button
-            onClick={handleClosePosition}
-            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
-          >
-            Close Position
-          </button>
-        </div>
+        <button
+          onClick={handleAddTrade}
+          className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-4 px-6 rounded-lg font-semibold transition-colors"
+        >
+          Add Trade
+        </button>
       </div>
+
+      {/* Trade Execution Modal */}
+      {showTradeModal && position && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="trade-execution-modal">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <TradeExecutionForm
+              position={position}
+              onTradeAdded={handleTradeAdded}
+              onError={handleTradeError}
+              onCancel={handleTradeCancel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

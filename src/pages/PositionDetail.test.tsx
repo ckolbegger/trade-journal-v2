@@ -190,7 +190,7 @@ describe('PositionDetail', () => {
     })
   })
 
-  it('should display bottom action buttons', async () => {
+  it('should display Add Trade button in bottom actions', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
@@ -198,15 +198,77 @@ describe('PositionDetail', () => {
     })
 
     await waitFor(() => {
-      // Look for the bottom action bar specifically
-      const bottomActions = screen.getByText('Close Position').closest('.fixed')
-      if (bottomActions) {
-        const addTradeButton = within(bottomActions).getByRole('button', { name: 'Add Trade' })
-        const closeButton = within(bottomActions).getByRole('button', { name: 'Close Position' })
+      // Look for the Add Trade button specifically
+      const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+      expect(addTradeButton).toBeInTheDocument()
+      expect(addTradeButton).toBeVisible()
 
-        expect(addTradeButton).toBeInTheDocument()
-        expect(closeButton).toBeInTheDocument()
-      }
+      // Verify the Close Position button is not present
+      expect(screen.queryByRole('button', { name: 'Close Position' })).not.toBeInTheDocument()
+    })
+  })
+
+  it('should show trade execution modal when Add Trade button is clicked', async () => {
+    mockPositionService.getById.mockResolvedValue(mockPosition)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
+
+    await waitFor(() => {
+      // Find and click the Add Trade button
+      const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+      expect(addTradeButton).toBeInTheDocument()
+      expect(addTradeButton).toBeVisible()
+
+      fireEvent.click(addTradeButton)
+    })
+
+    // Modal should be visible
+    await waitFor(() => {
+      const modal = screen.getByTestId('trade-execution-modal')
+      expect(modal).toBeInTheDocument()
+      expect(modal).toBeVisible()
+    })
+
+    // TradeExecutionForm should be in the modal
+    await waitFor(() => {
+      const tradeForm = screen.getByTestId('trade-execution-form')
+      expect(tradeForm).toBeInTheDocument()
+      expect(tradeForm).toBeVisible()
+    })
+  })
+
+  it('should close trade execution modal when cancel is clicked', async () => {
+    mockPositionService.getById.mockResolvedValue(mockPosition)
+
+    await act(async () => {
+      renderWithRouter(<PositionDetail />)
+    })
+
+    // Open the modal
+    await waitFor(() => {
+      const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+      fireEvent.click(addTradeButton)
+    })
+
+    // Modal should be visible
+    await waitFor(() => {
+      const modal = screen.getByTestId('trade-execution-modal')
+      expect(modal).toBeInTheDocument()
+      expect(modal).toBeVisible()
+    })
+
+    // Click cancel button
+    await act(async () => {
+      const cancelButton = screen.getByRole('button', { name: 'Cancel' })
+      fireEvent.click(cancelButton)
+    })
+
+    // Modal should be hidden
+    await waitFor(() => {
+      const modal = screen.queryByTestId('trade-execution-modal')
+      expect(modal).not.toBeInTheDocument()
     })
   })
 

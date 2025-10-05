@@ -49,7 +49,7 @@ describe('End-to-End: Add Trade Functionality', () => {
     }
   }, 10000)
 
-  it('[End-to-End] should allow complete trade execution flow from Dashboard', async () => {
+  it('[End-to-End] should allow complete trade execution flow from Dashboard via PositionDetail', async () => {
     // Arrange - Create a planned position
     const testPosition = createTestPosition({
       id: 'e2e-pos-123',
@@ -71,13 +71,26 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.getByTestId('position-symbol-e2e-pos-123')).toBeVisible()
     })
 
-    // Should show "Add Trade" button for planned position
-    const tradeButton = screen.getByTestId('trade-execution-button')
-    expect(tradeButton).toBeVisible()
-    expect(tradeButton).toHaveTextContent('Add Trade')
+    // Should show position card that is clickable
+    const positionCard = screen.getByTestId('position-card')
+    expect(positionCard).toBeVisible()
+    expect(positionCard).toHaveAttribute('data-position-id', 'e2e-pos-123')
+
+    // Click on position card to navigate to PositionDetail
+    fireEvent.click(positionCard)
+
+    // Wait for PositionDetail page to load
+    await waitFor(() => {
+      expect(screen.getByText('TSLA')).toBeVisible()
+      expect(screen.getByText(/Long Stock/)).toBeVisible()
+    })
+
+    // Should show "Add Trade" button on PositionDetail page
+    const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+    expect(addTradeButton).toBeVisible()
 
     // Click "Add Trade" to open modal
-    fireEvent.click(tradeButton)
+    fireEvent.click(addTradeButton)
 
     // Should show trade execution modal
     await waitFor(() => {
@@ -101,18 +114,10 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
     })
 
-    // Should show position with open status
+    // Should show position with updated information
     await waitFor(() => {
-      const statusBadge = screen.getByTestId('position-status-badge')
-      expect(statusBadge).toHaveTextContent('open')
-      expect(statusBadge).toHaveClass('bg-green-100', 'text-green-800')
+      expect(screen.getByText('25 shares')).toBeVisible() // Updated quantity in header
     })
-
-    // Should not show "Add Trade" button anymore
-    expect(screen.queryByTestId('trade-execution-button')).not.toBeInTheDocument()
-
-    // Should show "Position Executed" indicator
-    expect(screen.getByTestId('position-executed-indicator')).toBeVisible()
 
     // Verify trade was actually saved
     const updatedPosition = await positionService.getById('e2e-pos-123')
@@ -151,10 +156,44 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.getByTestId('position-symbol-e2e-constraint-pos-123')).toBeVisible()
     })
 
-    // Should not show "Add Trade" button for position with existing trade
-    expect(screen.queryByTestId('trade-execution-button')).not.toBeInTheDocument()
+    // Click on position card to navigate to PositionDetail
+    const positionCard = screen.getByTestId('position-card')
+    expect(positionCard).toHaveAttribute('data-position-id', 'e2e-constraint-pos-123')
+    fireEvent.click(positionCard)
 
-    // Should show "Position Executed" indicator
-    expect(screen.getByTestId('position-executed-indicator')).toBeVisible()
+    // Wait for PositionDetail page to load
+    await waitFor(() => {
+      expect(screen.getByText('MSFT')).toBeVisible()
+      expect(screen.getByText(/Long Stock/)).toBeVisible()
+    })
+
+    // Should show "Add Trade" button
+    const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+    expect(addTradeButton).toBeVisible()
+
+    // Click "Add Trade" to open modal
+    fireEvent.click(addTradeButton)
+
+    // Should show Phase 1A constraint error in modal
+    await waitFor(() => {
+      expect(screen.getByTestId('phase-1a-constraint-error')).toBeVisible()
+      expect(screen.getByText(/Trade Not Allowed/)).toBeVisible()
+      expect(screen.getByText(/Phase 1A allows only one trade per position/)).toBeVisible()
+    })
+
+    // Should show close button instead of form
+    const closeButton = screen.getByRole('button', { name: 'Close' })
+    expect(closeButton).toBeVisible()
+    fireEvent.click(closeButton)
+
+    // Modal should close
+    await waitFor(() => {
+      expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
+    })
+
+    // Position should remain unchanged
+    const unchangedPosition = await positionService.getById('e2e-constraint-pos-123')
+    expect(unchangedPosition).toBeTruthy()
+    expect(unchangedPosition!.trades).toHaveLength(1) // Still has original trade
   })
 })

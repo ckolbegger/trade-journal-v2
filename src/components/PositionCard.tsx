@@ -4,37 +4,41 @@ import type { Position } from '@/lib/position'
 
 export interface PositionCardProps {
   position: Position
-  onTradeClick: (positionId: string) => void
-  onViewDetails: (positionId: string) => void
+  onClick: (positionId: string) => void
 }
 
 /**
- * PositionCard component displays a position with its status and action buttons
+ * PositionCard component displays a position card matching the mockup design
  */
-export const PositionCard: React.FC<PositionCardProps> = ({ position, onTradeClick, onViewDetails }) => {
-  // Determine if position can have trades added (Phase 1A constraint)
-  const canAddTrade = position.trades.length === 0
-
-  // Calculate position status for styling
-  const getPositionStatusClass = () => {
-    if (position.trades.length === 0) return ''
-
-    // For now, since we don't have current prices in Phase 1A,
-    // we'll use a neutral state for positions with trades
-    return ''
-  }
-
+export const PositionCard: React.FC<PositionCardProps> = ({ position, onClick }) => {
   // Calculate average cost from trades
   const avgCost = position.trades.length > 0
     ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
     : position.target_entry_price
 
+  // Determine card styling based on position status
+  const isPlanned = position.trades.length === 0
+
+  const cardClasses = `
+    rounded-xl border border-gray-200 shadow-sm hover:shadow-lg
+    transition-all cursor-pointer p-4 mb-4
+    ${isPlanned ? 'bg-gray-50 border-l-4 border-l-gray-500' : 'bg-white border-l-4 border-l-green-600'}
+  `.trim().replace(/\s+/g, ' ')
+
+  // Determine position status text
+  const getPositionStatusText = () => {
+    if (position.trades.length > 0) {
+      return 'Position Open'
+    }
+    return 'Planned'
+  }
+
   return (
     <div
       data-testid="position-card"
       data-position-id={position.id}
-      className={`bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer mb-4 ${getPositionStatusClass()}`}
-      onClick={() => onViewDetails(position.id)}
+      className={cardClasses}
+      onClick={() => onClick(position.id)}
     >
       {/* Header with symbol, status, and P&L */}
       <div className="flex justify-between items-start mb-3">
@@ -56,7 +60,7 @@ export const PositionCard: React.FC<PositionCardProps> = ({ position, onTradeCli
         {/* P&L Display */}
         <div className="text-right">
           <div className="text-sm font-medium text-gray-500">
-            {position.trades.length > 0 ? 'Position Open' : 'Planned'}
+            {getPositionStatusText()}
           </div>
         </div>
       </div>
@@ -78,7 +82,7 @@ export const PositionCard: React.FC<PositionCardProps> = ({ position, onTradeCli
       </div>
 
       {/* Position footer */}
-      <div className="flex justify-between items-center text-xs text-gray-500 mb-3">
+      <div className="flex justify-between items-center text-xs text-gray-500">
         <span>Target Qty: {position.target_quantity}</span>
         <span>
           {position.trades.length > 0
@@ -86,40 +90,6 @@ export const PositionCard: React.FC<PositionCardProps> = ({ position, onTradeCli
             : 'No trades'
           }
         </span>
-      </div>
-
-      {/* Action buttons */}
-      <div className="flex gap-2">
-        {canAddTrade ? (
-          <button
-            data-testid="trade-execution-button"
-            onClick={(e) => {
-              e.stopPropagation()
-              onTradeClick(position.id)
-            }}
-            className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-          >
-            Add Trade
-          </button>
-        ) : (
-          <div
-            data-testid="position-executed-indicator"
-            className="flex-1 bg-gray-100 text-gray-600 px-3 py-2 rounded-md text-sm font-medium text-center"
-          >
-            Position Executed
-          </div>
-        )}
-
-        <button
-          data-testid={`view-details-button-${position.id}`}
-          onClick={(e) => {
-            e.stopPropagation()
-            onViewDetails(position.id)
-          }}
-          className="px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors text-sm font-medium"
-        >
-          Details
-        </button>
       </div>
     </div>
   )
