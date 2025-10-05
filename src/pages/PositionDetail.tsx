@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
@@ -8,6 +9,9 @@ import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
 import { TradeExecutionForm } from '@/components/TradeExecutionForm'
+import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
+import type { JournalField } from '@/types/journal'
+import { generateJournalId } from '@/lib/uuid'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 
 interface PositionDetailProps {
@@ -26,6 +30,9 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [showTradeModal, setShowTradeModal] = useState(false)
+  const [showJournalModal, setShowJournalModal] = useState(false)
+  const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
+  const [journalModalError, setJournalModalError] = useState<string | null>(null)
   const [currentPrice, setCurrentPrice] = useState('')
   const positionServiceInstance = injectedPositionService || new PositionService()
   const tradeServiceInstance = injectedTradeService || new TradeService()
@@ -116,6 +123,14 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     }
   }
 
+  const formatTradeSummary = (trade: Trade): string => {
+    const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
+    const quantity = trade.quantity
+    const price = formatCurrency(trade.price)
+    const date = formatDate(trade.timestamp)
+    return `${type} ${quantity} @ ${price} on ${date}`
+  }
+
   const handlePriceUpdate = () => {
     if (!currentPrice || isNaN(parseFloat(currentPrice))) return
 
@@ -130,9 +145,24 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeAdded = async (trade: Trade) => {
     try {
-      await tradeServiceInstance.addTrade(trade)
+      // addTrade returns all trades including the newly added one
+      const updatedTrades = await tradeServiceInstance.addTrade(trade)
       setShowTradeModal(false)
-      await loadPosition() // Refresh position after trade
+
+      // Refresh position to include the new trade
+      await loadPosition()
+
+      // Get the newly added trade (it will be the last one in Phase 1A)
+      const newTrade = updatedTrades[updatedTrades.length - 1]
+
+      // Use flushSync to ensure selectedTradeId is set synchronously
+      // before opening the modal, guaranteeing the dropdown has the correct value
+      flushSync(() => {
+        setSelectedTradeId(newTrade.id)
+      })
+
+      // Now open the modal - selectedTradeId will be in sync
+      setShowJournalModal(true)
     } catch (err) {
       // Error is handled by TradeExecutionForm
       throw err
@@ -145,6 +175,50 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeCancel = () => {
     setShowTradeModal(false)
+  }
+
+  const handleAddJournal = () => {
+    setSelectedTradeId(undefined) // Default to no trade selected
+    setJournalModalError(null) // Clear any previous errors
+    setShowJournalModal(true)
+  }
+
+  const handleJournalTradeChange = (tradeId: string) => {
+    setSelectedTradeId(tradeId || undefined)
+  }
+
+  const handleJournalSave = async (fields: JournalField[]) => {
+    if (!position) return
+
+    try {
+      setJournalModalError(null) // Clear previous errors
+      const journalService = await getJournalService()
+      const entryType = selectedTradeId ? 'trade_execution' : 'position_plan'
+
+      await journalService.create({
+        id: generateJournalId(),
+        position_id: position.id,
+        trade_id: selectedTradeId,
+        entry_type: entryType,
+        fields,
+        created_at: new Date().toISOString()
+      })
+
+      setShowJournalModal(false)
+      setSelectedTradeId(undefined)
+      setJournalModalError(null)
+      await loadJournalEntries() // Refresh journal list
+    } catch (error) {
+      console.error('Failed to create journal entry:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create journal entry'
+      setJournalModalError(errorMessage)
+      // Don't throw - keep modal open for retry
+    }
+  }
+
+  const handleJournalCancel = () => {
+    setShowJournalModal(false)
+    setSelectedTradeId(undefined)
   }
 
 
@@ -479,6 +553,16 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             </div>
           </Accordion>
         </section>
+
+        {/* Add Journal Entry Button */}
+        <section className="px-4 pb-4">
+          <button
+            onClick={handleAddJournal}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium transition-colors border border-gray-300"
+          >
+            Add Journal Entry
+          </button>
+        </section>
       </main>
 
       {/* Bottom Actions */}
@@ -500,6 +584,51 @@ export function PositionDetail({ positionService: injectedPositionService, trade
               onTradeAdded={handleTradeAdded}
               onError={handleTradeError}
               onCancel={handleTradeCancel}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Add Journal Entry Modal */}
+      {showJournalModal && position && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="add-journal-modal">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Add Journal Entry</h2>
+
+            {/* Error Display */}
+            {journalModalError && (
+              <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                {journalModalError}
+              </div>
+            )}
+
+            {/* Trade Selection Dropdown */}
+            <div className="mb-4">
+              <label htmlFor="trade-select" className="block text-sm font-medium text-gray-700 mb-2">
+                Select Trade (Optional)
+              </label>
+              <select
+                id="trade-select"
+                value={selectedTradeId || ''}
+                onChange={(e) => handleJournalTradeChange(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Select trade"
+              >
+                <option value="">Position Journal (no trade)</option>
+                {position.trades.map((trade) => (
+                  <option key={trade.id} value={trade.id}>
+                    {formatTradeSummary(trade)}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Enhanced Journal Entry Form */}
+            <EnhancedJournalEntryForm
+              entryType={selectedTradeId ? 'trade_execution' : 'position_plan'}
+              onSave={handleJournalSave}
+              onCancel={handleJournalCancel}
+              submitButtonText="Save Journal Entry"
             />
           </div>
         </div>
