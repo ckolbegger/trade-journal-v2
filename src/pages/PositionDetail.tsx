@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
@@ -9,8 +10,9 @@ import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
 import { TradeExecutionForm } from '@/components/TradeExecutionForm'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
-import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import type { JournalField } from '@/types/journal'
+import { generateJournalId } from '@/lib/uuid'
+import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 
 interface PositionDetailProps {
   positionService?: PositionService
@@ -28,6 +30,9 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [showTradeModal, setShowTradeModal] = useState(false)
+  const [showJournalModal, setShowJournalModal] = useState(false)
+  const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
+  const [journalModalError, setJournalModalError] = useState<string | null>(null)
   const [currentPrice, setCurrentPrice] = useState('')
   const [showTradeJournalModal, setShowTradeJournalModal] = useState(false)
   const [pendingTradeForJournal, setPendingTradeForJournal] = useState<Trade | null>(null)
@@ -124,6 +129,14 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     }
   }
 
+  const formatTradeSummary = (trade: Trade): string => {
+    const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
+    const quantity = trade.quantity
+    const price = formatCurrency(trade.price)
+    const date = formatDate(trade.timestamp)
+    return `${type} ${quantity} @ ${price} on ${date}`
+  }
+
   const handlePriceUpdate = () => {
     if (!currentPrice || isNaN(parseFloat(currentPrice))) return
 
@@ -162,6 +175,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     setShowTradeModal(false)
   }
 
+<<<<<<< HEAD
   const handleTradeJournalSave = async (fields: JournalField[]): Promise<void> => {
     if (!pendingTradeForJournal) {
       throw new Error('No trade available for journaling')
@@ -527,6 +541,16 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             </div>
           </Accordion>
         </section>
+
+        {/* Add Journal Entry Button */}
+        <section className="px-4 pb-4">
+          <button
+            onClick={handleAddJournal}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 px-6 rounded-lg font-medium transition-colors border border-gray-300"
+          >
+            Add Journal Entry
+          </button>
+        </section>
       </main>
 
       {/* Bottom Actions */}
@@ -553,6 +577,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
         </div>
       )}
 
+<<<<<<< HEAD
       {showTradeJournalModal && (journalPositionSnapshot || position) && pendingTradeForJournal && (
         <div data-testid="trade-execution-journal-modal" className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5">
