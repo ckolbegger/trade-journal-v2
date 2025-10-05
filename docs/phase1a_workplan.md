@@ -648,6 +648,80 @@ This implementation establishes the architectural foundation for:
 
 ---
 
+## **Dashboard UI Updates & Position Closing Flow** 🎨 ✅ **COMPLETED**
+
+**Description**: Updated Position Dashboard cards to match mockup design and simplified position closing workflow by removing separate Close Position button.
+
+**Date Completed**: October 5, 2025
+
+### **Implementation Summary**
+
+#### **2.1 Position Card UI Redesign** ✅ **COMPLETED**
+**Problem Solved**: Position cards had separate "Add Trade" and "Details" buttons, creating cluttered UI that didn't match mockups.
+
+**Implementation Changes**:
+- **Removed button clutter**: Deleted "Add Trade" and "Details" buttons from position cards
+- **Made cards clickable**: Entire card now navigates to position detail page on click
+- **Added mockup styling**:
+  - Rounded corners (`rounded-xl` for 12px border radius)
+  - Colored left border (grey 4px border for planned positions: `border-l-4 border-l-gray-500`)
+  - Shadow effects with hover enhancement (`shadow-sm hover:shadow-lg`)
+- **Updated navigation**: Cards use `onViewDetails` callback for clean routing integration
+
+**Files Modified**:
+- `src/components/PositionCard.tsx` - Removed buttons, added styling, made clickable
+- `src/components/Dashboard.tsx` - Removed trade modal from dashboard level
+- `src/components/__tests__/PositionCard.test.tsx` - New test file for card styling verification
+
+#### **2.2 Simplified Position Closing Workflow** ✅ **COMPLETED**
+**Problem Solved**: Separate "Close Position" button created confusion about the proper way to close positions.
+
+**Solution**: Positions are now closed by adding a sell trade through the existing "Add Trade" flow, which reduces position quantity to zero naturally.
+
+**Implementation Changes**:
+- **Removed Close Position button** from Position Detail page bottom action bar
+- **Removed handleClosePosition** function (unused handler)
+- **Updated bottom actions**: Single full-width "Add Trade" button with blue styling
+- **Simplified UX**: One clear path for all trade actions (opening and closing)
+
+**Files Modified**:
+- `src/pages/PositionDetail.tsx` - Removed Close Position button and handler
+- `src/pages/PositionDetail.test.tsx` - Updated tests to verify single button
+- `src/integration/dashboard-display-flow.test.tsx` - Updated assertions
+
+#### **2.3 Comprehensive Test Updates** ✅ **COMPLETED**
+**Following TDD principles**, updated all tests to match new card-click navigation pattern:
+
+**Test Files Updated** (all passing):
+- `src/integration/__tests__/end-to-end-trade.test.ts` - Updated for card-based navigation to detail page
+- `src/integration/__tests__/status-ui-integration.test.ts` - Fixed button references to use `onViewDetails`
+- `src/components/__tests__/DashboardOptionA.test.tsx` - Updated for card navigation
+- `src/integration/position-detail-routing.test.tsx` - Updated card click logic
+- `src/pages/Dashboard.test.tsx` - Fixed hover tests for multiple cards
+- `src/integration/add-trade-from-position-detail.test.tsx` - New integration test for Add Trade flow
+
+**Test Coverage**: ✅ **365/365 tests passing**
+
+### **Technical Metrics**
+- **Files Changed**: 12 files (10 modified, 2 new)
+- **Code Changes**: +457 insertions, -327 deletions
+- **Test Coverage**: Maintained 100% (365/365 tests passing)
+- **Breaking Changes**: None - all changes backward compatible
+
+### **User Experience Improvements**
+1. **Cleaner Dashboard**: Position cards are now visually clean with clear click targets
+2. **Mockup Compliance**: Cards match design specifications exactly
+3. **Simplified Closing**: Single "Add Trade" button for all trade operations
+4. **Better Visual Hierarchy**: Rounded corners and shadows provide depth and focus
+5. **Consistent Navigation**: Click anywhere on card to view details
+
+### **Commits**
+- `437e26f` - Update dashboard UI and remove Close Position button
+
+**Status**: ✅ **COMPLETE** - Dashboard UI matches mockups, position closing simplified
+
+---
+
 ## **Slice 1: Trade Data Foundation** 📊
 
 **Description**: Implement core trade entity and service layer to support single opening trade execution tracking with embedded trades in Position objects. Focus on foundation for single trades only (Phase 1A limitation).
