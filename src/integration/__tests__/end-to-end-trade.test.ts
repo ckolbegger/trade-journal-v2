@@ -3,7 +3,6 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
 import { Home } from '@/pages/Home'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
@@ -26,14 +25,12 @@ const createTestPosition = (overrides?: Partial<Position>): Position => ({
 
 describe('End-to-End: Add Trade Functionality', () => {
   let positionService: PositionService
-  let tradeService: TradeService
   let testDbName: string
 
   beforeEach(async () => {
     testDbName = `TradingJournalDB_EndToEnd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     positionService = new PositionService()
     ;(positionService as any).dbName = testDbName
-    tradeService = new TradeService(positionService)
   })
 
   afterEach(async () => {
@@ -44,9 +41,6 @@ describe('End-to-End: Add Trade Functionality', () => {
     }
     if (positionService && typeof positionService.close === 'function') {
       positionService.close()
-    }
-    if (tradeService && typeof tradeService.close === 'function') {
-      tradeService.close()
     }
   }, 10000)
 
@@ -65,7 +59,7 @@ describe('End-to-End: Add Trade Functionality', () => {
       React.createElement(MemoryRouter, { initialEntries: ['/'] },
         React.createElement(Routes, {},
           React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) }),
-          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService, tradeService }) })
+          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService }) })
         )
       )
     )
@@ -108,9 +102,18 @@ describe('End-to-End: Add Trade Functionality', () => {
     const executeButton = screen.getByRole('button', { name: /Execute Trade/i })
     fireEvent.click(executeButton)
 
-    // Assert - Modal should close and position should update
+    // Assert - Trade modal closes and journal modal opens
     await waitFor(() => {
       expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
+      expect(screen.getByTestId('trade-execution-journal-modal')).toBeVisible()
+    })
+
+    // Skip journaling for this E2E case
+    const skipButton = screen.getByRole('button', { name: /skip for now/i })
+    fireEvent.click(skipButton)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('trade-execution-journal-modal')).not.toBeInTheDocument()
     })
 
     // Verify trade was actually saved

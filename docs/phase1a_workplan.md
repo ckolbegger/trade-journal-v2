@@ -329,35 +329,54 @@
 
 ## 2A. Trade Execution Journal Entry (Vertical Slice)
 
-**Description**: Optional journal entry during trade execution with immediate visibility in position detail and trade history.
+**Description**: After a trader saves a trade, present an optional journal modal that can be completed immediately or skipped for later (Daily Review/Position Detail). Trade persistence happens first; the follow-up journal uses `trade_execution` prompts and links to the saved trade.
 
-**User Journey**: Execute trade → Optional journal entry with execution-focused prompts → Return to position detail with journal visible → View execution reasoning in trade timeline
+**User Journey**: Execute trade → Trade persists → Optional journal modal appears (Save or Skip) → Return to position detail with updated trade list → Journal entry visible when saved; otherwise can be captured later.
 
-**Task Breakdown**:
+### ✅ Success Criteria
+- Trade execution flow always persists the trade, even if the trader skips journaling.
+- Journal modal preloads prompts from `JOURNAL_PROMPTS.trade_execution` and associates saved entries with the matching `trade_id`.
+- Skipping the modal leaves no placeholder records; journal entries can be authored later with full context.
+- Position Detail reloads to show the new trade immediately, and journals render correctly when present.
+- Test suite covers the entire flow using TDD (failing tests first, then implementation) across unit, component, and integration layers.
 
-### 2A.1 Trade Execution Journal Service (TDD)
-- **Write failing tests** for trade execution journal functionality
-- **Entry type 'trade_execution'**: Add prompts for execution documentation
-- **Trade linking**: Connect journal entries to specific trade_id
-- **Service methods**: createTradeExecutionEntry, findByTradeId
+### 🔍 TDD Checklist & Key Test Cases
 
-### 2A.2 Trade Execution Journal UI (TDD)
-- **Write failing tests** for trade execution journal component
-- **Execution prompts**: "Describe the execution", "How do you feel?", "Deviations from plan?"
-- **Optional workflow**: Clear skip/cancel options, not mandatory
-- **Context display**: Show position plan and trade details during journaling
+#### 2A.1 Trade Execution Flow Refinement (TDD)
+- [x] **Component test**: submitting `TradeExecutionForm` closes the trade modal, triggers position reload, and opens journal modal.
+  - Failing test idea: expect `TradeExecutionForm` to call new handler that opens journal UI after trade save.
+- [x] **Integration test**: end-to-end "Add Trade" flow saves the trade, shows the journal modal, and updates trade history.
+  - Failing test idea: run through `PositionDetail` → submit trade → assert modal sequence and trade list update.
 
-### 2A.3 Trade Flow Integration (TDD)
-- **Write failing tests** for enhanced trade execution flow
-- **Journal option** after successful trade entry
-- **Return navigation**: Back to position detail with journal visible
-- **Trade history enhancement**: Show journal entries linked to specific trades
+#### 2A.2 Trade Execution Journal Modal (TDD)
+- [x] **Component tests** for new modal: render prompts, validate required behavior, support Save/Skip buttons.
+  - Failing test idea: saving posts to `JournalService` with `trade_id` and closes modal.
+  - Failing test idea: skip closes modal without journal creation.
+- [x] **Validation tests** using journal schema rules (length checks, required fields when filled).
 
-### 2A.4 Position Detail Journal Display (TDD)
-- **Write failing tests** for journal timeline in position detail
-- **Chronological display**: Show all journal entries with timestamps
-- **Trade linkage**: Highlight which journals relate to specific executions
-- **Mobile formatting**: Clean journal display on small screens
+#### 2A.3 Service Integration & Data Wiring (TDD)
+- [x] **Unit tests**: `JournalService` creates entries with `trade_id`; retrieving by trade returns the new entry.
+  - Failing test idea: ensure new helper returns entries linked to the saved trade.
+- [x] **Component/integration tests** confirming Position Detail renders the newly added journal entry immediately after save.
+- [x] **Regression tests** ensuring skipping the journal leaves no orphaned data and the position remains consistent.
+
+#### 2A.4 Future Daily Review Hook (Placeholder)
+- [ ] Document follow-up hook for Daily Review to surface trades without execution journals (no code yet; capture as TODO for Phase 1B planning).
+
+### 🛠 Implementation Notes
+- Reuse `EnhancedJournalEntryForm` for trade execution journaling to stay aligned with ADR-002/003.
+- Inject `JournalService` alongside `TradeService` in `PositionDetail` to avoid re-opening IndexedDB.
+- Use existing journal prompt configuration; no schema changes required.
+- Ensure modal orchestration handles rapid save/skip actions gracefully (disable buttons during async ops).
+
+### 🧪 Test Matrix Summary
+| Layer | Focus | Key Cases |
+|-------|-------|-----------|
+| Unit  | Journal service helpers | save with `trade_id`, skip leaves none |
+| Component | Trade form & journal modal | submit → modal, save/skip UX |
+| Integration | Position detail E2E | trade persists, modal workflow, journal display |
+| Regression | Legacy behavior | skipping doesn’t block future journaling |
+
 
 ## 2B. Market Observation Journal Entry (Vertical Slice)
 

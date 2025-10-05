@@ -457,4 +457,46 @@ describe('EnhancedJournalEntryForm', () => {
       expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
     })
   })
+
+  it('should support custom title, subtitle, labels, and error messaging', async () => {
+    render(
+      <EnhancedJournalEntryForm
+        entryType="trade_execution"
+        onSave={vi.fn()}
+        onCancel={mockOnCancel}
+        title="Custom Title"
+        subtitle="Custom Subtitle"
+        submitButtonText="Submit Journal"
+        cancelButtonText="Skip"
+        errorMessage="Example error"
+      />
+    )
+
+    expect(screen.getByText('Custom Title')).toBeInTheDocument()
+    expect(screen.getByText('Custom Subtitle')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /submit journal/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /skip/i })).toBeInTheDocument()
+    expect(screen.getByText(/example error/i)).toBeInTheDocument()
+  })
+
+  it('should await async onSave handlers', async () => {
+    const asyncSave = vi.fn(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    render(
+      <EnhancedJournalEntryForm
+        entryType="position_plan"
+        onSave={asyncSave}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText(/Rationale/i), { target: { value: 'Sufficient rationale content' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /save journal entry/i }))
+
+    await waitFor(() => {
+      expect(asyncSave).toHaveBeenCalled()
+    })
+  })
 })

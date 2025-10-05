@@ -3,14 +3,13 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
 import type { Position } from '@/lib/position'
+import { JournalService } from '@/services/JournalService'
 import { createIntegrationTestData } from '@/test/data-factories'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Add Trade from Position Detail', () => {
   let positionService: PositionService
-  let tradeService: TradeService
   let testPosition: Position
 
   beforeEach(async () => {
@@ -19,7 +18,6 @@ describe('Integration: Add Trade from Position Detail', () => {
 
     // Create fresh service instances
     positionService = new PositionService()
-    tradeService = new TradeService()
 
     // Create a test position using data factory
     const testData = createIntegrationTestData()
@@ -36,7 +34,6 @@ describe('Integration: Add Trade from Position Detail', () => {
             element={
               <PositionDetail
                 positionService={positionService}
-                tradeService={tradeService}
               />
             }
           />
@@ -72,9 +69,21 @@ describe('Integration: Add Trade from Position Detail', () => {
     const executeButton = screen.getByRole('button', { name: /execute trade/i })
     fireEvent.click(executeButton)
 
-    // Modal should close
+    // Trade modal should close and journal modal should appear
     await waitFor(() => {
       expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
+      expect(screen.getByTestId('trade-execution-journal-modal')).toBeInTheDocument()
+    })
+
+    // Journal modal should present Save and Skip options
+    expect(screen.getByRole('button', { name: /save journal/i })).toBeVisible()
+    expect(screen.getByRole('button', { name: /skip for now/i })).toBeVisible()
+
+    // Skip journaling for this test scenario
+    fireEvent.click(screen.getByRole('button', { name: /skip for now/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('trade-execution-journal-modal')).not.toBeInTheDocument()
     })
 
     // Verify trade was saved to IndexedDB
@@ -86,6 +95,18 @@ describe('Integration: Add Trade from Position Detail', () => {
     const newTrade = updatedPosition?.trades.find(t => t.quantity === 50 && t.price === 149.50)
     expect(newTrade).toBeDefined()
     expect(newTrade?.trade_type).toBe('buy')
+
+    // Verify no journal entry was created when skipping
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('TradingJournalDB', 2)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+    })
+
+    const journalService = new JournalService(db)
+    const journalEntries = await journalService.getByPositionId(testPosition.id)
+    expect(journalEntries).toHaveLength(0)
+    db.close()
   })
 
   it('should allow canceling the Add Trade modal', async () => {
@@ -99,7 +120,6 @@ describe('Integration: Add Trade from Position Detail', () => {
             element={
               <PositionDetail
                 positionService={positionService}
-                tradeService={tradeService}
               />
             }
           />
@@ -132,5 +152,60 @@ describe('Integration: Add Trade from Position Detail', () => {
     // No new trade should be added
     const updatedPosition = await positionService.getById(testPosition.id)
     expect(updatedPosition?.trades.length).toBe(initialTradeCount)
+  })
+
+  it('should allow saving trade execution journal immediately after trade', async () => {
+    render(
+      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+        <Routes>
+          <Route
+            path="/position/:id"
+            element={
+              <PositionDetail
+                positionService={positionService}
+              />
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('AAPL')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /add trade/i }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('trade-execution-modal')).toBeInTheDocument()
+    })
+
+    fireEvent.change(screen.getByLabelText(/quantity/i), { target: { value: '12' } })
+    fireEvent.change(screen.getByLabelText(/price/i), { target: { value: '151.25' } })
+    fireEvent.change(screen.getByLabelText(/trade date/i), { target: { value: '2024-01-15T10:30' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /execute trade/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
+      expect(screen.getByTestId('trade-execution-journal-modal')).toBeInTheDocument()
+    })
+
+    // Fill journal prompt responses (use textarea inputs rendered by modal)
+    const textareas = screen.getAllByRole('textbox')
+    expect(textareas.length).toBeGreaterThan(0)
+    fireEvent.change(textareas[0], { target: { value: 'Executed quickly at open.' } })
+
+    fireEvent.click(screen.getByRole('button', { name: /save journal/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('trade-execution-journal-modal')).not.toBeInTheDocument()
+    })
+
+    // Position detail should now show journal entry linked to trade
+    await waitFor(() => {
+      expect(screen.getByText(/Trade Execution/i)).toBeInTheDocument()
+      expect(screen.getByText(/Executed quickly at open./i)).toBeInTheDocument()
+    })
   })
 })

@@ -8,7 +8,9 @@ import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
 import { TradeExecutionForm } from '@/components/TradeExecutionForm'
+import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
+import type { JournalField } from '@/types/journal'
 
 interface PositionDetailProps {
   positionService?: PositionService
@@ -27,10 +29,14 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
   const [showTradeModal, setShowTradeModal] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
+  const [showTradeJournalModal, setShowTradeJournalModal] = useState(false)
+  const [pendingTradeForJournal, setPendingTradeForJournal] = useState<Trade | null>(null)
+  const [journalPositionSnapshot, setJournalPositionSnapshot] = useState<Position | null>(null)
+  const [isTradeJournalSaving, setIsTradeJournalSaving] = useState(false)
+  const [tradeJournalError, setTradeJournalError] = useState<string | null>(null)
   const positionServiceInstance = injectedPositionService || new PositionService()
-  const tradeServiceInstance = injectedTradeService || new TradeService()
+  const tradeServiceInstance = injectedTradeService || new TradeService(positionServiceInstance)
 
-  
   const getJournalService = async (): Promise<JournalService> => {
     if (injectedJournalService) {
       return injectedJournalService
@@ -50,8 +56,8 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     loadJournalEntries()
   }, [id])
 
-  const loadPosition = async () => {
-    if (!id) return
+  const loadPosition = async (): Promise<Position | null> => {
+    if (!id) return null
 
     try {
       const loadedPosition = await positionServiceInstance.getById(id)
@@ -59,9 +65,11 @@ export function PositionDetail({ positionService: injectedPositionService, trade
       if (loadedPosition) {
         setCurrentPrice(loadedPosition.target_entry_price?.toString() || '0')
       }
+      return loadedPosition || null
     } catch (error) {
       console.error('Failed to load position:', error)
       setPosition(null)
+      return null
     } finally {
       setLoading(false)
     }
@@ -130,9 +138,16 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeAdded = async (trade: Trade) => {
     try {
-      await tradeServiceInstance.addTrade(trade)
+      const updatedTrades = await tradeServiceInstance.addTrade(trade)
       setShowTradeModal(false)
-      await loadPosition() // Refresh position after trade
+      const refreshedPosition = await loadPosition() // Refresh position after trade
+      const latestTrade = updatedTrades[updatedTrades.length - 1] ?? null
+      if (latestTrade) {
+        setPendingTradeForJournal(latestTrade)
+        setJournalPositionSnapshot(refreshedPosition ?? position ?? null)
+        setTradeJournalError(null)
+        setShowTradeJournalModal(true)
+      }
     } catch (err) {
       // Error is handled by TradeExecutionForm
       throw err
@@ -145,6 +160,42 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeCancel = () => {
     setShowTradeModal(false)
+  }
+
+  const handleTradeJournalSave = async (fields: JournalField[]): Promise<void> => {
+    if (!pendingTradeForJournal) {
+      throw new Error('No trade available for journaling')
+    }
+
+    const journalService = await getJournalService()
+    setIsTradeJournalSaving(true)
+    setTradeJournalError(null)
+
+    try {
+      await journalService.create({
+        position_id: pendingTradeForJournal.position_id,
+        trade_id: pendingTradeForJournal.id,
+        entry_type: 'trade_execution',
+        fields
+      })
+
+      await loadJournalEntries()
+      setShowTradeJournalModal(false)
+      setPendingTradeForJournal(null)
+      setJournalPositionSnapshot(null)
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to save journal entry'
+      setTradeJournalError(message)
+    } finally {
+      setIsTradeJournalSaving(false)
+    }
+  }
+
+  const handleTradeJournalSkip = () => {
+    setShowTradeJournalModal(false)
+    setPendingTradeForJournal(null)
+    setJournalPositionSnapshot(null)
+    setTradeJournalError(null)
   }
 
 
@@ -183,9 +234,6 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   // Calculate total quantity from trades
   const totalQuantity = position.trades.reduce((sum, trade) => sum + trade.quantity, 0)
-
-  // Calculate total cost
-  const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto bg-white shadow-lg">
@@ -500,6 +548,24 @@ export function PositionDetail({ positionService: injectedPositionService, trade
               onTradeAdded={handleTradeAdded}
               onError={handleTradeError}
               onCancel={handleTradeCancel}
+            />
+          </div>
+        </div>
+      )}
+
+      {showTradeJournalModal && (journalPositionSnapshot || position) && pendingTradeForJournal && (
+        <div data-testid="trade-execution-journal-modal" className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto p-5">
+            <EnhancedJournalEntryForm
+              entryType="trade_execution"
+              onSave={handleTradeJournalSave}
+              onCancel={handleTradeJournalSkip}
+              submitButtonText="Save Journal"
+              cancelButtonText="Skip for now"
+              title="Trade Execution Journal"
+              subtitle={`${(journalPositionSnapshot ?? position).symbol} • ${pendingTradeForJournal.quantity} shares @ ${pendingTradeForJournal.price.toFixed(2)}`}
+              isLoading={isTradeJournalSaving}
+              errorMessage={tradeJournalError ?? undefined}
             />
           </div>
         </div>

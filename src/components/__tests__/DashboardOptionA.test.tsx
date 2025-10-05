@@ -2,8 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { Dashboard } from '@/components/Dashboard'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
-import type { Position, Trade } from '@/lib/position'
+import type { Position } from '@/lib/position'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -23,7 +22,6 @@ const createTestPosition = (overrides?: Partial<Position>): Position => ({
 
 describe('Dashboard Option A: PositionService Integration', () => {
   let mockPositionService: PositionService
-  let mockTradeService: TradeService
 
   beforeEach(() => {
     // Mock PositionService
@@ -35,15 +33,7 @@ describe('Dashboard Option A: PositionService Integration', () => {
       delete: vi.fn(),
       clearAll: vi.fn(),
       close: vi.fn()
-    } as PositionService
-
-    // Mock TradeService
-    mockTradeService = {
-      addTrade: vi.fn(),
-      getTradesByPosition: vi.fn(),
-      deleteTrade: vi.fn(),
-      close: vi.fn()
-    } as TradeService
+    } as unknown as PositionService
   })
 
   describe('[Integration] Dashboard data management with PositionService', () => {
@@ -53,14 +43,11 @@ describe('Dashboard Option A: PositionService Integration', () => {
         createTestPosition({ id: 'pos-1', symbol: 'AAPL', trades: [] }),
         createTestPosition({ id: 'pos-2', symbol: 'MSFT', trades: [] })
       ]
-      mockPositionService.getAll.mockResolvedValue(testPositions)
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockResolvedValue(testPositions)
 
       // Act - Render Dashboard with PositionService
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert - Should call getAll and show positions
@@ -74,16 +61,13 @@ describe('Dashboard Option A: PositionService Integration', () => {
 
     it('[Integration] should show loading state while fetching positions', () => {
       // Arrange - Mock slow loading
-      mockPositionService.getAll.mockImplementation(
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockImplementation(
         () => new Promise(resolve => setTimeout(resolve, 1000))
       )
 
       // Act
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert - Should show loading state
@@ -92,14 +76,11 @@ describe('Dashboard Option A: PositionService Integration', () => {
 
     it('[Integration] should show error state when PositionService fails', async () => {
       // Arrange - Mock error
-      mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Database error'))
 
       // Act
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert - Should show error state
@@ -111,14 +92,11 @@ describe('Dashboard Option A: PositionService Integration', () => {
 
     it('[Integration] should handle empty positions state', async () => {
       // Arrange - Mock empty positions
-      mockPositionService.getAll.mockResolvedValue([])
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([])
 
       // Act
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert - Should show empty state
@@ -132,13 +110,10 @@ describe('Dashboard Option A: PositionService Integration', () => {
     it('[Integration] should make entire position card clickable', async () => {
       // Arrange
       const testPosition = createTestPosition({ id: 'trade-pos-123', symbol: 'TSLA', trades: [] })
-      mockPositionService.getAll.mockResolvedValue([testPosition])
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([testPosition])
 
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Wait for positions to load
@@ -165,13 +140,10 @@ describe('Dashboard Option A: PositionService Integration', () => {
           timestamp: new Date('2024-01-15T10:30:00.000Z')
         }]
       })
-      mockPositionService.getAll.mockResolvedValue([positionWithTrade])
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockResolvedValue([positionWithTrade])
 
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert - Should show "Position Open" for positions with trades
@@ -200,13 +172,10 @@ describe('Dashboard Option A: PositionService Integration', () => {
           }]
         })
       ]
-      mockPositionService.getAll.mockResolvedValue(initialPositions)
+      ;(mockPositionService.getAll as ReturnType<typeof vi.fn>).mockResolvedValue(initialPositions)
 
       render(
-        <Dashboard
-          positionService={mockPositionService}
-          tradeService={mockTradeService}
-        />
+        <Dashboard positionService={mockPositionService} />
       )
 
       // Assert initial filter counts

@@ -9,10 +9,14 @@ import { JOURNAL_PROMPTS } from '@/types/journal'
 export interface EnhancedJournalEntryFormProps {
   entryType: 'position_plan' | 'trade_execution'
   initialFields?: JournalField[]
-  onSave: (fields: JournalField[]) => void
+  onSave: (fields: JournalField[]) => Promise<void> | void
   onCancel?: () => void
   submitButtonText?: string
+  cancelButtonText?: string
+  title?: string
+  subtitle?: string
   isLoading?: boolean
+  errorMessage?: string
 }
 
 // Helper function to title-case field names for display
@@ -29,7 +33,11 @@ export function EnhancedJournalEntryForm({
   onSave,
   onCancel,
   submitButtonText = 'Save Journal Entry',
-  isLoading = false
+  cancelButtonText = 'Cancel',
+  title,
+  subtitle,
+  isLoading = false,
+  errorMessage
 }: EnhancedJournalEntryFormProps) {
   // Get field definitions - use initialFields if provided, otherwise current JOURNAL_PROMPTS
   const getFieldDefinitions = (): JournalField[] => {
@@ -81,7 +89,7 @@ export function EnhancedJournalEntryForm({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (validateForm()) {
@@ -93,7 +101,7 @@ export function EnhancedJournalEntryForm({
         required: field.required // Preserve stored required value
       }))
 
-      onSave(fields)
+      await onSave(fields)
     }
   }
 
@@ -118,6 +126,10 @@ export function EnhancedJournalEntryForm({
   }
 
   const isPositionPlan = entryType === 'position_plan'
+  const defaultTitle = isPositionPlan ? '📝 Position Plan' : '⚡ Trade Execution'
+  const defaultSubtitle = isPositionPlan
+    ? 'Document your trading plan and mindset before entering this position.'
+    : 'Record your observations and lessons from this trade execution.'
 
   // Render field component dynamically
   const renderField = (field: JournalField, index: number) => {
@@ -143,6 +155,7 @@ export function EnhancedJournalEntryForm({
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-md text-base min-h-20 resize-y"
             rows={field.name === 'thesis' || field.name === 'rationale' ? 4 : 2}
+            disabled={isLoading}
           />
         ) : (
           <Input
@@ -150,6 +163,7 @@ export function EnhancedJournalEntryForm({
             value={fieldValue}
             onChange={(e) => handleInputChange(field.name, e.target.value)}
             className="w-full p-3 border border-gray-300 rounded-md text-base"
+            disabled={isLoading}
           />
         )}
         {fieldError && <p className="text-red-600 text-xs mt-1">{fieldError}</p>}
@@ -169,15 +183,18 @@ export function EnhancedJournalEntryForm({
       {/* Header */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-1">
-          {isPositionPlan ? '📝 Position Plan' : '⚡ Trade Execution'}
+          {title ?? defaultTitle}
         </h3>
         <p className="text-sm text-gray-600">
-          {isPositionPlan
-            ? 'Document your trading plan and mindset before entering this position.'
-            : 'Record your observations and lessons from this trade execution.'
-          }
+          {subtitle ?? defaultSubtitle}
         </p>
       </div>
+
+      {errorMessage && (
+        <div className="p-3 border border-red-200 rounded-md bg-red-50 text-sm text-red-700" role="alert">
+          {errorMessage}
+        </div>
+      )}
 
       {/* Dynamic Field Rendering */}
       <div className="space-y-3">
@@ -194,7 +211,7 @@ export function EnhancedJournalEntryForm({
             disabled={isLoading}
             className="flex-1"
           >
-            Cancel
+            {cancelButtonText}
           </Button>
         )}
 

@@ -6,7 +6,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { PositionDetail } from '@/pages/PositionDetail'
-import type { Position, Trade } from '@/lib/position'
+import type { Position } from '@/lib/position'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -26,13 +26,10 @@ const createTestPosition = (overrides?: Partial<Position>): Position => ({
 
 describe('PositionDetail Trade Data Integration', () => {
   let positionService: PositionService
-  let tradeService: TradeService
-
   beforeEach(async () => {
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
-    tradeService = new TradeService(positionService)
   })
 
   afterEach(async () => {
@@ -57,6 +54,7 @@ describe('PositionDetail Trade Data Integration', () => {
     await positionService.create(positionWithTrade)
 
     // Add trade using TradeService (this properly associates the trade)
+    const tradeService = new TradeService(positionService)
     await tradeService.addTrade({
       position_id: 'detail-test-pos-123',
       trade_type: 'buy',
@@ -167,6 +165,7 @@ describe('PositionDetail Trade Data Integration', () => {
     await positionService.create(positionWithTrade)
 
     // Add trade using TradeService
+    const tradeService = new TradeService(positionService)
     await tradeService.addTrade({
       position_id: 'detail-status-test-123',
       trade_type: 'buy',
