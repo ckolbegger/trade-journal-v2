@@ -209,19 +209,18 @@ describe('Dashboard', () => {
       })
 
       await waitFor(() => {
-        const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
+        const positionCards = screen.getAllByTestId('position-card')
+        const positionCard = positionCards[0]
         expect(positionCard).toBeInTheDocument()
 
-        // The new component has these hover classes in its base styling
-        expect(positionCard).toHaveClass('hover:shadow-md')
+        // The new component has hover:shadow-lg class
+        expect(positionCard).toHaveClass('hover:shadow-lg')
 
         // Simulate hover (fire mouseover event)
-        if (positionCard) {
-          fireEvent.mouseOver(positionCard)
+        fireEvent.mouseOver(positionCard)
 
-          // Should still have hover classes (they're always present in Tailwind)
-          expect(positionCard).toHaveClass('hover:shadow-md')
-        }
+        // Should still have hover classes (they're always present in Tailwind)
+        expect(positionCard).toHaveClass('hover:shadow-lg')
       })
     })
 
@@ -233,21 +232,20 @@ describe('Dashboard', () => {
       })
 
       await waitFor(() => {
-        const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
+        const positionCards = screen.getAllByTestId('position-card')
+        const positionCard = positionCards[0]
         expect(positionCard).toBeInTheDocument()
 
-        if (positionCard) {
-          // Simulate hover
-          fireEvent.mouseOver(positionCard)
-          expect(positionCard).toHaveClass('hover:shadow-md')
+        // Simulate hover
+        fireEvent.mouseOver(positionCard)
+        expect(positionCard).toHaveClass('hover:shadow-lg')
 
-          // Simulate mouse leave
-          fireEvent.mouseOut(positionCard)
+        // Simulate mouse leave
+        fireEvent.mouseOut(positionCard)
 
-          // Should still be present (hover classes are always there in Tailwind CSS)
-          expect(positionCard).toBeInTheDocument()
-          expect(positionCard).toHaveClass('hover:shadow-md')
-        }
+        // Should still be present (hover classes are always there in Tailwind CSS)
+        expect(positionCard).toBeInTheDocument()
+        expect(positionCard).toHaveClass('hover:shadow-lg')
       })
     })
   })

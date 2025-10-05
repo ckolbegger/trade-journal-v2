@@ -88,11 +88,11 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       await positionService.create(plannedPosition)
       const retrievedPosition = await positionService.getById('card-header-pos-123')
 
-      const mockOnTradeClick = vi.fn()
+      const mockOnViewDetails = vi.fn()
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onTradeClick: mockOnTradeClick
+          onViewDetails: mockOnViewDetails
         })
       )
 
@@ -102,7 +102,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       expect(statusBadge).toHaveClass('bg-gray-100', 'text-gray-800')
     })
 
-    it('[Integration] should show/hide trade execution button based on status', async () => {
+    it('[Integration] should make entire card clickable to view details', async () => {
       const plannedPosition = createTestPosition({
         id: 'button-pos-123',
         symbol: 'TSLA',
@@ -112,23 +112,23 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       await positionService.create(plannedPosition)
       const retrievedPosition = await positionService.getById('button-pos-123')
 
-      const mockOnTradeClick = vi.fn()
+      const mockOnViewDetails = vi.fn()
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onTradeClick: mockOnTradeClick
+          onViewDetails: mockOnViewDetails
         })
       )
 
-      const tradeButton = screen.getByTestId('trade-execution-button')
-      expect(tradeButton).toBeVisible()
-      expect(tradeButton).toBeEnabled()
+      const card = screen.getByTestId('position-card')
+      expect(card).toBeVisible()
+      expect(card).toHaveClass('cursor-pointer')
 
-      fireEvent.click(tradeButton)
-      expect(mockOnTradeClick).toHaveBeenCalledWith('button-pos-123')
+      fireEvent.click(card)
+      expect(mockOnViewDetails).toHaveBeenCalledWith('button-pos-123')
     })
 
-    it('[Integration] should hide trade execution button for open positions', async () => {
+    it('[Integration] should show open status for positions with trades', async () => {
       const openPosition = createTestPosition({
         id: 'open-button-pos-123',
         symbol: 'NVDA',
@@ -148,15 +148,15 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onTradeClick: vi.fn()
+          onViewDetails: vi.fn()
         })
       )
 
-      const tradeButton = screen.queryByTestId('trade-execution-button')
-      expect(tradeButton).not.toBeInTheDocument()
+      // Should show "Position Open" text instead of "Planned"
+      expect(screen.getByText('Position Open')).toBeVisible()
 
-      const executedIndicator = screen.getByTestId('position-executed-indicator')
-      expect(executedIndicator).toBeVisible()
+      // Should show trade count
+      expect(screen.getByText('1 trade')).toBeVisible()
     })
 
     it('[Integration] should update status across all views after trade execution', async () => {
@@ -183,7 +183,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       const { unmount } = render(
         React.createElement(PositionCard, {
           position: updatedPosition!,
-          onTradeClick: vi.fn()
+          onViewDetails: vi.fn()
         })
       )
 
@@ -232,7 +232,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       render(
         React.createElement(PositionCard, {
           position: refreshedPosition!,
-          onTradeClick: vi.fn()
+          onViewDetails: vi.fn()
         })
       )
 
@@ -257,7 +257,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onTradeClick: vi.fn()
+          onViewDetails: vi.fn()
         })
       )
 
@@ -481,7 +481,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
         render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onTradeClick: vi.fn()
+          onViewDetails: vi.fn()
         })
       )
       }).not.toThrow()

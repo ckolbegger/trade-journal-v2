@@ -1,29 +1,34 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
-import type { Position } from '@/lib/position'
+import type { Position, Trade } from '@/lib/position'
+import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
 import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
+import { TradeExecutionForm } from '@/components/TradeExecutionForm'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 
 interface PositionDetailProps {
   positionService?: PositionService
+  tradeService?: TradeService
   journalService?: JournalService
 }
 
-export function PositionDetail({ positionService: injectedPositionService, journalService: injectedJournalService }: PositionDetailProps = {}) {
+export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService }: PositionDetailProps = {}) {
   const navigate = useNavigate()
-  const { id } = useParams<{ id: string }>()
+  const { id} = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [journalLoading, setJournalLoading] = useState(true)
   const [journalError, setJournalError] = useState<string | null>(null)
   const [showPriceUpdate, setShowPriceUpdate] = useState(false)
+  const [showTradeModal, setShowTradeModal] = useState(false)
   const [currentPrice, setCurrentPrice] = useState('')
   const positionServiceInstance = injectedPositionService || new PositionService()
+  const tradeServiceInstance = injectedTradeService || new TradeService()
 
   
   const getJournalService = async (): Promise<JournalService> => {
@@ -120,14 +125,28 @@ export function PositionDetail({ positionService: injectedPositionService, journ
   }
 
   const handleAddTrade = () => {
-    // Will be implemented in Trade Execution Flow
-    console.log('Add Trade clicked')
+    setShowTradeModal(true)
   }
 
-  const handleClosePosition = () => {
-    // Will be implemented in Position Closing Workflow
-    console.log('Close Position clicked')
+  const handleTradeAdded = async (trade: Trade) => {
+    try {
+      await tradeServiceInstance.addTrade(trade)
+      setShowTradeModal(false)
+      await loadPosition() // Refresh position after trade
+    } catch (err) {
+      // Error is handled by TradeExecutionForm
+      throw err
+    }
   }
+
+  const handleTradeError = (errorMessage: string) => {
+    console.error('Trade execution error:', errorMessage)
+  }
+
+  const handleTradeCancel = () => {
+    setShowTradeModal(false)
+  }
+
 
   if (loading) {
     return (
@@ -464,21 +483,27 @@ export function PositionDetail({ positionService: injectedPositionService, journ
 
       {/* Bottom Actions */}
       <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 p-4">
-        <div className="flex gap-3">
-          <button
-            onClick={handleAddTrade}
-            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-800 py-4 px-6 rounded-lg font-semibold transition-colors"
-          >
-            Add Trade
-          </button>
-          <button
-            onClick={handleClosePosition}
-            className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
-          >
-            Close Position
-          </button>
-        </div>
+        <button
+          onClick={handleAddTrade}
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
+        >
+          Add Trade
+        </button>
       </div>
+
+      {/* Trade Execution Modal */}
+      {showTradeModal && position && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" data-testid="trade-execution-modal">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <TradeExecutionForm
+              position={position}
+              onTradeAdded={handleTradeAdded}
+              onError={handleTradeError}
+              onCancel={handleTradeCancel}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 }

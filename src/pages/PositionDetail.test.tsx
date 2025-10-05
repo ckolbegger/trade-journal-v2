@@ -190,7 +190,7 @@ describe('PositionDetail', () => {
     })
   })
 
-  it('should display bottom action buttons', async () => {
+  it('should display Add Trade button in bottom action bar', async () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
@@ -198,15 +198,12 @@ describe('PositionDetail', () => {
     })
 
     await waitFor(() => {
-      // Look for the bottom action bar specifically
-      const bottomActions = screen.getByText('Close Position').closest('.fixed')
-      if (bottomActions) {
-        const addTradeButton = within(bottomActions).getByRole('button', { name: 'Add Trade' })
-        const closeButton = within(bottomActions).getByRole('button', { name: 'Close Position' })
+      const addTradeButton = screen.getByRole('button', { name: 'Add Trade' })
+      expect(addTradeButton).toBeInTheDocument()
+      expect(addTradeButton).toHaveClass('w-full')
 
-        expect(addTradeButton).toBeInTheDocument()
-        expect(closeButton).toBeInTheDocument()
-      }
+      // Verify Close Position button does not exist
+      expect(screen.queryByRole('button', { name: 'Close Position' })).not.toBeInTheDocument()
     })
   })
 
@@ -687,6 +684,33 @@ describe('PositionDetail', () => {
         // Should be able to collapse Trade History too
         fireEvent.click(tradeHistoryButton!)
         expect(tradeHistoryButton).not.toHaveClass('active')
+      })
+    })
+  })
+
+  describe('Add Trade Button', () => {
+    it('should show TradeExecutionForm modal when Add Trade button is clicked', async () => {
+      mockPositionService.getById.mockResolvedValue(mockPosition)
+      mockJournalService.getByPositionId.mockResolvedValue([])
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('AAPL')).toBeInTheDocument()
+      })
+
+      // Click the Add Trade button
+      const addTradeButton = screen.getByRole('button', { name: /add trade/i })
+      expect(addTradeButton).toBeVisible()
+
+      fireEvent.click(addTradeButton)
+
+      // Modal should appear
+      await waitFor(() => {
+        expect(screen.getByTestId('trade-execution-modal')).toBeInTheDocument()
+        expect(screen.getByText(/execute trade for aapl/i)).toBeInTheDocument()
       })
     })
   })

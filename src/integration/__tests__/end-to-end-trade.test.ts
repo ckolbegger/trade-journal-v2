@@ -1,10 +1,11 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { BrowserRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { Home } from '@/pages/Home'
+import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
@@ -49,7 +50,7 @@ describe('End-to-End: Add Trade Functionality', () => {
     }
   }, 10000)
 
-  it('[End-to-End] should allow complete trade execution flow from Dashboard', async () => {
+  it('[End-to-End] should allow complete trade execution flow from Position Detail', async () => {
     // Arrange - Create a planned position
     const testPosition = createTestPosition({
       id: 'e2e-pos-123',
@@ -59,10 +60,13 @@ describe('End-to-End: Add Trade Functionality', () => {
     })
     await positionService.create(testPosition)
 
-    // Act - Render Home component (should show Dashboard since position exists)
+    // Act - Render app with routes
     render(
-      React.createElement(BrowserRouter, {},
-        React.createElement(Home, { positionService })
+      React.createElement(MemoryRouter, { initialEntries: ['/'] },
+        React.createElement(Routes, {},
+          React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) }),
+          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService, tradeService }) })
+        )
       )
     )
 
@@ -71,13 +75,21 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.getByTestId('position-symbol-e2e-pos-123')).toBeVisible()
     })
 
-    // Should show "Add Trade" button for planned position
-    const tradeButton = screen.getByTestId('trade-execution-button')
-    expect(tradeButton).toBeVisible()
-    expect(tradeButton).toHaveTextContent('Add Trade')
+    // Click position card to navigate to detail page
+    const positionCard = screen.getByTestId('position-card')
+    expect(positionCard).toBeVisible()
+    expect(positionCard).toHaveClass('cursor-pointer')
+    fireEvent.click(positionCard)
 
-    // Click "Add Trade" to open modal
-    fireEvent.click(tradeButton)
+    // Wait for Position Detail page to load
+    await waitFor(() => {
+      expect(screen.getByText('Trade Plan')).toBeVisible()
+    })
+
+    // Click "Add Trade" button on detail page
+    const addTradeButton = screen.getByRole('button', { name: /Add Trade/i })
+    expect(addTradeButton).toBeVisible()
+    fireEvent.click(addTradeButton)
 
     // Should show trade execution modal
     await waitFor(() => {
@@ -101,19 +113,6 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
     })
 
-    // Should show position with open status
-    await waitFor(() => {
-      const statusBadge = screen.getByTestId('position-status-badge')
-      expect(statusBadge).toHaveTextContent('open')
-      expect(statusBadge).toHaveClass('bg-green-100', 'text-green-800')
-    })
-
-    // Should not show "Add Trade" button anymore
-    expect(screen.queryByTestId('trade-execution-button')).not.toBeInTheDocument()
-
-    // Should show "Position Executed" indicator
-    expect(screen.getByTestId('position-executed-indicator')).toBeVisible()
-
     // Verify trade was actually saved
     const updatedPosition = await positionService.getById('e2e-pos-123')
     expect(updatedPosition).toBeTruthy()
@@ -123,7 +122,7 @@ describe('End-to-End: Add Trade Functionality', () => {
     expect(updatedPosition!.status).toBe('open')
   })
 
-  it('[End-to-End] should show Phase 1A constraint error for second trade', async () => {
+  it('[End-to-End] should show position with trades on Dashboard', async () => {
     // Arrange - Create position with existing trade
     const positionWithTrade = createTestPosition({
       id: 'e2e-constraint-pos-123',
@@ -139,10 +138,12 @@ describe('End-to-End: Add Trade Functionality', () => {
     })
     await positionService.create(positionWithTrade)
 
-    // Act - Render Home component
+    // Act - Render app with routes
     render(
-      React.createElement(BrowserRouter, {},
-        React.createElement(Home, { positionService })
+      React.createElement(MemoryRouter, { initialEntries: ['/'] },
+        React.createElement(Routes, {},
+          React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) })
+        )
       )
     )
 
@@ -151,10 +152,10 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.getByTestId('position-symbol-e2e-constraint-pos-123')).toBeVisible()
     })
 
-    // Should not show "Add Trade" button for position with existing trade
-    expect(screen.queryByTestId('trade-execution-button')).not.toBeInTheDocument()
+    // Should show "Position Open" for position with trades
+    expect(screen.getByText('Position Open')).toBeVisible()
 
-    // Should show "Position Executed" indicator
-    expect(screen.getByTestId('position-executed-indicator')).toBeVisible()
+    // Should show trade count
+    expect(screen.getByText('1 trade')).toBeVisible()
   })
 })

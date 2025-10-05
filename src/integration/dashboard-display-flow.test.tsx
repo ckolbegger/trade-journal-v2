@@ -118,9 +118,10 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     expect(screen.getByText('Strong technical support at current levels with bullish momentum')).toBeInTheDocument() // Journal entry content appears in Journal Entries
 
-    // 15. VERIFY: Bottom action buttons are present
+    // 15. VERIFY: Add Trade button is present
     expect(screen.getByText('Add Trade')).toBeInTheDocument()
-    expect(screen.getByText('Close Position')).toBeInTheDocument()
+    // Close Position button has been removed - positions are closed via Add Trade flow
+    expect(screen.queryByText('Close Position')).not.toBeInTheDocument()
 
     // 16. INTEGRATION VERIFY: Position was actually saved to IndexedDB
     const savedPositions = await positionService.getAll()

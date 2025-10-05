@@ -40,17 +40,11 @@ describe('Integration: Position Detail Routing', () => {
       expect(screen.getByText('AAPL')).toBeInTheDocument()
     }, { timeout: 2000 })
 
-    const positionCard = screen.getByText('AAPL').closest('div[class*="bg-white"]')
-    if (positionCard) {
-      fireEvent.click(positionCard)
-    }
+    const positionCard = screen.getByTestId('position-card')
+    expect(positionCard).toBeVisible()
+    fireEvent.click(positionCard)
 
-    // 4. Should navigate to position detail
-    await waitFor(() => {
-      expect(screen.getByText('Loading position...')).toBeInTheDocument()
-    }, { timeout: 2000 })
-
-    // 5. Should show position detail view
+    // 4. Should show position detail view
     await waitFor(() => {
       expect(screen.getByText('AAPL')).toBeInTheDocument()
       expect(screen.getByText(/Long Stock/)).toBeInTheDocument()
