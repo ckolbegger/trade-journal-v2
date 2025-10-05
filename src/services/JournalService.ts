@@ -26,7 +26,17 @@ export class JournalService {
   private validateJournalRequest(request: CreateJournalEntryRequest): void {
     // Must have either position_id or trade_id
     if (!request.position_id && !request.trade_id) {
-      throw new Error('Either position_id or trade_id is required');
+      throw new Error('Journal entry must have either position_id or trade_id');
+    }
+
+    // Validate trade_id is not empty string
+    if (request.trade_id === '') {
+      throw new Error('trade_id cannot be empty string');
+    }
+
+    // Warn if trade_execution entry has no trade_id
+    if (request.entry_type === 'trade_execution' && !request.trade_id) {
+      console.warn(`trade_execution entry created without trade_id for journal ${request.id || 'new'}`);
     }
 
     // Must have at least one field
@@ -154,6 +164,11 @@ export class JournalService {
         reject(new Error('Failed to find journal entries by trade'));
       };
     });
+  }
+
+  // Standardized method name for trade ID queries
+  async getByTradeId(tradeId: string): Promise<JournalEntry[]> {
+    return this.findByTradeId(tradeId);
   }
 
   async update(id: string, updates: UpdateJournalEntryRequest): Promise<JournalEntry> {
