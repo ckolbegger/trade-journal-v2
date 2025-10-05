@@ -114,7 +114,7 @@ describe('JournalService', () => {
       await expect(journalService.create({
         entry_type: 'position_plan',
         fields
-      })).rejects.toThrow('Either position_id or trade_id is required');
+      })).rejects.toThrow('Journal entry must have either position_id or trade_id');
     });
 
     it('should reject journal entry with empty fields array', async () => {
