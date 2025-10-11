@@ -4,9 +4,11 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
+import { JournalService } from '@/services/JournalService'
 import { Home } from '@/pages/Home'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
+import 'fake-indexeddb/auto'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -27,13 +29,43 @@ const createTestPosition = (overrides?: Partial<Position>): Position => ({
 describe('End-to-End: Add Trade Functionality', () => {
   let positionService: PositionService
   let tradeService: TradeService
+  let journalService: JournalService
   let testDbName: string
+  let db: IDBDatabase
 
   beforeEach(async () => {
+    // Clear and initialize IndexedDB
+    indexedDB.deleteDatabase('TradingJournalDB')
+
+    db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('TradingJournalDB', 2)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result
+
+        if (!db.objectStoreNames.contains('positions')) {
+          const store = db.createObjectStore('positions', { keyPath: 'id' })
+          store.createIndex('symbol', 'symbol', { unique: false })
+          store.createIndex('status', 'status', { unique: false })
+          store.createIndex('created_date', 'created_date', { unique: false })
+        }
+
+        if (!db.objectStoreNames.contains('journal_entries')) {
+          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
+          journalStore.createIndex('position_id', 'position_id', { unique: false })
+          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
+          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
+          journalStore.createIndex('created_at', 'created_at', { unique: false })
+        }
+      }
+    })
+
     testDbName = `TradingJournalDB_EndToEnd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     positionService = new PositionService()
     ;(positionService as any).dbName = testDbName
     tradeService = new TradeService(positionService)
+    journalService = new JournalService(db)
   })
 
   afterEach(async () => {
@@ -65,7 +97,7 @@ describe('End-to-End: Add Trade Functionality', () => {
       React.createElement(MemoryRouter, { initialEntries: ['/'] },
         React.createElement(Routes, {},
           React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) }),
-          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService, tradeService }) })
+          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService, tradeService, journalService }) })
         )
       )
     )
@@ -108,9 +140,22 @@ describe('End-to-End: Add Trade Functionality', () => {
     const executeButton = screen.getByRole('button', { name: /Execute Trade/i })
     fireEvent.click(executeButton)
 
-    // Assert - Modal should close and position should update
+    // Assert - Trade modal should close
     await waitFor(() => {
       expect(screen.queryByTestId('trade-execution-modal')).not.toBeInTheDocument()
+    })
+
+    // Journal modal should open automatically (new behavior)
+    await waitFor(() => {
+      expect(screen.getByTestId('add-journal-modal')).toBeInTheDocument()
+    })
+
+    // Close the journal modal (skip journaling for this test)
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i })
+    fireEvent.click(cancelButton)
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('add-journal-modal')).not.toBeInTheDocument()
     })
 
     // Verify trade was actually saved
