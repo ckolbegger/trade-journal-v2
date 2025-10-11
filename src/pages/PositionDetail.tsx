@@ -466,7 +466,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                               ? 'bg-green-100 text-green-800'
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {trade.trade_type.toUpperCase()}
+                            {trade.trade_type ? trade.trade_type.toUpperCase() : 'UNKNOWN'}
                           </span>
                           <span className="text-sm text-gray-600">
                             {trade.quantity} shares
