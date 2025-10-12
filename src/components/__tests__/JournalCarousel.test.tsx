@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { JournalCarousel } from '@/components/JournalCarousel'
 import type { JournalEntry } from '@/types/journal'
 
@@ -127,5 +127,153 @@ describe('JournalCarousel', () => {
     // Border radius and shadow are applied via inline style
     expect(card.style.borderRadius).toBe('10px')
     expect(card.style.boxShadow).toBe('0 12px 24px -18px rgba(15, 23, 42, 0.8)')
+  })
+})
+
+describe('JournalCarousel - Navigation', () => {
+  const mockEntries: JournalEntry[] = [
+    {
+      id: 'journal-1',
+      position_id: 'pos-1',
+      entry_type: 'position_plan',
+      fields: [
+        {
+          name: 'core_thesis',
+          prompt: 'What is the core thesis?',
+          response: 'First entry'
+        }
+      ],
+      created_at: '2024-09-04T10:00:00Z'
+    },
+    {
+      id: 'journal-2',
+      position_id: 'pos-1',
+      entry_type: 'trade_execution',
+      trade_id: 'trade-1',
+      fields: [
+        {
+          name: 'execution_timing',
+          prompt: 'Why now?',
+          response: 'Second entry'
+        }
+      ],
+      created_at: '2024-09-05T14:30:00Z'
+    },
+    {
+      id: 'journal-3',
+      position_id: 'pos-1',
+      entry_type: 'position_plan',
+      fields: [
+        {
+          name: 'position_update',
+          prompt: 'What changed?',
+          response: 'Third entry'
+        }
+      ],
+      created_at: '2024-09-07T09:15:00Z'
+    }
+  ]
+
+  it('hides navigation when no entries exist', () => {
+    render(<JournalCarousel entries={[]} />)
+
+    expect(screen.queryByTestId('carousel-nav')).not.toBeInTheDocument()
+  })
+
+  it('hides navigation when only one entry exists', () => {
+    const singleEntry = [mockEntries[0]]
+    render(<JournalCarousel entries={singleEntry} />)
+
+    expect(screen.queryByTestId('carousel-nav')).not.toBeInTheDocument()
+  })
+
+  it('shows navigation with multiple entries', () => {
+    render(<JournalCarousel entries={mockEntries} />)
+
+    expect(screen.getByTestId('carousel-nav')).toBeInTheDocument()
+    expect(screen.getByTestId('prev-arrow')).toBeInTheDocument()
+    expect(screen.getByTestId('next-arrow')).toBeInTheDocument()
+    expect(screen.getByTestId('carousel-dots')).toBeInTheDocument()
+  })
+
+  it('disables left arrow on first slide', () => {
+    render(<JournalCarousel entries={mockEntries} />)
+
+    const prevArrow = screen.getByTestId('prev-arrow')
+    expect(prevArrow).toBeDisabled()
+  })
+
+  it('disables right arrow on last slide', () => {
+    render(<JournalCarousel entries={mockEntries} currentIndex={2} />)
+
+    const nextArrow = screen.getByTestId('next-arrow')
+    expect(nextArrow).toBeDisabled()
+  })
+
+  it('enables both arrows on middle slides', () => {
+    render(<JournalCarousel entries={mockEntries} currentIndex={1} />)
+
+    const prevArrow = screen.getByTestId('prev-arrow')
+    const nextArrow = screen.getByTestId('next-arrow')
+
+    expect(prevArrow).not.toBeDisabled()
+    expect(nextArrow).not.toBeDisabled()
+  })
+
+  it('advances to next slide when right arrow clicked', () => {
+    const { rerender } = render(<JournalCarousel entries={mockEntries} />)
+
+    // Initially showing first entry
+    expect(screen.getByText('First entry')).toBeInTheDocument()
+
+    // Click next arrow
+    const nextArrow = screen.getByTestId('next-arrow')
+    fireEvent.click(nextArrow)
+
+    // Verify transform changed
+    const wrapper = screen.getByTestId('carousel-wrapper')
+    expect(wrapper.style.transform).toBe('translateX(-100%)')
+  })
+
+  it('goes to previous slide when left arrow clicked', () => {
+    render(<JournalCarousel entries={mockEntries} currentIndex={1} />)
+
+    // Initially showing second entry
+    const wrapper = screen.getByTestId('carousel-wrapper')
+    expect(wrapper.style.transform).toBe('translateX(-100%)')
+
+    // Click prev arrow
+    const prevArrow = screen.getByTestId('prev-arrow')
+    fireEvent.click(prevArrow)
+
+    // Verify transform changed to first slide
+    expect(wrapper.style.transform).toBe('translateX(-0%)')
+  })
+
+  it('jumps to specific slide when dot clicked', () => {
+    render(<JournalCarousel entries={mockEntries} />)
+
+    // Click the third dot
+    const dots = screen.getAllByTestId(/^carousel-dot-/)
+    fireEvent.click(dots[2])
+
+    // Verify transform changed to third slide
+    const wrapper = screen.getByTestId('carousel-wrapper')
+    expect(wrapper.style.transform).toBe('translateX(-200%)')
+  })
+
+  it('highlights active dot corresponding to current slide', () => {
+    const { rerender } = render(<JournalCarousel entries={mockEntries} currentIndex={0} />)
+
+    // First dot should be active
+    const dot0 = screen.getByTestId('carousel-dot-0')
+    expect(dot0.className).toMatch(/active/)
+
+    // Change to second slide
+    rerender(<JournalCarousel entries={mockEntries} currentIndex={1} />)
+
+    // Second dot should be active
+    const dot1 = screen.getByTestId('carousel-dot-1')
+    expect(dot1.className).toMatch(/active/)
   })
 })

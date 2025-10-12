@@ -30,6 +30,26 @@ export function JournalCarousel({
     }
   }, [currentSlide, onSlideChange])
 
+  // Navigation handlers
+  const handlePrevious = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(currentSlide - 1)
+    }
+  }
+
+  const handleNext = () => {
+    if (currentSlide < entries.length - 1) {
+      setCurrentSlide(currentSlide + 1)
+    }
+  }
+
+  const handleDotClick = (index: number) => {
+    setCurrentSlide(index)
+  }
+
+  // Determine if we should show navigation (only if more than 1 entry)
+  const showNavigation = entries.length > 1
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return new Intl.DateTimeFormat('en-US', {
@@ -59,6 +79,87 @@ export function JournalCarousel({
       data-testid="carousel-container"
       className="relative overflow-hidden bg-white"
     >
+      {/* Navigation Controls */}
+      {showNavigation && (
+        <div
+          data-testid="carousel-nav"
+          className="flex justify-between items-center bg-white"
+          style={{
+            padding: '12px 20px',
+            borderBottom: '1px solid #e5e7eb'
+          }}
+        >
+          {/* Previous Arrow */}
+          <button
+            data-testid="prev-arrow"
+            onClick={handlePrevious}
+            disabled={currentSlide === 0}
+            className="flex items-center justify-center transition-all"
+            style={{
+              background: currentSlide === 0 ? '#f3f4f6' : '#f3f4f6',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              width: '32px',
+              height: '32px',
+              cursor: currentSlide === 0 ? 'not-allowed' : 'pointer',
+              opacity: currentSlide === 0 ? 0.3 : 1,
+              color: '#374151',
+              fontSize: '16px',
+              fontWeight: 600
+            }}
+          >
+            ←
+          </button>
+
+          {/* Dots */}
+          <div
+            data-testid="carousel-dots"
+            className="flex justify-center items-center"
+            style={{ gap: '8px', flex: 1 }}
+          >
+            {entries.map((_, index) => (
+              <button
+                key={index}
+                data-testid={`carousel-dot-${index}`}
+                onClick={() => handleDotClick(index)}
+                className={`transition-all ${index === currentSlide ? 'active' : ''}`}
+                style={{
+                  width: index === currentSlide ? '10px' : '8px',
+                  height: index === currentSlide ? '10px' : '8px',
+                  borderRadius: '50%',
+                  background: index === currentSlide ? '#3b82f6' : '#d1d5db',
+                  cursor: 'pointer',
+                  border: 'none',
+                  padding: 0
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Next Arrow */}
+          <button
+            data-testid="next-arrow"
+            onClick={handleNext}
+            disabled={currentSlide === entries.length - 1}
+            className="flex items-center justify-center transition-all"
+            style={{
+              background: currentSlide === entries.length - 1 ? '#f3f4f6' : '#f3f4f6',
+              border: '1px solid #d1d5db',
+              borderRadius: '6px',
+              width: '32px',
+              height: '32px',
+              cursor: currentSlide === entries.length - 1 ? 'not-allowed' : 'pointer',
+              opacity: currentSlide === entries.length - 1 ? 0.3 : 1,
+              color: '#374151',
+              fontSize: '16px',
+              fontWeight: 600
+            }}
+          >
+            →
+          </button>
+        </div>
+      )}
+
       <div
         data-testid="carousel-wrapper"
         className="flex"

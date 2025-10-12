@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { JournalCarousel } from '@/components/JournalCarousel'
 import type { JournalEntry } from '@/types/journal'
 
@@ -107,5 +107,137 @@ describe('JournalCarousel - Integration', () => {
     const wrapper = screen.getByTestId('carousel-wrapper')
     // Transform could be 'translateX(0%)' or 'translateX(-0%)' - both are valid for first slide
     expect(wrapper.style.transform).toMatch(/translateX\(-?0%\)/)
+  })
+
+  it('navigates through full carousel of real journal entries using all controls', () => {
+    // Create multiple real journal entries
+    const multipleEntries: JournalEntry[] = [
+      {
+        id: 'journal-1',
+        position_id: 'pos-tsla-001',
+        entry_type: 'position_plan',
+        fields: [
+          {
+            name: 'core_thesis',
+            prompt: 'What is the core thesis for this position?',
+            response: 'Entry 1: Strong technical setup with support at $250.'
+          }
+        ],
+        created_at: '2024-09-04T10:00:00Z'
+      },
+      {
+        id: 'journal-2',
+        position_id: 'pos-tsla-001',
+        entry_type: 'trade_execution',
+        trade_id: 'trade-1',
+        fields: [
+          {
+            name: 'execution_timing',
+            prompt: 'Why did I execute this trade now?',
+            response: 'Entry 2: Price reached target entry with volume.'
+          }
+        ],
+        created_at: '2024-09-05T14:30:00Z'
+      },
+      {
+        id: 'journal-3',
+        position_id: 'pos-tsla-001',
+        entry_type: 'position_plan',
+        fields: [
+          {
+            name: 'position_update',
+            prompt: 'What changed since last review?',
+            response: 'Entry 3: Market showing weakness in tech.'
+          }
+        ],
+        created_at: '2024-09-07T09:00:00Z'
+      },
+      {
+        id: 'journal-4',
+        position_id: 'pos-tsla-001',
+        entry_type: 'position_plan',
+        fields: [
+          {
+            name: 'daily_review',
+            prompt: 'What am I observing today?',
+            response: 'Entry 4: Position near stop level, considering exit.'
+          }
+        ],
+        created_at: '2024-09-10T16:00:00Z'
+      }
+    ]
+
+    render(<JournalCarousel entries={multipleEntries} />)
+
+    // Verify navigation controls are present
+    expect(screen.getByTestId('carousel-nav')).toBeInTheDocument()
+    const prevArrow = screen.getByTestId('prev-arrow')
+    const nextArrow = screen.getByTestId('next-arrow')
+    const dots = screen.getAllByTestId(/^carousel-dot-/)
+
+    // Should start at first entry
+    expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
+
+    // Left arrow should be disabled
+    expect(prevArrow).toBeDisabled()
+    expect(nextArrow).not.toBeDisabled()
+
+    // First dot should be active
+    expect(dots[0].className).toMatch(/active/)
+
+    // Click next arrow to go to second entry
+    fireEvent.click(nextArrow)
+    expect(screen.getByText(/Entry 2:/)).toBeInTheDocument()
+    const wrapper = screen.getByTestId('carousel-wrapper')
+    expect(wrapper.style.transform).toBe('translateX(-100%)')
+
+    // Both arrows should be enabled on middle slide
+    expect(prevArrow).not.toBeDisabled()
+    expect(nextArrow).not.toBeDisabled()
+
+    // Second dot should be active
+    expect(dots[1].className).toMatch(/active/)
+
+    // Click next arrow again to go to third entry
+    fireEvent.click(nextArrow)
+    expect(screen.getByText(/Entry 3:/)).toBeInTheDocument()
+    expect(wrapper.style.transform).toBe('translateX(-200%)')
+
+    // Third dot should be active
+    expect(dots[2].className).toMatch(/active/)
+
+    // Click next arrow to reach last entry
+    fireEvent.click(nextArrow)
+    expect(screen.getByText(/Entry 4:/)).toBeInTheDocument()
+    expect(wrapper.style.transform).toBe('translateX(-300%)')
+
+    // Right arrow should be disabled at last entry
+    expect(nextArrow).toBeDisabled()
+    expect(prevArrow).not.toBeDisabled()
+
+    // Fourth dot should be active
+    expect(dots[3].className).toMatch(/active/)
+
+    // Click prev arrow to go back
+    fireEvent.click(prevArrow)
+    expect(screen.getByText(/Entry 3:/)).toBeInTheDocument()
+    expect(wrapper.style.transform).toBe('translateX(-200%)')
+
+    // Click first dot to jump to beginning
+    fireEvent.click(dots[0])
+    expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
+    expect(wrapper.style.transform).toMatch(/translateX\(-?0%\)/)
+
+    // Left arrow should be disabled again
+    expect(prevArrow).toBeDisabled()
+
+    // Click third dot to jump to third entry
+    fireEvent.click(dots[2])
+    expect(screen.getByText(/Entry 3:/)).toBeInTheDocument()
+    expect(wrapper.style.transform).toBe('translateX(-200%)')
+
+    // Verify all entry data remained intact throughout navigation
+    expect(screen.getAllByText('POSITION PLAN').length).toBeGreaterThan(0)
+    expect(screen.getByText('What changed since last review?')).toBeInTheDocument()
   })
 })
