@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
@@ -116,7 +116,11 @@ describe('Integration: Position Dashboard Display Flow', () => {
     const journalEntriesButton = screen.getByText('Journal Entries').closest('button')
     fireEvent.click(journalEntriesButton!)
 
-    expect(screen.getByText('Strong technical support at current levels with bullish momentum')).toBeInTheDocument() // Journal entry content appears in Journal Entries
+    // Look for journal text within the carousel container
+    const journalCarousel = screen.getByTestId('journal-carousel')
+    expect(journalCarousel).toBeInTheDocument()
+    const { getByText } = within(journalCarousel)
+    expect(getByText('Strong technical support at current levels with bullish momentum')).toBeInTheDocument() // Journal entry content appears in Journal Carousel
 
     // 15. VERIFY: Add Trade button is present
     expect(screen.getByText('Add Trade')).toBeInTheDocument()

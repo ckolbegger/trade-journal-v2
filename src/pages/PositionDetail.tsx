@@ -511,7 +511,17 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             indicator={`(${journalEntries.length})`}
             defaultOpen={false}
           >
-            <JournalCarousel entries={journalEntries} />
+            {journalLoading ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  Loading journal entries...
+                </div>
+              ) : journalError ? (
+                <div className="p-4 text-center text-red-500 text-sm">
+                  {journalError}
+                </div>
+              ) : (
+                <JournalCarousel entries={journalEntries} />
+              )}
           </Accordion>
         </section>
 
