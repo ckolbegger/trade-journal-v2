@@ -1,4 +1,5 @@
 import React from 'react';
+import './JournalCarousel.css';
 import type { JournalEntry } from '../types/journal';
 
 interface JournalCarouselProps {
