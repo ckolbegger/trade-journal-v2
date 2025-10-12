@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSLA Position - Trading Journal</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #1f2937;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 414px;
+            margin: 0 auto;
+            min-height: 100vh;
+            background: white;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            background: #1f2937;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            margin-right: 16px;
+            cursor: pointer;
+            padding: 4px;
+        }
+        
+        .header-info {
+            flex: 1;
+        }
+        
+        .position-symbol {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .position-strategy {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .header-button {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        .performance-section {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 20px;
+        }
+        
+        .performance-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .current-price {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .price-change {
+            text-align: right;
+        }
+        
+        .change-amount {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .change-percent {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .performance-item {
+            text-align: center;
+        }
+        
+        .performance-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.8;
+            margin-bottom: 2px;
+        }
+        
+        .performance-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .progress-section {
+            padding: 20px;
+        }
+        
+        .progress-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 16px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            width: 45%;
+            transition: width 0.3s ease;
+        }
+        
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+        
+        .risk-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .risk-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        
+        .risk-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .risk-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        /* Accordion Styles */
+        .accordion-container {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .accordion-item {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+        
+        .accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: white;
+            border: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .accordion-header:hover {
+            background: #f8fafc;
+        }
+        
+        .accordion-header.active {
+            background: #f3f4f6;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .accordion-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .accordion-icon {
+            font-size: 14px;
+        }
+        
+        .accordion-indicator {
+            font-size: 12px;
+            color: #6b7280;
+            margin-left: 4px;
+            font-weight: 400;
+        }
+        
+        .accordion-chevron {
+            font-size: 12px;
+            color: #6b7280;
+            transition: transform 0.2s;
+        }
+        
+        .accordion-header.active .accordion-chevron {
+            transform: rotate(180deg);
+        }
+        
+        .accordion-content {
+            display: none;
+            padding: 0 20px 20px 20px;
+            background: #f8fafc;
+        }
+        
+        .accordion-content.active {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Carousel Container */
+        .carousel-container {
+            position: relative;
+            margin-bottom: 16px;
+        }
+        
+        .carousel-controls {
+            position: relative;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #e5e7eb;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+            font-size: 16px;
+            color: #6b7280;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-button:hover {
+            background: white;
+            border-color: #d1d5db;
+            color: #374151;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .nav-button:active {
+            transform: scale(0.95);
+        }
+        
+        .nav-button.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        .nav-button.disabled:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: #e5e7eb;
+            color: #6b7280;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Dot Indicators */
+        .dots-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            padding: 0;
+        }
+        
+        .dot:hover {
+            background: #9ca3af;
+        }
+        
+        .dot.active {
+            background: #3b82f6;
+            width: 24px;
+            border-radius: 4px;
+        }
+        
+        /* Touch-friendly swipe hint */
+        .swipe-hint {
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+            margin: 8px 0;
+            font-style: italic;
+        }
+        
+        /* Carousel track and slides */
+        .carousel-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .carousel-track {
+            display: flex;
+            transition: transform 0.3s ease-in-out;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .carousel-slide {
+            flex: 0 0 100%;
+            width: 100%;
+            scroll-snap-align: start;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            min-height: 300px;
+        }
+        
+        /* Entry Content Styling */
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .entry-type {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .entry-date {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .entry-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .field-prompt {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .field-response {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.5;
+        }
+        
+        /* Other component styles */
+        .trade-plan-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .plan-immutable-notice {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #dc2626;
+        }
+        
+        .plan-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .plan-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .plan-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+        }
+        
+        .plan-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        
+        .plan-thesis {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #374151;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+        }
+        
+        .trades-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .trade-item {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .trade-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .trade-buy {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+        
+        .trade-sell {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .trade-details {
+            font-size: 14px;
+            color: #374151;
+            margin-top: 4px;
+        }
+        
+        .trade-amount {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .trade-amount.trade-buy {
+            color: #16a34a;
+        }
+        
+        .trade-amount.trade-sell {
+            color: #dc2626;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: #6b7280;
+        }
+        
+        .empty-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #374151;
+        }
+        
+        .empty-description {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .add-journal-button {
+            margin: 0 20px 20px;
+        }
+        
+        .add-journal-btn {
+            width: 100%;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-journal-btn:hover {
+            background: #e5e7eb;
+            border-color: #9ca3af;
+        }
+        
+        .bottom-actions {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 414px;
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+        }
+        
+        .add-trade-btn {
+            width: 100%;
+            background: #3b82f6;
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .add-trade-btn:hover {
+            background: #2563eb;
+        }
+        
+        /* Focus states for accessibility */
+        .nav-button:focus-visible,
+        .dot:focus-visible {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+        
+        @media (max-width: 414px) {
+            .nav-button {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+            
+            .carousel-slide {
+                padding: 12px;
+                min-height: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button class="back-button">←</button>
+            <div class="header-info">
+                <div class="position-symbol">TSLA</div>
+                <div class="position-strategy">Long Stock • 100 shares</div>
+            </div>
+            <div class="header-actions">
+                <button class="header-button">Edit Price</button>
+            </div>
+        </header>
+
+        <!-- Performance Section -->
+        <section class="performance-section">
+            <div class="performance-main">
+                <div class="current-price">$248.50</div>
+                <div class="price-change">
+                    <div class="change-amount">-$1,890</div>
+                    <div class="change-percent">-7.6%</div>
+                </div>
+            </div>
+            
+            <div class="performance-grid">
+                <div class="performance-item">
+                    <div class="performance-label">Avg Cost</div>
+                    <div class="performance-value">$248.50</div>
+                </div>
+                <div class="performance-item">
+                    <div class="performance-label">Current</div>
+                    <div class="performance-value">$230.00</div>
+                </div>
+                <div class="performance-item">
+                    <div class="performance-label">Stop</div>
+                    <div class="performance-value">$220.00</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section class="progress-section">
+            <div class="progress-title">Progress to Target</div>
+            
+            <div class="progress-labels">
+                <span>Stop $220</span>
+                <span>100 shares @ $248.50</span>
+                <span>Target $285</span>
+            </div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill"></div>
+            </div>
+            
+            <div class="risk-metrics">
+                <div class="risk-item">
+                    <div class="risk-label">To Stop</div>
+                    <div class="risk-value">-$2,850</div>
+                </div>
+                <div class="risk-item">
+                    <div class="risk-label">Risk Amount</div>
+                    <div class="risk-value">$2,850</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Accordion Content Section -->
+        <section class="accordion-container">
+            <!-- Trade Plan Accordion -->
+            <div class="accordion-item">
+                <button class="accordion-header active" onclick="toggleAccordion('plan')">
+                    <div class="accordion-title">
+                        <span class="accordion-icon">🎯</span>
+                        <span>Trade Plan</span>
+                        <span class="accordion-indicator">(Immutable)</span>
+                    </div>
+                    <span class="accordion-chevron">▼</span>
+                </button>
+                <div class="accordion-content active" id="accordion-plan">
+                    <div class="trade-plan-card">
+                        <div class="plan-immutable-notice">
+                            <span>🔒</span>
+                            This trade plan is immutable and cannot be modified
+                        </div>
+                        <div class="plan-grid">
+                            <div class="plan-item">
+                                <div class="plan-label">Target Entry Price</div>
+                                <div class="plan-value">$248.50</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Target Quantity</div>
+                                <div class="plan-value">60 shares</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Profit Target</div>
+                                <div class="plan-value">$285.00</div>
+                            </div>
+                            <div class="plan-item">
+                                <div class="plan-label">Stop Loss</div>
+                                <div class="plan-value">$220.00</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="plan-label">Position Thesis</div>
+                            <div class="plan-thesis">
+                                NVDA showing strong technical setup after earnings consolidation. AI infrastructure demand driving institutional accumulation around $775 support. Target $925 based on previous resistance becoming support pattern. Risk management with tight stop at $695.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade History Accordion -->
+            <div class="accordion-item">
+                <button class="accordion-header" onclick="toggleAccordion('history')">
+                    <div class="accordion-title">
+                        <span class="accordion-icon">📊</span>
+                        <span>Trade History</span>
+                        <span class="accordion-indicator">(1)</span>
+                    </div>
+                    <span class="accordion-chevron">▼</span>
+                </button>
+                <div class="accordion-content" id="accordion-history">
+                    <div class="trades-list">
+                        <div class="trade-item">
+                            <div class="trade-info">
+                                <div class="trade-type trade-buy">BUY</div>
+                                <div class="trade-details">60 shares @ $248.50 • Sep 5, 2024</div>
+                            </div>
+                            <div class="trade-amount trade-buy">$14,910</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Journal Entries Accordion -->
+            <div class="accordion-item">
+                <button class="accordion-header active" onclick="toggleAccordion('journal')">
+                    <div class="accordion-title">
+                        <span class="accordion-icon">📝</span>
+                        <span>Journal Entries</span>
+                        <span class="accordion-indicator">(4)</span>
+                    </div>
+                    <span class="accordion-chevron">▼</span>
+                </button>
+                <div class="accordion-content active" id="accordion-journal">
+                    <div class="swipe-hint">Swipe or use arrows to navigate through journal entries</div>
+
+                    <!-- Carousel Container -->
+                    <div class="carousel-container">
+                        <!-- Navigation Controls Above -->
+                        <div class="carousel-controls">
+                            <button class="nav-button prev disabled" id="prev-btn" aria-label="Previous journal entry">‹</button>
+                            <div class="dots-container" id="dots-container">
+                                <button class="dot active" aria-label="Go to entry 1" data-slide="0"></button>
+                                <button class="dot" aria-label="Go to entry 2" data-slide="1"></button>
+                                <button class="dot" aria-label="Go to entry 3" data-slide="2"></button>
+                                <button class="dot" aria-label="Go to entry 4" data-slide="3"></button>
+                            </div>
+                            <button class="nav-button next" id="next-btn" aria-label="Next journal entry">›</button>
+                        </div>
+
+                        <!-- Carousel Track -->
+                        <div class="carousel-wrapper">
+                            <div class="carousel-track" id="carousel-track">
+                                <!-- Entry 1: Position Plan -->
+                                <div class="carousel-slide">
+                                    <div class="entry-header">
+                                        <div class="entry-type">Position Plan</div>
+                                        <div class="entry-date">Jan 15, 2024</div>
+                                    </div>
+                                    <div class="entry-fields">
+                                        <div class="field-group">
+                                            <div class="field-prompt">Why this trade? Why now?</div>
+                                            <div class="field-response">
+                                                Tesla is showing strong technical support at current levels with bullish momentum. The stock has found a solid support level around $150 and recent analyst upgrades suggest positive catalysts coming. I'm entering at a key resistance breakout level with clear risk management.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How are you feeling about this trade?</div>
+                                            <div class="field-response">
+                                                Confident in the analysis but cautious given market volatility. The technical setup looks strong, but I'm staying aware of broader market conditions that could affect the trade.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe current market environment and how it affects this trade</div>
+                                            <div class="field-response">
+                                                Market is in a cautious uptrend with moderate volatility. Technology stocks are showing relative strength, and EV sector sentiment is improving. Overall market breadth is positive, which supports this directional position.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How will you enter and exit this position?</div>
+                                            <div class="field-response">
+                                                Enter via limit order at $150.00, looking for breakout confirmation. Plan to scale out in stages: 50% at $165 (profit target) and remainder if momentum continues. Stop loss at $135 to protect against downside.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Entry 2: Buy Trade Execution -->
+                                <div class="carousel-slide">
+                                    <div class="entry-header">
+                                        <div class="entry-type">Trade Execution</div>
+                                        <div class="entry-date">Jan 16, 2024</div>
+                                    </div>
+                                    <div class="entry-fields">
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe the execution</div>
+                                            <div class="field-response">
+                                                Executed buy order for 100 shares at $149.87, slightly better than planned entry price. Order filled over two trades: 75 shares at opening, then remaining 25 shares after initial dip. Got good execution with minimal slippage.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How do you feel about this execution?</div>
+                                            <div class="field-response">
+                                                Satisfied with the execution quality. Getting in below the planned level gives me extra cushion. Market behaved as expected with the initial dip providing a better entry opportunity.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe current market environment and how it affects this trade</div>
+                                            <div class="field-response">
+                                                market opened with slight weakness in tech stocks, creating the planned dip. Tesla showed relative strength compared to other EV stocks, suggesting institutional interest. Volume patterns support the bullish thesis.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How will you enter and exit this position?</div>
+                                            <div class="field-response">
+                                                Position is now established. Will monitor for breakout above resistance levels. If stock shows strong momentum above $160, will consider holding partial position longer. Stop loss remains at $135 protecting capital.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Entry 3: Market Update -->
+                                <div class="carousel-slide">
+                                    <div class="entry-header">
+                                        <div class="entry-type">Position Plan</div>
+                                        <div class="entry-date">Jan 18, 2024</div>
+                                    </div>
+                                    <div class="entry-fields">
+                                        <div class="field-group">
+                                            <div class="field-prompt">Why this trade? Why now?</div>
+                                            <div class="field-response">
+                                                Stock is approaching key breakout level at $165. Recent quarter results were solid despite broader market concerns. The company's delivery numbers beat estimates and production guidance was maintained, supporting the original thesis.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How are you feeling about this trade?</div>
+                                            <div class="field-response">
+                                                More confident now that the stock is performing as expected. The risk/reward has improved with the stock moving closer to profit target. Still monitoring broader market factors that could impact the trade.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe current market environment and how it affects this trade</div>
+                                            <div class="field-response">
+                                                Market is showing mixed signals with some rotation between growth and value stocks. Tesla is maintaining relative strength in the EV sector despite some competitive pressures. Options flow suggests institutional accumulation.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How will you enter and exit this position?</div>
+                                            <div class="field-response">
+                                                Position is fully established. Will look to take partial profits at $165 as originally planned. If breakout is strong, may hold remaining position for higher targets. Stop loss moved up to $145 to lock in partial profits.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Entry 4: Profit Taking -->
+                                <div class="carousel-slide">
+                                    <div class="entry-header">
+                                        <div class="entry-type">Trade Execution</div>
+                                        <div class="entry-date">Jan 22, 2024</div>
+                                    </div>
+                                    <div class="entry-fields">
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe the execution</div>
+                                            <div class="field-response">
+                                                Sold 50 shares at $166.42 as planned when stock reached profit target. The breakout was strong with increasing volume. Execution was clean with market order filling immediately. Remaining 50 shares held for potential upside.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How do you feel about this execution?</div>
+                                            <div class="field-response">
+                                                Good execution of the trading plan. Taking partial profits at the predetermined level maintains discipline. The remaining position continues to be managed with the stop loss protecting the gains already achieved.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">Describe current market environment and how it affects this trade</div>
+                                            <div class="field-response">
+                                                Market is showing strength with tech stocks leading. Tesla benefited from positive analyst upgrades and overall EV sector optimism. Broader market rally supports maintaining exposure to strong performers.
+                                            </div>
+                                        </div>
+                                        <div class="field-group">
+                                            <div class="field-prompt">How will you enter and exit this position?</div>
+                                            <div class="field-response">
+                                                Partial exit completed successfully. Remaining position allows for continued upside capture. Will monitor technical levels and market conditions for the final exit. Current stop at $145 protects most of the unrealized gains.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Add Journal Entry Button -->
+        <div class="add-journal-button">
+            <button class="add-journal-btn">Add Journal Entry</button>
+        </div>
+
+        <!-- Bottom Actions -->
+        <div class="bottom-actions">
+            <button class="add-trade-btn">Add Trade</button>
+        </div>
+    </div>
+
+    <script>
+        // Carousel functionality
+        class JournalCarousel {
+            constructor() {
+                this.currentSlide = 0;
+                this.totalSlides = 4;
+                this.track = document.getElementById('carousel-track');
+                this.prevBtn = document.getElementById('prev-btn');
+                this.nextBtn = document.getElementById('next-btn');
+                this.dotsContainer = document.getElementById('dots-container');
+                this.dots = document.querySelectorAll('.dot');
+                
+                this.init();
+            }
+            
+            init() {
+                // Button navigation
+                this.prevBtn.addEventListener('click', () => this.prevSlide());
+                this.nextBtn.addEventListener('click', () => this.nextSlide());
+                
+                // Dot navigation
+                this.dots.forEach((dot, index) => {
+                    dot.addEventListener('click', () => this.goToSlide(index));
+                });
+                
+                // Touch/swipe navigation
+                let touchStartX = 0;
+                let touchEndX = 0;
+                
+                this.track.addEventListener('touchstart', (e) => {
+                    touchStartX = e.changedTouches[0].screenX;
+                });
+                
+                this.track.addEventListener('touchend', (e) => {
+                    touchEndX = e.changedTouches[0].screenX;
+                    this.handleSwipe();
+                });
+                
+                const handleSwipe = () => {
+                    const swipeThreshold = 50;
+                    const diff = touchStartX - touchEndX;
+                    
+                    if (Math.abs(diff) > swipeThreshold) {
+                        if (diff > 0) {
+                            this.nextSlide(); // Swiped left
+                        } else {
+                            this.prevSlide(); // Swiped right
+                        }
+                    }
+                };
+                
+                this.handleSwipe = handleSwipe;
+                
+                // Keyboard navigation
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'ArrowLeft') {
+                        this.prevSlide();
+                    } else if (e.key === 'ArrowRight') {
+                        this.nextSlide();
+                    }
+                });
+            }
+            
+            prevSlide() {
+                if (this.currentSlide > 0) {
+                    this.currentSlide--;
+                    this.updateCarousel();
+                }
+            }
+            
+            nextSlide() {
+                if (this.currentSlide < this.totalSlides - 1) {
+                    this.currentSlide++;
+                    this.updateCarousel();
+                }
+            }
+            
+            goToSlide(slideIndex) {
+                this.currentSlide = slideIndex;
+                this.updateCarousel();
+            }
+            
+            updateCarousel() {
+                // Update slide position
+                const offset = -this.currentSlide * 100;
+                this.track.style.transform = `translateX(${offset}%)`;
+                
+                // Update navigation buttons
+                this.prevBtn.classList.toggle('disabled', this.currentSlide === 0);
+                this.nextBtn.classList.toggle('disabled', this.currentSlide === this.totalSlides - 1);
+                
+                // Update dots
+                this.dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === this.currentSlide);
+                });
+            }
+        }
+        
+        // Accordion functionality
+        function toggleAccordion(sectionName) {
+            const header = event.target.closest('.accordion-header');
+            const content = document.getElementById('accordion-' + sectionName);
+            const isActive = header.classList.contains('active')
+
+            if (isActive) {
+                // Collapse the section
+                header.classList.remove('active')
+                content.classList.remove('active')
+            } else {
+                // Expand the section
+                header.classList.add('active')
+                content.classList.add('active')
+            }
+        }
+        
+        // Initialize carousel when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new JournalCarousel();
+        });
+        
+        // Add smooth scrolling behavior for the carousel
+        if ('scrollBehavior' in document.documentElement.style) {
+            // Browser supports smooth scrolling
+            console.log('Smooth scrolling supported');
+        }
+    </script>
+</body>
+</html>
