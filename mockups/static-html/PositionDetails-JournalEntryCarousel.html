@@ -529,24 +529,34 @@
 
         .carousel-wrapper {
             display: flex;
-            transition: transform 0.3s ease-out;
+            transition: transform 0.28s ease-out;
             touch-action: pan-y;
+            background: rgba(248, 250, 252, 0.75);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            border-radius: 12px;
         }
 
         .carousel-slide {
             min-width: 100%;
             max-width: 100%;
             flex-shrink: 0;
-            padding: 16px 20px;
+            padding: 18px;
             box-sizing: border-box;
         }
 
         .journal-entry {
-            background: white;
             width: 100%;
             max-width: 100%;
             overflow-wrap: break-word;
             word-wrap: break-word;
+        }
+
+        .entry-card {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid rgba(203, 213, 225, 0.7);
+            box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.8);
         }
 
         .journal-header {
@@ -574,7 +584,7 @@
         .journal-fields {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
 
         .journal-field {
@@ -592,7 +602,7 @@
         .field-response {
             font-size: 14px;
             color: #374151;
-            line-height: 1.5;
+            line-height: 1.6;
             background: #f9fafb;
             padding: 10px 12px;
             border-radius: 6px;
@@ -865,22 +875,24 @@
                                 <!-- Slide 4 - Most Recent (Daily Review) -->
                                 <div class="carousel-slide">
                                     <div class="journal-entry">
-                                        <div class="journal-header">
-                                            <div class="journal-type">Daily Review</div>
-                                            <div class="journal-date">Sep 10, 2024</div>
-                                        </div>
-                                        <div class="journal-fields">
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What market conditions am I observing today?</div>
-                                                <div class="field-response">Market showing continued weakness in tech sector. TSLA down another 3% on volume. Broader market selling pressure with VIX elevated above 20. Not seeing bounce signals yet.</div>
+                                        <div class="entry-card">
+                                            <div class="journal-header">
+                                                <div class="journal-type">Daily Review</div>
+                                                <div class="journal-date">Sep 10, 2024</div>
                                             </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">How is my position performing relative to my plan?</div>
-                                                <div class="field-response">Position down -12.4%, now dangerously close to stop at $210. Need to decide if cutting early or waiting for exact stop level. Current price $217.25 gives very little cushion.</div>
-                                            </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What adjustments, if any, am I considering?</div>
-                                                <div class="field-response">Seriously considering cutting the position if we break $215 support. Rather take controlled loss than watch stop get hit in panic selling. Will monitor closely tomorrow morning.</div>
+                                            <div class="journal-fields">
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What market conditions am I observing today?</div>
+                                                    <div class="field-response">Market showing continued weakness in tech sector. TSLA down another 3% on volume. Broader market selling pressure with VIX elevated above 20. Not seeing bounce signals yet.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">How is my position performing relative to my plan?</div>
+                                                    <div class="field-response">Position down -12.4%, now dangerously close to stop at $210. Need to decide if cutting early or waiting for exact stop level. Current price $217.25 gives very little cushion.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What adjustments, if any, am I considering?</div>
+                                                    <div class="field-response">Seriously considering cutting the position if we break $215 support. Rather take controlled loss than watch stop get hit in panic selling. Will monitor closely tomorrow morning.</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -889,22 +901,24 @@
                                 <!-- Slide 3 - Position Update -->
                                 <div class="carousel-slide">
                                     <div class="journal-entry">
-                                        <div class="journal-header">
-                                            <div class="journal-type">Position Update</div>
-                                            <div class="journal-date">Sep 7, 2024</div>
-                                        </div>
-                                        <div class="journal-fields">
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What changed since my last review?</div>
-                                                <div class="field-response">Position down -8% from entry. Market showing unexpected weakness in growth stocks. Fed commentary more hawkish than expected, causing tech sector rotation.</div>
+                                        <div class="entry-card">
+                                            <div class="journal-header">
+                                                <div class="journal-type">Position Update</div>
+                                                <div class="journal-date">Sep 7, 2024</div>
                                             </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">Am I still confident in my thesis?</div>
-                                                <div class="field-response">Thesis being tested. Institutional support level around $250 broken on volume. EV delivery numbers still good but macro headwinds stronger than anticipated. Need to reassess risk.</div>
-                                            </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What's my plan from here?</div>
-                                                <div class="field-response">Hold for now but watching stop closely. If breaks below $215, might exit early rather than let full stop trigger. Position sizing was appropriate which helps me stay rational.</div>
+                                            <div class="journal-fields">
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What changed since my last review?</div>
+                                                    <div class="field-response">Position down -8% from entry. Market showing unexpected weakness in growth stocks. Fed commentary more hawkish than expected, causing tech sector rotation.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">Am I still confident in my thesis?</div>
+                                                    <div class="field-response">Thesis being tested. Institutional support level around $250 broken on volume. EV delivery numbers still good but macro headwinds stronger than anticipated. Need to reassess risk.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What's my plan from here?</div>
+                                                    <div class="field-response">Hold for now but watching stop closely. If breaks below $215, might exit early rather than let full stop trigger. Position sizing was appropriate which helps me stay rational.</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -913,22 +927,24 @@
                                 <!-- Slide 2 - Trade Execution -->
                                 <div class="carousel-slide">
                                     <div class="journal-entry">
-                                        <div class="journal-header">
-                                            <div class="journal-type">Trade Execution</div>
-                                            <div class="journal-date">Sep 5, 2024</div>
-                                        </div>
-                                        <div class="journal-fields">
-                                            <div class="journal-field">
-                                                <div class="field-prompt">Why did I execute this trade now?</div>
-                                                <div class="field-response">Price reached my target entry of $248.50 with confirming volume. Technical setup looking strong with consolidation complete. Got filled at exact target price - patient waiting paid off.</div>
+                                        <div class="entry-card">
+                                            <div class="journal-header">
+                                                <div class="journal-type">Trade Execution</div>
+                                                <div class="journal-date">Sep 5, 2024</div>
                                             </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">How did the execution compare to my plan?</div>
-                                                <div class="field-response">Perfect execution - hit target entry exactly at $248.50. Bought full 60 shares as planned in single order. No slippage. Market conditions aligned with thesis at entry.</div>
-                                            </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What's my emotional state entering this trade?</div>
-                                                <div class="field-response">Calm and confident. Did the work upfront with planning. Position size feels right - can handle the risk. Stop is set and I'm committed to following the plan. No FOMO or anxiety.</div>
+                                            <div class="journal-fields">
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">Why did I execute this trade now?</div>
+                                                    <div class="field-response">Price reached my target entry of $248.50 with confirming volume. Technical setup looking strong with consolidation complete. Got filled at exact target price - patient waiting paid off.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">How did the execution compare to my plan?</div>
+                                                    <div class="field-response">Perfect execution - hit target entry exactly at $248.50. Bought full 60 shares as planned in single order. No slippage. Market conditions aligned with thesis at entry.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What's my emotional state entering this trade?</div>
+                                                    <div class="field-response">Calm and confident. Did the work upfront with planning. Position size feels right - can handle the risk. Stop is set and I'm committed to following the plan. No FOMO or anxiety.</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -937,26 +953,28 @@
                                 <!-- Slide 1 - Position Plan -->
                                 <div class="carousel-slide">
                                     <div class="journal-entry">
-                                        <div class="journal-header">
-                                            <div class="journal-type">Position Plan</div>
-                                            <div class="journal-date">Sep 4, 2024</div>
-                                        </div>
-                                        <div class="journal-fields">
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What is the core thesis for this position?</div>
-                                                <div class="field-response">TSLA showing strong institutional support around $250 level with positive EV delivery momentum building into Q3 earnings. Technical setup suggests consolidation phase completing before next leg up toward $285 resistance. Risk management critical given inherent volatility in name.</div>
+                                        <div class="entry-card">
+                                            <div class="journal-header">
+                                                <div class="journal-type">Position Plan</div>
+                                                <div class="journal-date">Sep 4, 2024</div>
                                             </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What specific setup or signal am I seeing?</div>
-                                                <div class="field-response">Stock formed higher low at $245, bouncing off key support zone. Volume profile shows accumulation at current levels. Options flow showing bullish bias with calls outpacing puts 2:1. Bollinger bands tightening indicating volatility compression.</div>
-                                            </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">What could invalidate this trade setup?</div>
-                                                <div class="field-response">Break below $210 support on heavy volume would invalidate bullish setup. Negative news on deliveries or production. Broader market correction taking high-beta stocks down. Fed turning more hawkish than expected.</div>
-                                            </div>
-                                            <div class="journal-field">
-                                                <div class="field-prompt">How does this position fit my overall strategy?</div>
-                                                <div class="field-response">Aligns with swing trading approach - 2-4 week hold time. Position size is 20% of portfolio which matches my risk tolerance for medium conviction setups. Using wider stops due to TSLA volatility but maintaining 2:1 reward/risk ratio.</div>
+                                            <div class="journal-fields">
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What is the core thesis for this position?</div>
+                                                    <div class="field-response">TSLA showing strong institutional support around $250 level with positive EV delivery momentum building into Q3 earnings. Technical setup suggests consolidation phase completing before next leg up toward $285 resistance. Risk management critical given inherent volatility in name.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What specific setup or signal am I seeing?</div>
+                                                    <div class="field-response">Stock formed higher low at $245, bouncing off key support zone. Volume profile shows accumulation at current levels. Options flow showing bullish bias with calls outpacing puts 2:1. Bollinger bands tightening indicating volatility compression.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">What could invalidate this trade setup?</div>
+                                                    <div class="field-response">Break below $210 support on heavy volume would invalidate bullish setup. Negative news on deliveries or production. Broader market correction taking high-beta stocks down. Fed turning more hawkish than expected.</div>
+                                                </div>
+                                                <div class="journal-field">
+                                                    <div class="field-prompt">How does this position fit my overall strategy?</div>
+                                                    <div class="field-response">Aligns with swing trading approach - 2-4 week hold time. Position size is 20% of portfolio which matches my risk tolerance for medium conviction setups. Using wider stops due to TSLA volatility but maintaining 2:1 reward/risk ratio.</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
