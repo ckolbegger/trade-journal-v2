@@ -13,6 +13,7 @@ import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import type { JournalField } from '@/types/journal'
 import { generateJournalId } from '@/lib/uuid'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
+import { JournalCarousel } from '@/components/JournalCarousel'
 
 interface PositionDetailProps {
   positionService?: PositionService
@@ -509,48 +510,21 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             indicator={`(${journalEntries.length})`}
             defaultOpen={false}
           >
-            <div className="bg-white">
-              {journalLoading ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  Loading journal entries...
-                </div>
-              ) : journalError ? (
-                <div className="p-4 text-center text-red-500 text-sm">
-                  {journalError}
-                </div>
-              ) : journalEntries.length === 0 ? (
-                <div className="p-4 text-center text-gray-500 text-sm">
-                  No journal entries yet
-                </div>
-              ) : (
-                journalEntries.map((entry, index) => (
-                  <div key={entry.id} className={`p-4 ${index < journalEntries.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs text-gray-600 uppercase tracking-wide">
-                        {formatEntryType(entry.entry_type)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(new Date(entry.executed_at || entry.created_at))}
-                      </div>
-                    </div>
-
-                    {/* Display all journal fields */}
-                    <div className="space-y-3">
-                      {entry.fields.map((field, fieldIndex) => (
-                        <div key={fieldIndex}>
-                          <div className="text-xs text-gray-600 mb-1 font-medium">
-                            {field.prompt}
-                          </div>
-                          <div className="text-sm text-gray-700 leading-relaxed">
-                            {field.response}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            {journalLoading ? (
+              <div className="p-4 text-center text-gray-500 text-sm bg-white">
+                Loading journal entries...
+              </div>
+            ) : journalError ? (
+              <div className="p-4 text-center text-red-500 text-sm bg-white">
+                {journalError}
+              </div>
+            ) : journalEntries.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 text-sm bg-white">
+                No journal entries yet
+              </div>
+            ) : (
+              <JournalCarousel entries={journalEntries} />
+            )}
           </Accordion>
         </section>
 
