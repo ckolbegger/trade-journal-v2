@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { JournalEntry } from '@/types/journal'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -27,6 +27,27 @@ export function JournalCarousel({ entries, transitionDuration = 280 }: JournalCa
       setCurrentSlide(currentSlide - 1)
     }
   }
+
+  // Keyboard navigation support
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowLeft') {
+        event.preventDefault()
+        previousSlide()
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault()
+        nextSlide()
+      }
+    }
+
+    // Add event listener when component mounts
+    document.addEventListener('keydown', handleKeyDown)
+    
+    // Cleanup event listener when component unmounts
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [currentSlide, entries.length]) // Re-install on dependencies change
 
   const formatDate = (date: string) => {
     return new Intl.DateTimeFormat('en-US', {
