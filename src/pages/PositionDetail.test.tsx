@@ -397,40 +397,15 @@ describe('PositionDetail', () => {
         fireEvent.click(journalButton!)
       })
 
-      // Should display journal entries
+      // Should display the most recent journal entry
       await waitFor(() => {
-        assertTextExists('Position Plan')
-        assertTextExists('Strong earnings expected for AAPL this quarter')
-        assertTextExists('Confident and well-researched')
-      })
+        assertTextExists('Trade Execution');
+        assertTextExists('Filled at market open as planned');
+        // Ensure the older entry is not visible
+        expect(screen.queryByText('Position Plan')).not.toBeInTheDocument();
+      });
     })
 
-    it('should display journal entries in chronological order', async () => {
-      mockPositionService.getById.mockResolvedValue(mockPosition)
-      mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
-
-      await act(async () => {
-        renderWithRouter(<PositionDetail />)
-      })
-
-      // Expand the Journal Entries accordion to see the content
-      await act(async () => {
-        const journalButton = screen.getByText('Journal Entries').closest('button')
-        fireEvent.click(journalButton!)
-      })
-
-      await waitFor(() => {
-        const journalSection = screen.getByText('Journal Entries').closest('section')
-        expect(journalSection).toBeInTheDocument()
-
-        // Position Plan entry should appear before Trade Execution entry
-        const positionPlanText = screen.getByText('Strong earnings expected for AAPL this quarter')
-        const executionText = screen.getByText('Filled at market open as planned')
-
-        expect(positionPlanText).toBeInTheDocument()
-        expect(executionText).toBeInTheDocument()
-      })
-    })
 
     it('should display structured journal fields with prompts and responses', async () => {
       mockPositionService.getById.mockResolvedValue(mockPosition)
@@ -516,9 +491,9 @@ describe('PositionDetail', () => {
       })
 
       await waitFor(() => {
-        assertTextExists('Position Plan')
-        assertTextExists('Trade Execution')
-      })
+        assertTextExists('Trade Execution');
+        expect(screen.queryByText('Position Plan')).not.toBeInTheDocument();
+      });
     })
 
     it('should format journal entry timestamps correctly', async () => {
@@ -540,6 +515,31 @@ describe('PositionDetail', () => {
         assertTextExists(/Jan 15, 2024/)
       })
     })
+
+    it('should render journal entries using the carousel component', async () => {
+      mockPositionService.getById.mockResolvedValue(mockPosition);
+      mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries);
+
+      await act(async () => {
+        renderWithRouter(<PositionDetail />);
+      });
+
+      // Expand the Journal Entries accordion to see the content
+      await act(async () => {
+        const journalButton = screen.getByText('Journal Entries').closest('button');
+        fireEvent.click(journalButton!);
+      });
+
+      await waitFor(() => {
+        // The most recent entry (the second one in the mock) should be visible
+        expect(screen.getByText('Describe the execution')).toBeInTheDocument();
+        expect(screen.getByText('Filled at market open as planned')).toBeInTheDocument();
+
+        // The first entry should NOT be visible
+        expect(screen.queryByText('Why are you planning this position?')).not.toBeInTheDocument();
+        expect(screen.queryByText('Strong earnings expected for AAPL this quarter')).not.toBeInTheDocument();
+      });
+    });
   })
 
   describe('Conditional Section Display', () => {

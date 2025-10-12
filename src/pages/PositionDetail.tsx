@@ -8,6 +8,7 @@ import { JournalService } from '@/services/JournalService'
 import type { JournalEntry } from '@/types/journal'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
+import { JournalCarousel } from '@/components/JournalCarousel';
 import { TradeExecutionForm } from '@/components/TradeExecutionForm'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import type { JournalField } from '@/types/journal'
@@ -502,6 +503,10 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             </div>
           </Accordion>
 
+import { JournalCarousel } from '@/components/JournalCarousel';
+
+// ... inside the component ...
+
           {/* Journal Entries Accordion */}
           <Accordion
             title="Journal Entries"
@@ -523,32 +528,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                   No journal entries yet
                 </div>
               ) : (
-                journalEntries.map((entry, index) => (
-                  <div key={entry.id} className={`p-4 ${index < journalEntries.length - 1 ? 'border-b border-gray-100' : ''}`}>
-                    <div className="flex justify-between items-start mb-2">
-                      <div className="text-xs text-gray-600 uppercase tracking-wide">
-                        {formatEntryType(entry.entry_type)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {formatDate(new Date(entry.executed_at || entry.created_at))}
-                      </div>
-                    </div>
-
-                    {/* Display all journal fields */}
-                    <div className="space-y-3">
-                      {entry.fields.map((field, fieldIndex) => (
-                        <div key={fieldIndex}>
-                          <div className="text-xs text-gray-600 mb-1 font-medium">
-                            {field.prompt}
-                          </div>
-                          <div className="text-sm text-gray-700 leading-relaxed">
-                            {field.response}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
+                <JournalCarousel entry={journalEntries.slice().reverse()[0]} />
               )}
             </div>
           </Accordion>
