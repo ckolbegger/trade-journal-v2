@@ -585,33 +585,34 @@
             color: #9ca3af;
         }
 
+        .journal-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
         .journal-field {
-            margin-bottom: 12px;
-            /* Ensure fields don't exceed container width */
-            width: 100%;
-            max-width: 100%;
-            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .journal-field-prompt {
-            font-size: 12px;
-            color: #6b7280;
-            margin-bottom: 4px;
+            font-size: 13px;
             font-weight: 500;
+            color: #4b5563;
         }
 
         .journal-field-response {
             font-size: 14px;
             color: #374151;
             line-height: 1.5;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
-            white-space: normal;
             width: 100%;
             max-width: 100%;
             box-sizing: border-box;
-            /* Fix text overflow issues */
-            text-overflow: clip;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
         }
 
         /* Navigation Arrows and Dots */
@@ -875,17 +876,19 @@
                                         <div class="journal-type">Position Plan</div>
                                         <div class="journal-date">Sep 5, 2024</div>
                                     </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your investment thesis for this position?</div>
-                                        <div class="journal-field-response">TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.</div>
-                                    </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your planned entry price and quantity?</div>
-                                        <div class="journal-field-response">Plan to enter at $248.50 for 60 shares when market shows strength.</div>
-                                    </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your profit target and stop loss?</div>
-                                        <div class="journal-field-response">Profit target at $285.00 with stop loss at $210.00 to manage risk.</div>
+                                    <div class="journal-fields">
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your investment thesis for this position?</div>
+                                            <div class="journal-field-response">TSLA showing strong institutional support around $250 with positive EV delivery momentum. Technical setup suggests consolidation before next leg up toward $285 resistance. Risk management critical given volatility.</div>
+                                        </div>
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your planned entry price and quantity?</div>
+                                            <div class="journal-field-response">Plan to enter at $248.50 for 60 shares when market shows strength.</div>
+                                        </div>
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your profit target and stop loss?</div>
+                                            <div class="journal-field-response">Profit target at $285.00 with stop loss at $210.00 to manage risk.</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="journal-entry">
@@ -893,13 +896,15 @@
                                         <div class="journal-type">Trade Execution</div>
                                         <div class="journal-date">Sep 8, 2024</div>
                                     </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your execution rationale for this trade?</div>
-                                        <div class="journal-field-response">Added 40 shares at $245.00 as market showed resilience despite general tech sector weakness.</div>
-                                    </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">How are you monitoring the position?</div>
-                                        <div class="journal-field-response">Monitoring volume trends closely and watching for breakout signals.</div>
+                                    <div class="journal-fields">
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your execution rationale for this trade?</div>
+                                            <div class="journal-field-response">Added 40 shares at $245.00 as market showed resilience despite general tech sector weakness.</div>
+                                        </div>
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">How are you monitoring the position?</div>
+                                            <div class="journal-field-response">Monitoring volume trends closely and watching for breakout signals.</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="journal-entry">
@@ -907,13 +912,15 @@
                                         <div class="journal-type">Position Update</div>
                                         <div class="journal-date">Sep 10, 2024</div>
                                     </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">How is the position performing relative to your thesis?</div>
-                                        <div class="journal-field-response">Position down -12.4% and approaching stop loss at $210.</div>
-                                    </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your current market outlook?</div>
-                                        <div class="journal-field-response">Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.</div>
+                                    <div class="journal-fields">
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">How is the position performing relative to your thesis?</div>
+                                            <div class="journal-field-response">Position down -12.4% and approaching stop loss at $210.</div>
+                                        </div>
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your current market outlook?</div>
+                                            <div class="journal-field-response">Market showing weakness in growth stocks. Need to monitor closely - considering cutting losses if breaks below $215 support.</div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="journal-entry">
@@ -921,13 +928,15 @@
                                         <div class="journal-type">Exit Plan</div>
                                         <div class="journal-date">Sep 12, 2024</div>
                                     </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your exit rationale?</div>
-                                        <div class="journal-field-response">Taking partial exit at $220 to reduce risk exposure.</div>
-                                    </div>
-                                    <div class="journal-field">
-                                        <div class="journal-field-prompt">What is your plan for the remaining position?</div>
-                                        <div class="journal-field-response">Will re-evaluate remaining position at next support level. Market conditions still uncertain.</div>
+                                    <div class="journal-fields">
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your exit rationale?</div>
+                                            <div class="journal-field-response">Taking partial exit at $220 to reduce risk exposure.</div>
+                                        </div>
+                                        <div class="journal-field">
+                                            <div class="journal-field-prompt">What is your plan for the remaining position?</div>
+                                            <div class="journal-field-response">Will re-evaluate remaining position at next support level. Market conditions still uncertain.</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
