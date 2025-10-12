@@ -491,10 +491,6 @@ export function PositionDetail({ positionService: injectedPositionService, trade
             </div>
           </Accordion>
 
-import { JournalCarousel } from '@/components/JournalCarousel';
-
-// ... inside the component ...
-
           {/* Journal Entries Accordion */}
           <Accordion
             title="Journal Entries"

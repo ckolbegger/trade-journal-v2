@@ -1,0 +1,75 @@
+.carousel-slide {
+    min-width: 100%;
+    max-width: 100%;
+    flex-shrink: 0;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.journal-entry {
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+}
+
+.entry-card {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid rgba(203, 213, 225, 0.7);
+    box-shadow: 0 12px 24px -18px rgba(15, 23, 42, 0.8);
+}
+
+.journal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.journal-type {
+    font-size: 12px;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 500;
+}
+
+.journal-date {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.journal-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.journal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.field-prompt {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.field-response {
+    font-size: 14px;
+    color: #374151;
+    line-height: 1.6;
+    background: #f9fafb;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    white-space: normal;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
