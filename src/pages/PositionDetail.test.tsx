@@ -399,7 +399,7 @@ describe('PositionDetail', () => {
 
       // Should display journal entries
       await waitFor(() => {
-        assertTextExists('Position Plan')
+        assertTextExists('POSITION PLAN')
         assertTextExists('Strong earnings expected for AAPL this quarter')
         assertTextExists('Confident and well-researched')
       })
@@ -516,8 +516,8 @@ describe('PositionDetail', () => {
       })
 
       await waitFor(() => {
-        assertTextExists('Position Plan')
-        assertTextExists('Trade Execution')
+        assertTextExists('POSITION PLAN')
+        assertTextExists('TRADE EXECUTION')
       })
     })
 
