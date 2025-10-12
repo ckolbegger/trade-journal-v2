@@ -512,7 +512,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                   No journal entries yet
                 </div>
               ) : (
-                <JournalCarousel entry={journalEntries.slice().reverse()[0]} />
+                <JournalCarousel entries={journalEntries.slice().reverse()} />
               )}
             </div>
           </Accordion>
