@@ -14,7 +14,10 @@ export function JournalCarousel({
   currentIndex: externalIndex,
   onSlideChange
 }: JournalCarouselProps) {
-  const [currentSlide, setCurrentSlide] = useState(0)
+  // Initialize to last entry (most recent) instead of first
+  const [currentSlide, setCurrentSlide] = useState(
+    entries.length > 0 ? entries.length - 1 : 0
+  )
 
   // Sync with external index if provided
   useEffect(() => {
@@ -22,6 +25,14 @@ export function JournalCarousel({
       setCurrentSlide(externalIndex)
     }
   }, [externalIndex])
+
+  // Update current slide if entries change (e.g., new entry added)
+  useEffect(() => {
+    // If external index not provided and entries array changes, go to last entry
+    if (externalIndex === undefined && entries.length > 0) {
+      setCurrentSlide(entries.length - 1)
+    }
+  }, [entries.length, externalIndex])
 
   // Notify parent of slide changes
   useEffect(() => {

@@ -194,13 +194,29 @@ describe('PositionDetail - Full Carousel Workflow', () => {
     const dots = screen.getAllByTestId(/^carousel-dot-/)
     expect(dots.length).toBe(4)
 
-    // Verify first entry is visible
-    expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
+    // Verify LAST entry is visible (most recent)
+    expect(screen.getByText(/Entry 4:/)).toBeInTheDocument()
     expect(screen.getAllByText('POSITION PLAN').length).toBeGreaterThan(0)
 
     // Navigate through all entries using arrows
     const nextArrow = screen.getByTestId('next-arrow')
     const prevArrow = screen.getByTestId('prev-arrow')
+
+    // Right arrow should be disabled on last slide (starting position)
+    expect(nextArrow).toBeDisabled()
+    expect(prevArrow).not.toBeDisabled()
+
+    // Click prev arrow to go to entry 3
+    fireEvent.click(prevArrow)
+    await waitFor(() => {
+      expect(screen.getByText(/Entry 3:/)).toBeInTheDocument()
+    })
+
+    // Navigate to first entry to test forward navigation
+    fireEvent.click(dots[0])
+    await waitFor(() => {
+      expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
+    })
 
     // Left arrow should be disabled on first slide
     expect(prevArrow).toBeDisabled()

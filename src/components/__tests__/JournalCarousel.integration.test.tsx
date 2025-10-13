@@ -103,10 +103,9 @@ describe('JournalCarousel - Integration', () => {
     const firstSlide = slides[0]
     expect(firstSlide).toContainElement(screen.getByText('POSITION PLAN'))
 
-    // Verify wrapper has correct transform for first slide (0%)
+    // Verify wrapper starts at LAST slide (index 1 of 2 entries = 100% offset)
     const wrapper = screen.getByTestId('carousel-wrapper')
-    // Transform could be 'translateX(0%)' or 'translateX(-0%)' - both are valid for first slide
-    expect(wrapper.style.transform).toMatch(/translateX\(-?0%\)/)
+    expect(wrapper.style.transform).toBe('translateX(-100%)')
   })
 
   it('navigates through full carousel of real journal entries using all controls', () => {
@@ -175,15 +174,21 @@ describe('JournalCarousel - Integration', () => {
     const nextArrow = screen.getByTestId('next-arrow')
     const dots = screen.getAllByTestId(/^carousel-dot-/)
 
-    // Should start at first entry
-    expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
+    // Should start at LAST entry (most recent)
+    expect(screen.getByText(/Entry 4:/)).toBeInTheDocument()
 
-    // Left arrow should be disabled
+    // Right arrow should be disabled (at last entry)
+    expect(nextArrow).toBeDisabled()
+    expect(prevArrow).not.toBeDisabled()
+
+    // Fourth (last) dot should be active
+    expect(dots[3].className).toMatch(/active/)
+
+    // Navigate back to first entry to test forward navigation
+    fireEvent.click(dots[0])
+    expect(screen.getByText(/Entry 1:/)).toBeInTheDocument()
     expect(prevArrow).toBeDisabled()
     expect(nextArrow).not.toBeDisabled()
-
-    // First dot should be active
-    expect(dots[0].className).toMatch(/active/)
 
     // Click next arrow to go to second entry
     fireEvent.click(nextArrow)

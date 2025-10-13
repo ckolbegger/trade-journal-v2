@@ -72,16 +72,19 @@ describe('JournalCarousel', () => {
     expect(screen.getByText('Sep 4, 2024')).toBeInTheDocument()
   })
 
-  it('renders multiple entries with first entry visible by default', () => {
+  it('renders multiple entries with last entry visible by default', () => {
     render(<JournalCarousel entries={mockEntries} />)
 
-    // First entry should be visible
-    expect(screen.getByText('What is the core thesis for this position?')).toBeInTheDocument()
-    expect(screen.getByText('Strong technical setup with institutional support.')).toBeInTheDocument()
+    // Last entry (most recent) should be visible by default
+    expect(screen.getByText('What changed since my last review?')).toBeInTheDocument()
+    expect(screen.getByText('Market showing unexpected weakness.')).toBeInTheDocument()
 
     // Other entries should be in DOM but not necessarily visible (they're in slides)
     const wrapper = screen.getByTestId('carousel-wrapper')
     expect(wrapper.children.length).toBe(3)
+
+    // Should start at last slide (index 2 of 3 entries)
+    expect(wrapper.style.transform).toBe('translateX(-200%)')
   })
 
   it('applies custom transition duration from props', () => {
@@ -196,8 +199,16 @@ describe('JournalCarousel - Navigation', () => {
     expect(screen.getByTestId('carousel-dots')).toBeInTheDocument()
   })
 
-  it('disables left arrow on first slide', () => {
+  it('disables right arrow on last slide by default', () => {
     render(<JournalCarousel entries={mockEntries} />)
+
+    // Now starts at last slide, so right arrow should be disabled
+    const nextArrow = screen.getByTestId('next-arrow')
+    expect(nextArrow).toBeDisabled()
+  })
+
+  it('disables left arrow on first slide when navigated to', () => {
+    render(<JournalCarousel entries={mockEntries} currentIndex={0} />)
 
     const prevArrow = screen.getByTestId('prev-arrow')
     expect(prevArrow).toBeDisabled()
@@ -221,7 +232,8 @@ describe('JournalCarousel - Navigation', () => {
   })
 
   it('advances to next slide when right arrow clicked', () => {
-    const { rerender } = render(<JournalCarousel entries={mockEntries} />)
+    // Start at first slide explicitly
+    const { rerender } = render(<JournalCarousel entries={mockEntries} currentIndex={0} />)
 
     // Initially showing first entry
     expect(screen.getByText('First entry')).toBeInTheDocument()
