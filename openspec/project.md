@@ -11,7 +11,9 @@
 ## Tech Stack
 
 - **Frontend**: TypeScript, React, Vite
-- **Styling**: Mobile-first responsive design with CSS
+- **Styling**: Mobile-first responsive design with Tailwind CSS (PostCSS + autoprefixer), tailwind-merge, class-variance-authority
+- **UI Components**: Radix UI primitives, Lucide React icons
+- **Routing**: React Router DOM 7
 - **Data Storage**: IndexedDB (local storage only, privacy-focused)
 - **Testing**: Vitest + React Testing Library + fake-indexeddb
 - **Build Tool**: Vite
@@ -22,6 +24,8 @@
 ### Code Style
 
 - **TypeScript strict mode enabled**
+- **TypeScript Configuration**: `verbatimModuleSyntax` enabled for explicit import/export declarations
+- **Module Resolution**: Bundler mode with project references (`tsconfig.json`)
 - **Import Rules (CRITICAL)**:
   - ❌ NEVER import interfaces as runtime values: `import { MyInterface } from './types'`
   - ✅ ALWAYS use type-only imports for interfaces: `import type { MyInterface } from './types'`
@@ -32,7 +36,7 @@
 
 ### Architecture Patterns
 
-**Position vs Trade Separation Model** - Core architectural pattern with trade-level FIFO cost basis tracking:
+**Position vs Trade Separation Model (ADR-001)** - Core architectural pattern with trade-level FIFO cost basis tracking:
 
 **Position Entity:**
 - Contains immutable trade plan (strategy intent, price targets, stop levels, thesis)
@@ -59,6 +63,11 @@
 - Separate cost basis tracking per instrument type (stock vs each unique option contract)
 - Brokerage statement matching through FIFO methodology alignment
 
+**Service Layer Pattern:**
+- Dedicated service classes for data operations: `PositionService`, `TradeService`, `JournalService`
+- Service layer abstracts IndexedDB persistence with validation before writes
+- Enables consistent data access patterns and easier testing
+
 ### Testing Strategy
 
 **Test-Driven Development (TDD)** approach with comprehensive coverage:
@@ -73,6 +82,8 @@
   - Use `expect(element).toBeVisible()` before clicking/interacting with elements
   - Catches layout conflicts, CSS hiding, and positioning issues
 - **Real Data Persistence**: Integration tests use actual IndexedDB (via fake-indexeddb)
+- **Test Data Factories**: Centralized factory patterns in `src/test/data-factories.ts` for generating consistent test data
+- **Test Coverage**: Monitor coverage using `npm run test:coverage` (vitest run --coverage)
 - **Integration Test Requirements**:
   - Must test actual component imports: `const { Component } = await import('@/components/Component')`
   - Must test full user workflows from start to finish
