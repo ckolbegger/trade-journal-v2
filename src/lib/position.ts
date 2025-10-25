@@ -9,6 +9,12 @@ export interface Trade {
   price: number
   timestamp: Date
   notes?: string
+  /**
+   * The underlying instrument being traded
+   * Stock symbols (e.g., "AAPL", "TSLA") for Phase 1A
+   * OCC option symbols (e.g., "AAPL  250117C00150000") for Phase 3+
+   */
+  underlying: string
 }
 
 // Phase 1A Position Interface - Core trade planning entity
