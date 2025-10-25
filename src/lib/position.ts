@@ -41,7 +41,7 @@ export interface Position {
 // Position Service - IndexedDB CRUD operations
 export class PositionService {
   private dbName = 'TradingJournalDB'
-  private version = 2
+  private version = 3 // Incremented for price_history store
   private positionStore = 'positions'
   private dbConnection: IDBDatabase | null = null
 
@@ -76,6 +76,15 @@ export class PositionService {
           journalStore.createIndex('trade_id', 'trade_id', { unique: false })
           journalStore.createIndex('entry_type', 'entry_type', { unique: false })
           journalStore.createIndex('created_at', 'created_at', { unique: false })
+        }
+
+        // Create price_history object store (Slice 3.1)
+        if (!db.objectStoreNames.contains('price_history')) {
+          const priceStore = db.createObjectStore('price_history', { keyPath: 'id' })
+          priceStore.createIndex('underlying_date', ['underlying', 'date'], { unique: true })
+          priceStore.createIndex('underlying', 'underlying', { unique: false })
+          priceStore.createIndex('date', 'date', { unique: false })
+          priceStore.createIndex('updated_at', 'updated_at', { unique: false })
         }
       }
     })

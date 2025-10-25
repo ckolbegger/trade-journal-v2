@@ -22,7 +22,7 @@ export interface PriceChangeValidation {
  */
 export class PriceService {
   private dbName = 'TradingJournalDB'
-  private version = 2
+  private version = 3 // Incremented to match PositionService
   private priceHistoryStore = 'price_history'
   private dbConnection: IDBDatabase | null = null
 
