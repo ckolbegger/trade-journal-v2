@@ -1,20 +1,40 @@
 import React from 'react'
 import { StatusBadge } from './StatusBadge'
+import { PnLDisplay } from './PnLDisplay'
 import type { Position } from '@/lib/position'
+import type { PriceHistory } from '@/types/priceHistory'
+import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
 
 export interface PositionCardProps {
   position: Position
+  priceHistory?: PriceHistory | null
   onViewDetails: (positionId: string) => void
 }
 
 /**
  * PositionCard component displays a position card matching the mockup design
  */
-export const PositionCard: React.FC<PositionCardProps> = ({ position, onViewDetails }) => {
+export const PositionCard: React.FC<PositionCardProps> = ({ position, priceHistory, onViewDetails }) => {
   // Calculate average cost from trades
   const avgCost = position.trades.length > 0
     ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
     : position.target_entry_price
+
+  // Calculate P&L if price data exists and position has trades
+  const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
+  const pnl = position.trades.length > 0 ? calculatePositionPnL(position, priceMap) : null
+
+  // Calculate cost basis for percentage
+  const costBasis = position.trades.reduce((sum, trade) => {
+    if (trade.trade_type === 'buy') {
+      return sum + (trade.price * trade.quantity)
+    }
+    return sum
+  }, 0)
+
+  const pnlPercentage = pnl !== null && costBasis > 0
+    ? calculatePnLPercentage(pnl, costBasis)
+    : undefined
 
   // Determine card styling based on position status
   const isPlanned = position.trades.length === 0
@@ -51,8 +71,9 @@ export const PositionCard: React.FC<PositionCardProps> = ({ position, onViewDeta
 
         {/* P&L Display */}
         <div className="text-right">
-          <div className="text-sm font-medium text-gray-500">
-            {position.trades.length > 0 ? 'Position Open' : 'Planned'}
+          <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">P&L</div>
+          <div className="text-lg">
+            <PnLDisplay pnl={pnl} percentage={pnlPercentage} />
           </div>
         </div>
       </div>

@@ -5,13 +5,19 @@ import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
+import { PriceService } from '@/services/PriceService'
 import type { JournalEntry } from '@/types/journal'
+import type { PriceHistory } from '@/types/priceHistory'
 import { Button } from '@/components/ui/button'
 import { Accordion } from '@/components/ui/accordion'
 import { TradeExecutionForm } from '@/components/TradeExecutionForm'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
+import { PnLDisplay } from '@/components/PnLDisplay'
+import { ProgressIndicator } from '@/components/ProgressIndicator'
+import { PriceUpdateCard } from '@/components/PriceUpdateCard'
 import type { JournalField } from '@/types/journal'
 import { generateJournalId } from '@/lib/uuid'
+import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
 
@@ -19,12 +25,14 @@ interface PositionDetailProps {
   positionService?: PositionService
   tradeService?: TradeService
   journalService?: JournalService
+  priceService?: PriceService
 }
 
-export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService }: PositionDetailProps = {}) {
+export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService, priceService: injectedPriceService }: PositionDetailProps = {}) {
   const navigate = useNavigate()
   const { id} = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
+  const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null)
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [journalLoading, setJournalLoading] = useState(true)
@@ -34,9 +42,9 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [showJournalModal, setShowJournalModal] = useState(false)
   const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
   const [journalModalError, setJournalModalError] = useState<string | null>(null)
-  const [currentPrice, setCurrentPrice] = useState('')
   const positionServiceInstance = injectedPositionService || new PositionService()
   const tradeServiceInstance = injectedTradeService || new TradeService()
+  const priceServiceInstance = injectedPriceService || new PriceService()
 
   
   const getJournalService = async (): Promise<JournalService> => {
@@ -58,20 +66,35 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     loadJournalEntries()
   }, [id])
 
+  useEffect(() => {
+    if (position) {
+      loadPriceHistory()
+    }
+  }, [position])
+
   const loadPosition = async () => {
     if (!id) return
 
     try {
       const loadedPosition = await positionServiceInstance.getById(id)
       setPosition(loadedPosition)
-      if (loadedPosition) {
-        setCurrentPrice(loadedPosition.target_entry_price?.toString() || '0')
-      }
     } catch (error) {
       console.error('Failed to load position:', error)
       setPosition(null)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadPriceHistory = async () => {
+    if (!position) return
+
+    try {
+      const latestPrice = await priceServiceInstance.getLatestPrice(position.symbol)
+      setPriceHistory(latestPrice)
+    } catch (error) {
+      console.error('Failed to load price history:', error)
+      setPriceHistory(null)
     }
   }
 
@@ -132,12 +155,8 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     return `${type} ${quantity} @ ${price} on ${date}`
   }
 
-  const handlePriceUpdate = () => {
-    if (!currentPrice || isNaN(parseFloat(currentPrice))) return
-
-    // Update the price display
-    setCurrentPrice(currentPrice)
-    setShowPriceUpdate(false)
+  const handlePriceUpdated = (updatedPrice: PriceHistory) => {
+    setPriceHistory(updatedPrice)
   }
 
   const handleAddTrade = () => {
@@ -262,6 +281,23 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   // Calculate total cost
   const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
 
+  // Calculate P&L from price history
+  const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
+  const pnl = hasTrades ? calculatePositionPnL(position, priceMap) : null
+
+  const costBasis = position.trades.reduce((sum, trade) => {
+    if (trade.trade_type === 'buy') {
+      return sum + (trade.price * trade.quantity)
+    }
+    return sum
+  }, 0)
+
+  const pnlPercentage = pnl !== null && costBasis > 0
+    ? calculatePnLPercentage(pnl, costBasis)
+    : undefined
+
+  const currentPrice = priceHistory?.close || avgCost
+
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto bg-white shadow-lg">
       {/* Header */}
@@ -295,14 +331,20 @@ export function PositionDetail({ positionService: injectedPositionService, trade
       </header>
 
       {/* Performance Section */}
-      <section className="bg-gradient-to-br from-red-600 to-red-800 text-white p-5">
+      <section className={`p-5 text-white ${
+        pnl === null ? 'bg-gray-600' :
+        pnl > 0 ? 'bg-gradient-to-br from-green-600 to-green-800' :
+        pnl < 0 ? 'bg-gradient-to-br from-red-600 to-red-800' :
+        'bg-gray-600'
+      }`}>
         <div className="flex justify-between items-center mb-4">
           <div className="text-3xl font-bold">
-            {formatCurrency(parseFloat(currentPrice))}
+            {formatCurrency(currentPrice)}
           </div>
           <div className="text-right">
-            <div className="text-xl font-semibold">-$1,890</div>
-            <div className="text-sm opacity-90">-12.4%</div>
+            <div className="text-xl font-semibold">
+              <PnLDisplay pnl={pnl} percentage={pnlPercentage} />
+            </div>
           </div>
         </div>
 
@@ -313,7 +355,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
           </div>
           <div className="text-center">
             <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Current</div>
-            <div className="text-lg font-semibold">{formatCurrency(parseFloat(currentPrice))}</div>
+            <div className="text-lg font-semibold">{formatCurrency(currentPrice)}</div>
           </div>
           <div className="text-center">
             <div className="text-xs opacity-80 uppercase tracking-wide mb-1">Stop</div>
@@ -324,74 +366,26 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
       <main className="pb-24">
         {/* Price Update Section */}
-        {showPriceUpdate && (
-          <section className="p-4">
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-              <div className="flex justify-between items-center mb-3">
-                <div className="text-sm font-medium text-yellow-800">Manual Price Update</div>
-                <div className="text-xs text-yellow-600">Last: 2 min ago</div>
-              </div>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  value={currentPrice}
-                  onChange={(e) => setCurrentPrice(e.target.value)}
-                  step="0.01"
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                  placeholder="Enter price"
-                />
-                <Button
-                  onClick={handlePriceUpdate}
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-500 text-white"
-                >
-                  Update
-                </Button>
-              </div>
+        <section className="p-4">
+          <PriceUpdateCard
+            underlying={position.symbol}
+            priceService={priceServiceInstance}
+            onPriceUpdated={handlePriceUpdated}
+          />
+        </section>
+
+        {/* Progress to Target */}
+        {hasTrades && (
+          <section className="mb-6">
+            <div className="px-4 py-3">
+              <ProgressIndicator
+                currentPrice={currentPrice}
+                stopLoss={stopLoss}
+                profitTarget={profitTarget}
+              />
             </div>
           </section>
         )}
-
-        {/* Progress to Target */}
-        <section className="mb-6">
-          <div className="px-4 py-3">
-            <h3 className="text-base font-semibold text-gray-900 mb-3">Progress to Target</h3>
-
-            <div className="mb-4">
-              <div className="flex justify-between text-xs text-gray-600 mb-2">
-                <span>Stop {formatCurrency(stopLoss)}</span>
-                <span>{totalQuantity > 0 ? `${totalQuantity} shares @ ${formatCurrency(avgCost)}` : 'Pending opening trade'}</span>
-                <span>Target {formatCurrency(profitTarget)}</span>
-              </div>
-              <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden relative">
-                {/* Progress indicator based on current price vs targets */}
-                {totalQuantity > 0 && (
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{
-                      width: `${Math.min(100, Math.max(0, ((parseFloat(currentPrice) - avgCost) / (profitTarget - avgCost)) * 100))}%`
-                    }}
-                  ></div>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
-                <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">To Stop</div>
-                <div className="text-lg font-semibold text-gray-500">
-                  {totalQuantity > 0 ? formatCurrency(stopLoss - avgCost) : '—'}
-                </div>
-              </div>
-              <div className="bg-white border border-gray-200 rounded-lg p-3 text-center">
-                <div className="text-xs text-gray-600 uppercase tracking-wide mb-1">Risk Amount</div>
-                <div className="text-lg font-semibold text-gray-500">
-                  {totalQuantity > 0 ? formatCurrency(Math.abs(avgCost - stopLoss) * totalQuantity) : '—'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Accordion Sections */}
         <section className="bg-white border-t border-gray-200">
