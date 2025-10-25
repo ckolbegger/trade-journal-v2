@@ -41,6 +41,11 @@ export class TradeService {
     if (trade.timestamp instanceof Date && isNaN(trade.timestamp.getTime())) {
       throw new Error('Trade validation failed: Invalid timestamp')
     }
+
+    // Validate underlying (if provided, must not be empty)
+    if (trade.underlying !== undefined && trade.underlying.trim() === '') {
+      throw new Error('Trade validation failed: underlying cannot be empty')
+    }
   }
 
   /**
@@ -53,16 +58,25 @@ export class TradeService {
   /**
    * Add a trade to a position
    * Enforces Phase 1A constraint: maximum 1 trade per position
+   * Auto-populates underlying field from position.symbol if not provided
    */
   async addTrade(tradeData: Omit<Trade, 'id'>): Promise<Trade[]> {
-    // Validate trade data
-    this.validateTrade(tradeData)
-
-    // Get the current position
+    // Get the current position first (needed for auto-population)
     const position = await this.positionService.getById(tradeData.position_id)
     if (!position) {
       throw new Error(`Position not found: ${tradeData.position_id}`)
     }
+
+    // Auto-populate underlying from position.symbol if not provided
+    // Phase 1A: Simple stock positions use symbol directly
+    // Phase 3+: May use explicit underlying for multi-leg positions
+    const tradeWithUnderlying = {
+      ...tradeData,
+      underlying: tradeData.underlying !== undefined ? tradeData.underlying : position.symbol
+    }
+
+    // Validate trade data (after auto-population)
+    this.validateTrade(tradeWithUnderlying)
 
     // Enforce Phase 1A single trade constraint
     if (position.trades.length > 0) {
@@ -71,7 +85,7 @@ export class TradeService {
 
     // Create the trade with generated ID
     const trade: Trade = {
-      ...tradeData,
+      ...tradeWithUnderlying,
       id: this.generateTradeId(),
     }
 

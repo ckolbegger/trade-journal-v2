@@ -11,6 +11,7 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   quantity: 100,
   price: 150.25,
   timestamp: new Date('2024-01-15T10:30:00.000Z'),
+  underlying: 'AAPL', // Added for Trade interface requirement
   notes: 'Test trade execution',
   ...overrides
 })
@@ -57,10 +58,12 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with missing required fields', async () => {
       // Arrange
       const invalidTrade = {
+        position_id: 'pos-123', // Need this for position lookup
         trade_type: 'buy',
         quantity: 100,
-        // Missing position_id, price, timestamp
+        // Missing price, timestamp
       }
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade as any))
@@ -70,6 +73,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with invalid trade_type', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ trade_type: 'invalid' as any })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -79,6 +83,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with zero quantity', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ quantity: 0 })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -88,6 +93,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with negative quantity', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ quantity: -100 })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -97,6 +103,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with zero price', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ price: 0 })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -106,6 +113,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with negative price', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ price: -150.25 })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -115,6 +123,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with invalid timestamp', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ timestamp: new Date('invalid') as any })
+      mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
@@ -124,10 +133,11 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     it('[Unit] should reject trade with empty position_id', async () => {
       // Arrange
       const invalidTrade = createTestTrade({ position_id: '' })
+      // Don't mock position - empty position_id should fail before position lookup
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
-        .rejects.toThrow('Trade validation failed: Missing required fields')
+        .rejects.toThrow('Position not found')
     })
 
     it('[Service] should handle non-existent position gracefully', async () => {

@@ -9,6 +9,17 @@ export interface Trade {
   price: number
   timestamp: Date
   notes?: string
+  /**
+   * The underlying instrument identifier for this trade
+   * - Stock: Ticker symbol (e.g., "AAPL", "TSLA")
+   * - Option: OCC symbol format (e.g., "AAPL  250117C00150000")
+   *
+   * Phase 1A: Auto-populated from position.symbol
+   * Phase 3+: Enables multi-leg positions with different underlyings
+   *
+   * Links to PriceHistory.underlying for price lookups and P&L calculations.
+   */
+  underlying: string
 }
 
 // Phase 1A Position Interface - Core trade planning entity
