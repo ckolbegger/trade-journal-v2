@@ -137,6 +137,15 @@ describe('PositionDetail - P&L Integration', () => {
         expect(screen.getByText(/\$500\.00/)).toBeInTheDocument()
       })
 
+      // Click "Edit Price" button to show price update panel
+      const editPriceButton = screen.getByRole('button', { name: /edit price/i })
+      fireEvent.click(editPriceButton)
+
+      // Wait for price input to appear
+      await waitFor(() => {
+        expect(screen.getByLabelText(/current price/i)).toBeInTheDocument()
+      })
+
       // Update price to $160
       const priceInput = screen.getByLabelText(/current price/i)
       fireEvent.change(priceInput, { target: { value: '160' } })
@@ -182,7 +191,7 @@ describe('PositionDetail - P&L Integration', () => {
   })
 
   describe('Price Update Card', () => {
-    it('[Integration] should show price update card', async () => {
+    it('[Integration] should toggle price update card when Edit Price button clicked', async () => {
       // Arrange
       const position = { ...basePosition }
       const priceHistory = { ...basePriceHistory, close: 155.00 }
@@ -190,10 +199,28 @@ describe('PositionDetail - P&L Integration', () => {
       // Act
       renderPositionDetail(position, priceHistory)
 
-      // Assert
+      // Assert - Price update card should not be visible initially
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /edit price/i })).toBeInTheDocument()
+      })
+      expect(screen.queryByLabelText(/current price/i)).not.toBeInTheDocument()
+
+      // Click "Edit Price" button to show price update panel
+      const editPriceButton = screen.getByRole('button', { name: /edit price/i })
+      fireEvent.click(editPriceButton)
+
+      // Assert - Price update card should now be visible
       await waitFor(() => {
         expect(screen.getByLabelText(/current price/i)).toBeInTheDocument()
         expect(screen.getByRole('button', { name: /update price/i })).toBeInTheDocument()
+      })
+
+      // Click "Edit Price" button again to hide panel
+      fireEvent.click(editPriceButton)
+
+      // Assert - Price update card should be hidden again
+      await waitFor(() => {
+        expect(screen.queryByLabelText(/current price/i)).not.toBeInTheDocument()
       })
     })
 
@@ -212,6 +239,14 @@ describe('PositionDetail - P&L Integration', () => {
       // Act
       renderPositionDetail(position, priceHistory)
 
+      // Click "Edit Price" button to show price update panel
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /edit price/i })).toBeInTheDocument()
+      })
+      const editPriceButton = screen.getByRole('button', { name: /edit price/i })
+      fireEvent.click(editPriceButton)
+
+      // Wait for price input to appear
       await waitFor(() => {
         expect(screen.getByLabelText(/current price/i)).toBeInTheDocument()
       })

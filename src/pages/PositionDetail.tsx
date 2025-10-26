@@ -366,13 +366,15 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
       <main className="pb-24">
         {/* Price Update Section */}
-        <section className="p-4">
-          <PriceUpdateCard
-            underlying={position.symbol}
-            priceService={priceServiceInstance}
-            onPriceUpdated={handlePriceUpdated}
-          />
-        </section>
+        {showPriceUpdate && (
+          <section className="p-4">
+            <PriceUpdateCard
+              underlying={position.symbol}
+              priceService={priceServiceInstance}
+              onPriceUpdated={handlePriceUpdated}
+            />
+          </section>
+        )}
 
         {/* Progress to Target */}
         {hasTrades && (
