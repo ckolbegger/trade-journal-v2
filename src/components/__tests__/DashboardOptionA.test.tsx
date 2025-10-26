@@ -151,7 +151,7 @@ describe('Dashboard Option A: PositionService Integration', () => {
       expect(card).toHaveClass('cursor-pointer')
     })
 
-    it('[Integration] should show Position Open for positions with trades', async () => {
+    it('[Integration] should show open status for positions with trades', async () => {
       // Arrange - Position already has a trade
       const positionWithTrade = createTestPosition({
         id: 'already-traded-pos-123',
@@ -174,9 +174,9 @@ describe('Dashboard Option A: PositionService Integration', () => {
         />
       )
 
-      // Assert - Should show "Position Open" for positions with trades
+      // Assert - Should show "open" for positions with trades
       await waitFor(() => {
-        expect(screen.getByText('Position Open')).toBeVisible()
+        expect(screen.getByText('open')).toBeVisible()
         expect(screen.getByText('1 trade')).toBeVisible()
       })
     })

@@ -179,7 +179,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
 
     // Verify both positions are displayed with correct data
     expect(screen.getAllByText('Long Stock')).toHaveLength(2)
-    expect(screen.getAllByText('Planned')).toHaveLength(2) // Status text for planned positions
+    expect(screen.getAllByText('planned')).toHaveLength(2) // Status text for planned positions
     expect(screen.getByText('$135.00')).toBeInTheDocument() // AAPL stop loss
     expect(screen.getByText('$270.00')).toBeInTheDocument() // MSFT stop loss
     // The new component shows actual calculated values instead of TODO placeholders

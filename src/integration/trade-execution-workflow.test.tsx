@@ -21,7 +21,7 @@ describe('Integration: Trade Execution Workflow', () => {
 
     // Initialize database
     db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 2)
+      const request = indexedDB.open('TradingJournalDB', 3)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
       request.onupgradeneeded = (event) => {

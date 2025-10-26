@@ -105,7 +105,7 @@ export class PositionJournalTransaction {
   private async getDB(): Promise<IDBDatabase> {
     // Access the same database as the services
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 2)
+      const request = indexedDB.open('TradingJournalDB', 3)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
     })

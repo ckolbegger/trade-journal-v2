@@ -250,7 +250,7 @@ describe('PositionService - Trades Array Integration', () => {
 
 async function openDatabase(dbName: string): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 2)
+    const request = indexedDB.open(dbName, 3)
 
     request.onerror = () => reject(request.error)
     request.onsuccess = () => resolve(request.result)

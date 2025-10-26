@@ -38,7 +38,7 @@ describe('End-to-End: Add Trade Functionality', () => {
     indexedDB.deleteDatabase('TradingJournalDB')
 
     db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 2)
+      const request = indexedDB.open('TradingJournalDB', 3)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
       request.onupgradeneeded = (event) => {
@@ -197,8 +197,8 @@ describe('End-to-End: Add Trade Functionality', () => {
       expect(screen.getByTestId('position-symbol-e2e-constraint-pos-123')).toBeVisible()
     })
 
-    // Should show "Position Open" for position with trades
-    expect(screen.getByText('Position Open')).toBeVisible()
+    // Should show "open" status for position with trades
+    expect(screen.getByText('open')).toBeVisible()
 
     // Should show trade count
     expect(screen.getByText('1 trade')).toBeVisible()

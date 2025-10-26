@@ -152,8 +152,8 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
         })
       )
 
-      // Should show "Position Open" text instead of "Planned"
-      expect(screen.getByText('Position Open')).toBeVisible()
+      // Should show "open" text instead of "planned"
+      expect(screen.getByText('open')).toBeVisible()
 
       // Should show trade count
       expect(screen.getByText('1 trade')).toBeVisible()

@@ -127,7 +127,7 @@ describe('Dashboard', () => {
       // The new component shows position strategy type and other info but not dates
       // Let's verify the component is showing the expected content instead
       assertTextExists('Long Stock', { count: 2 })
-      assertTextExists('Planned', { count: 2 }) // Status badges
+      assertTextExists('planned', { count: 2 }) // Status badges
 
       // Verify position symbols are displayed
       expect(screen.getByText('AAPL')).toBeInTheDocument()
@@ -143,7 +143,7 @@ describe('Dashboard', () => {
     })
 
     await waitFor(() => {
-      assertTextExists('Planned', { count: 2 }) // 2 positions × 1 instance each (badge only)
+      assertTextExists('planned', { count: 2 }) // 2 positions × 1 instance each (badge only)
       // The new component shows "No trades" instead of P&L labels
       assertTextExists('No trades', { count: 2 })
     })

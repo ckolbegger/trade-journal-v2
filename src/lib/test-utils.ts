@@ -20,7 +20,7 @@ export async function setupTestDB(): Promise<void> {
 
   // Create fresh test database
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open('TradingJournalDB_Test', 2)
+    const request = indexedDB.open('TradingJournalDB_Test', 3)
 
     request.onerror = () => reject(request.error)
     request.onsuccess = () => {
