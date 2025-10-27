@@ -120,7 +120,7 @@ export function EnhancedJournalEntryForm({
   const isPositionPlan = entryType === 'position_plan'
 
   // Render field component dynamically
-  const renderField = (field: JournalField, index: number) => {
+  const renderField = (field: JournalField, _index: number) => {
     const fieldValue = formData[field.name] || ''
     const isRequired = field.required ?? false
     const fieldError = errors[field.name]

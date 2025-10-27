@@ -105,7 +105,8 @@ export const TradeExecutionForm: React.FC<TradeExecutionFormProps> = ({
         quantity: Number(formData.quantity),
         price: Number(formData.price),
         timestamp: new Date(formData.trade_date),
-        notes: formData.notes.trim() || undefined
+        notes: formData.notes.trim() || undefined,
+        underlying: position.symbol // Phase 1A: Auto-populate from position symbol
       }
 
       // Call callback

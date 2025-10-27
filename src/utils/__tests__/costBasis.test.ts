@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { calculateCostBasis } from '@/utils/costBasis'
-import type { Trade } from '@/lib/trade'
+import type { Trade } from '@/lib/position'
 
 describe('Cost Basis Calculation', () => {
   it('[Unit] should return cost basis equal to first buy trade price', () => {

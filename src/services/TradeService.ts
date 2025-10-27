@@ -1,4 +1,4 @@
-import type { Position, Trade } from '@/lib/position'
+import type { Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
 import { calculateCostBasis } from '@/utils/costBasis'
 import { computePositionStatus } from '@/utils/statusComputation'

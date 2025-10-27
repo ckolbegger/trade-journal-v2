@@ -136,16 +136,17 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     }).format(amount)
   }
 
-  const formatEntryType = (entryType: string) => {
-    switch (entryType) {
-      case 'position_plan':
-        return 'Position Plan'
-      case 'trade_execution':
-        return 'Trade Execution'
-      default:
-        return entryType
-    }
-  }
+  // Unused function - kept for potential future use
+  // const formatEntryType = (entryType: string) => {
+  //   switch (entryType) {
+  //     case 'position_plan':
+  //       return 'Position Plan'
+  //     case 'trade_execution':
+  //       return 'Trade Execution'
+  //     default:
+  //       return entryType
+  //   }
+  // }
 
   const formatTradeSummary = (trade: Trade): string => {
     const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
@@ -278,8 +279,8 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   // Calculate total quantity from trades
   const totalQuantity = position.trades.reduce((sum, trade) => sum + trade.quantity, 0)
 
-  // Calculate total cost
-  const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
+  // Calculate total cost - unused for now
+  // const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
 
   // Calculate P&L from price history
   const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
@@ -454,7 +455,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">
-                  {position.trades.map((trade, index) => (
+                  {position.trades.map((trade, _index) => (
                     <div key={trade.id} className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { calculateCostBasis } from '@/utils/costBasis'
 import { computePositionStatus } from '@/utils/statusComputation'
-import type { Trade } from '@/lib/trade'
+import type { Trade } from '@/lib/position'
 
 describe('Performance Benchmarks', () => {
   describe('Cost Basis Calculation Performance', () => {

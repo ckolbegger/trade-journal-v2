@@ -20,10 +20,16 @@ export interface TransactionResult {
 }
 
 export class PositionJournalTransaction {
+  private positionService: PositionService
+  private journalService: JournalService
+
   constructor(
-    private positionService: PositionService,
-    private journalService: JournalService
-  ) {}
+    positionService: PositionService,
+    journalService: JournalService
+  ) {
+    this.positionService = positionService
+    this.journalService = journalService
+  }
 
   /**
    * Create a position with associated journal entry in a transactional manner.
@@ -64,7 +70,8 @@ export class PositionJournalTransaction {
         position_thesis: data.position_thesis,
         created_date: new Date(),
         status: 'planned',
-        journal_entry_ids: [journalId]
+        journal_entry_ids: [journalId],
+        trades: [] // New position plan has no trades yet
       }
 
       const createdPosition = await this.positionService.create(position)

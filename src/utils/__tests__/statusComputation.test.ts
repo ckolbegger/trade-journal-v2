@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { computePositionStatus } from '@/utils/statusComputation'
-import type { Trade } from '@/lib/trade'
+import type { Trade } from '@/lib/position'
 
 describe('Position Status Computation', () => {
   it('[Unit] should return "planned" when trades array is empty', () => {

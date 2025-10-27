@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { PositionCard } from './PositionCard'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
 import type { Position } from '@/lib/position'
 
 export interface DashboardProps {
   positionService: PositionService
-  tradeService: TradeService
   filter?: 'all' | 'planned' | 'open'
   onViewDetails?: (positionId: string) => void
 }
@@ -15,7 +13,7 @@ export interface DashboardProps {
  * Dashboard component displays all positions with filtering capabilities
  * Manages its own data using PositionService (Option A architecture)
  */
-export const Dashboard: React.FC<DashboardProps> = ({ positionService, tradeService, filter = 'all', onViewDetails }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 'all', onViewDetails }) => {
   const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open'>(filter)
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)

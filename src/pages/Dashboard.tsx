@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Dashboard as DashboardComponent } from '@/components/Dashboard'
 import { PositionService } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
@@ -12,7 +11,6 @@ interface DashboardProps {
 export function Dashboard({ positionService: injectedPositionService }: DashboardProps = {}) {
   const navigate = useNavigate()
   const positionService = injectedPositionService || new PositionService()
-  const tradeService = new TradeService(positionService)
 
   const handleViewDetails = (positionId: string) => {
     navigate(`/position/${positionId}`)
@@ -37,7 +35,6 @@ export function Dashboard({ positionService: injectedPositionService }: Dashboar
       <div className="p-4 pb-24">
         <DashboardComponent
           positionService={positionService}
-          tradeService={tradeService}
           onViewDetails={handleViewDetails}
         />
       </div>
