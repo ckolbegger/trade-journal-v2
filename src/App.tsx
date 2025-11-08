@@ -3,15 +3,17 @@ import { Layout } from '@/components/Layout'
 import { Home } from '@/pages/Home'
 import { PositionCreate } from '@/pages/PositionCreate'
 import { PositionDetail } from '@/pages/PositionDetail'
+import PositionClosing from '@/pages/PositionClosing'
 import { ComingSoon } from '@/pages/ComingSoon'
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Position Create and Position Detail have their own layout (header + bottom actions) */}
+        {/* Position Create, Detail, and Closing have their own layout (header + bottom actions) */}
         <Route path="/position/create" element={<PositionCreate />} />
         <Route path="/position/:id" element={<PositionDetail />} />
+        <Route path="/position/:positionId/close" element={<PositionClosing />} />
 
         {/* Other routes use the main Layout with bottom navigation */}
         <Route path="/" element={<Layout><Home /></Layout>} />

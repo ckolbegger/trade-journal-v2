@@ -538,12 +538,29 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
       {/* Bottom Actions */}
       <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-md bg-white border-t border-gray-200 p-4">
-        <button
-          onClick={handleAddTrade}
-          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
-        >
-          Add Trade
-        </button>
+        {position?.status === 'open' ? (
+          <div className="flex gap-3">
+            <button
+              onClick={handleAddTrade}
+              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
+            >
+              Add Trade
+            </button>
+            <button
+              onClick={() => navigate(`/position/${position.id}/close`)}
+              className="flex-1 bg-red-600 hover:bg-red-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
+            >
+              Close Position
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleAddTrade}
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-4 px-6 rounded-lg font-semibold transition-colors"
+          >
+            Add Trade
+          </button>
+        )}
       </div>
 
       {/* Trade Execution Modal */}
