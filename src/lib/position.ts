@@ -1,5 +1,19 @@
 import { computePositionStatus } from '@/utils/statusComputation'
 
+/**
+ * Calculate current open quantity from trades
+ *
+ * @param trades - All trades for the position
+ * @returns Net quantity (buys - sells)
+ */
+export function calculateOpenQuantity(trades: Trade[]): number {
+  return trades.reduce((net, trade) => {
+    return trade.trade_type === 'buy'
+      ? net + trade.quantity
+      : net - trade.quantity
+  }, 0)
+}
+
 // Trade Interface - Individual trade execution within a position
 export interface Trade {
   id: string
@@ -22,6 +36,64 @@ export interface Trade {
   underlying: string
 }
 
+// Validation Error - Domain-specific errors for position/trade operations
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ValidationError'
+  }
+}
+
+/**
+ * Validate an exit trade against position state
+ *
+ * @param position - The position being exited
+ * @param exitQuantity - Quantity being sold
+ * @param exitPrice - Exit price per share/contract
+ * @throws ValidationError if validation fails
+ *
+ * Validation rules:
+ * - Position must have status 'open' (not 'planned' or 'closed')
+ * - Exit quantity must not exceed current open quantity
+ * - Exit price must be >= 0 (allows worthless exits)
+ */
+export function validateExitTrade(
+  position: Position,
+  exitQuantity: number,
+  exitPrice: number
+): void {
+  // Prevent exits from planned positions (no trades yet)
+  if (position.status === 'planned') {
+    throw new ValidationError(
+      'Cannot exit a planned position. Add an entry trade first.'
+    )
+  }
+
+  // Prevent exits from already closed positions
+  if (position.status === 'closed') {
+    throw new ValidationError(
+      'Cannot exit a closed position (net quantity is already 0).'
+    )
+  }
+
+  // Calculate current open quantity
+  const openQuantity = calculateOpenQuantity(position.trades)
+
+  // Prevent overselling
+  if (exitQuantity > openQuantity) {
+    throw new ValidationError(
+      `Exit quantity (${exitQuantity}) exceeds open quantity (${openQuantity}).`
+    )
+  }
+
+  // Validate exit price (allow >= 0 for worthless exits)
+  if (exitPrice < 0) {
+    throw new ValidationError(
+      'Exit price must be >= 0.'
+    )
+  }
+}
+
 // Phase 1A Position Interface - Core trade planning entity
 export interface Position {
   id: string
@@ -33,7 +105,7 @@ export interface Position {
   stop_loss: number
   position_thesis: string
   created_date: Date
-  status: 'planned' | 'open'
+  status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
   trades: Trade[] // New field for embedded trades (future-proof array)
 }

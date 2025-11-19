@@ -100,14 +100,17 @@ describe('Batch 5: Data Validation & Error Handling', () => {
         .rejects.toThrow('Trade validation failed: Quantity must be positive')
     })
 
-    it('[Unit] should reject trade with zero price', async () => {
-      // Arrange
-      const invalidTrade = createTestTrade({ price: 0 })
+    it('[Unit] should allow trade with zero price (worthless exit)', async () => {
+      // Arrange - Zero price allowed for worthless exits
+      const zeroPriceTrade = createTestTrade({ price: 0 })
       mockPositionService.getById.mockResolvedValue(testPosition)
+      mockPositionService.update.mockResolvedValue()
 
-      // Act & Assert
-      await expect(tradeService.addTrade(invalidTrade))
-        .rejects.toThrow('Trade validation failed: Price must be positive')
+      // Act
+      const result = await tradeService.addTrade(zeroPriceTrade)
+
+      // Assert - Should succeed with price 0
+      expect(result[0].price).toBe(0)
     })
 
     it('[Unit] should reject trade with negative price', async () => {
@@ -117,7 +120,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
       // Act & Assert
       await expect(tradeService.addTrade(invalidTrade))
-        .rejects.toThrow('Trade validation failed: Price must be positive')
+        .rejects.toThrow('Trade validation failed: Price must be >= 0')
     })
 
     it('[Unit] should reject trade with invalid timestamp', async () => {

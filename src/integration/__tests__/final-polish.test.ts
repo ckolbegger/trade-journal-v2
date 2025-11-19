@@ -440,45 +440,56 @@ describe('Batch 8: Final Integration & Polish', () => {
     }
   })
 
-  it('[Integration] should test Phase 1A constraints comprehensively', async () => {
+  it('[Integration] should test multiple trades and position lifecycle comprehensively', async () => {
     // Create position
     const position = createTestPosition({
-      id: 'phase1a-test-123',
+      id: 'multi-trade-test-123',
       symbol: 'CSCO',
     })
     await positionService.create(position)
 
-    // Test 1: Only one trade allowed (Phase 1A constraint)
+    // Test 1: First buy trade
     const trade1 = createTestTrade({
-      position_id: 'phase1a-test-123',
+      position_id: 'multi-trade-test-123',
+      trade_type: 'buy',
       quantity: 80,
       price: 55.25,
     })
     await tradeService.addTrade(trade1)
 
-    // Test 2: Second trade should be rejected
+    // Test 2: Second buy trade should succeed
     const trade2 = createTestTrade({
-      position_id: 'phase1a-test-123',
+      position_id: 'multi-trade-test-123',
+      trade_type: 'buy',
       quantity: 20,
       price: 56.00,
       id: 'trade-456',
     })
+    await tradeService.addTrade(trade2)
 
-    await expect(tradeService.addTrade(trade2))
-      .rejects.toThrow('Phase 1A allows only one trade per position')
-
-    // Test 3: Position should remain in consistent state
-    const retrievedPosition = await positionService.getById('phase1a-test-123')
-    expect(retrievedPosition!.trades).toHaveLength(1)
+    // Test 3: Position should have both trades
+    let retrievedPosition = await positionService.getById('multi-trade-test-123')
+    expect(retrievedPosition!.trades).toHaveLength(2)
     expect(retrievedPosition!.status).toBe('open')
 
-    // Test 4: Cost basis should work correctly
-    const costBasis = await tradeService.calculateCostBasis('phase1a-test-123')
-    expect(costBasis).toBe(55.25)
+    // Test 4: Add exit trade to close position
+    const exitTrade = createTestTrade({
+      position_id: 'multi-trade-test-123',
+      trade_type: 'sell',
+      quantity: 100, // Closing entire position (80 + 20)
+      price: 57.00,
+      id: 'exit-trade-789',
+    })
+    await tradeService.addTrade(exitTrade)
 
-    // Test 5: Status computation should work
-    const status = await tradeService.computePositionStatus('phase1a-test-123')
-    expect(status).toBe('open')
+    // Test 5: Position should be closed
+    retrievedPosition = await positionService.getById('multi-trade-test-123')
+    expect(retrievedPosition!.trades).toHaveLength(3)
+    expect(retrievedPosition!.status).toBe('closed')
+
+    // Test 6: Status computation should work
+    const status = await tradeService.computePositionStatus('multi-trade-test-123')
+    expect(status).toBe('closed')
   })
 
   it('[Integration] should verify backward compatibility with various legacy formats', async () => {
@@ -566,7 +577,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     const invalidTrades = [
       createTestTrade({ position_id: 'error-test-123', quantity: 0 }),
       createTestTrade({ position_id: 'error-test-123', quantity: -100 }),
-      createTestTrade({ position_id: 'error-test-123', price: 0 }),
+      // price: 0 is now valid (worthless exits), so removed from invalid list
       createTestTrade({ position_id: 'error-test-123', price: -50 }),
       createTestTrade({ position_id: 'error-test-123', trade_type: 'invalid' as any }),
       createTestTrade({ position_id: 'non-existent', quantity: 100 }),

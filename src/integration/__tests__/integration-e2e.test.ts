@@ -158,37 +158,39 @@ describe('Batch 7: Integration & End-to-End Tests', () => {
     expect(costBasis2).toBe(2500.75)
   })
 
-  it('[Integration] should enforce Phase 1A constraint: maximum 1 trade per position', async () => {
+  it('[Integration] should allow multiple trades per position', async () => {
     // Arrange - Create position and add first trade
     const position = createTestPosition({
-      id: 'constraint-pos-123',
+      id: 'multi-trade-pos-123',
       symbol: 'TSLA',
     })
     await positionService.create(position)
 
     const firstTrade = createTestTrade({
-      position_id: 'constraint-pos-123',
+      position_id: 'multi-trade-pos-123',
       quantity: 75,
       price: 200.50,
     })
     await tradeService.addTrade(firstTrade)
 
-    // Act & Assert - Try to add second trade (should fail)
+    // Act - Add second trade (should succeed now)
     const secondTrade = createTestTrade({
-      position_id: 'constraint-pos-123',
+      position_id: 'multi-trade-pos-123',
+      trade_type: 'buy',
       quantity: 25,
       price: 205.00,
       id: 'trade-456',
     })
+    await tradeService.addTrade(secondTrade)
 
-    await expect(tradeService.addTrade(secondTrade))
-      .rejects.toThrow('Phase 1A allows only one trade per position')
-
-    // Assert - Verify only first trade exists
-    const retrievedPosition = await positionService.getById('constraint-pos-123')
-    expect(retrievedPosition!.trades).toHaveLength(1)
+    // Assert - Verify both trades exist
+    const retrievedPosition = await positionService.getById('multi-trade-pos-123')
+    expect(retrievedPosition!.trades).toHaveLength(2)
     expect(retrievedPosition!.trades[0].quantity).toBe(75)
     expect(retrievedPosition!.trades[0].price).toBe(200.50)
+    expect(retrievedPosition!.trades[1].quantity).toBe(25)
+    expect(retrievedPosition!.trades[1].price).toBe(205.00)
+    expect(retrievedPosition!.status).toBe('open')
   })
 
   it('[Integration] should handle error scenarios gracefully across services', async () => {

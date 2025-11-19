@@ -112,20 +112,20 @@ describe('TradeService - Atomic Updates & Transactions', () => {
       timestamp: new Date()
     })
 
-    // Second trade fails (Phase 1A limit)
+    // Second trade fails (attempting to sell more than owned)
     try {
       await tradeService.addTrade({
-      position_id: 'pos-123',
+        position_id: 'pos-123',
         trade_type: 'sell',
-        quantity: 50,
+        quantity: 150, // Trying to sell 150 but only have 100
         price: 155.00,
         timestamp: new Date()
       })
     } catch (error) {
-      // Expected to fail
+      // Expected to fail due to overselling
     }
 
-    // Verify position still has only the first trade
+    // Verify position still has only the first trade (second was rejected)
     const retrieved = await positionService.getById('pos-123')
     expect(retrieved!.trades.length).toBe(1)
     expect(retrieved!.trades[0].trade_type).toBe('buy')

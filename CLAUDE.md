@@ -206,3 +206,10 @@ Uses Vitest + React Testing Library + fake-indexeddb for comprehensive testing c
 This is a **privacy-first, standalone tool** designed as a free alternative to complement rather than compete with paid trading platforms. The focus is on behavioral training and habit formation rather than complex analytics or social features.
 
 The app targets retail traders progressing from simple stock trades to complex option strategies, with emphasis on systematic decision-making and self-awareness development.
+
+## Active Technologies
+- TypeScript 5.8.3 + React 19.1.1, Vite 7.1.2, IndexedDB (via native browser API) (001-close-position)
+- IndexedDB (TradingJournalDB v3) - local browser storage only (001-close-position)
+
+## Recent Changes
+- 001-close-position: Added TypeScript 5.8.3 + React 19.1.1, Vite 7.1.2, IndexedDB (via native browser API)

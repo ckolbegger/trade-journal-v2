@@ -71,11 +71,14 @@ describe('Position Status Computation', () => {
       trade_type: 'buy',
       quantity: 0,
       price: 150.50,
-      timestamp: new Date()
+      timestamp: new Date(),
+      position_id: 'pos-1',
+      underlying: 'AAPL'
     }]
 
     const status = computePositionStatus(trades)
-    expect(status).toBe('open')
+    // Zero quantity = closed position (no open shares)
+    expect(status).toBe('closed')
   })
 
   it('[Unit] should be a pure function with consistent output', () => {
@@ -94,18 +97,30 @@ describe('Position Status Computation', () => {
     expect(result1).toBe('open')
   })
 
-  it('[Unit] should not return "closed" status in Phase 1A', () => {
-    const trades: Trade[] = [{
-      id: 'trade-1',
-      trade_type: 'buy',
-      quantity: 100,
-      price: 150.50,
-      timestamp: new Date()
-    }]
+  it('[Unit] should return "closed" status when net quantity is zero', () => {
+    const trades: Trade[] = [
+      {
+        id: 'trade-1',
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date('2024-01-01'),
+        position_id: 'pos-1',
+        underlying: 'AAPL'
+      },
+      {
+        id: 'trade-2',
+        trade_type: 'sell',
+        quantity: 100,
+        price: 155.00,
+        timestamp: new Date('2024-01-02'),
+        position_id: 'pos-1',
+        underlying: 'AAPL'
+      }
+    ]
 
     const status = computePositionStatus(trades)
-    expect(status).not.toBe('closed')
-    expect(status).toBe('open')
+    expect(status).toBe('closed')
   })
 
   it('[Unit] should have O(1) performance for status computation', () => {

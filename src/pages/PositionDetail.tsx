@@ -15,6 +15,7 @@ import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import { PnLDisplay } from '@/components/PnLDisplay'
 import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { PriceUpdateCard } from '@/components/PriceUpdateCard'
+import { PlanVsExecutionCard } from '@/components/PlanVsExecutionCard'
 import type { JournalField } from '@/types/journal'
 import { generateJournalId } from '@/lib/uuid'
 import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
@@ -42,6 +43,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [showJournalModal, setShowJournalModal] = useState(false)
   const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
   const [journalModalError, setJournalModalError] = useState<string | null>(null)
+  const [planVsExecution, setPlanVsExecution] = useState<any>(null)
   const positionServiceInstance = injectedPositionService || new PositionService()
   const tradeServiceInstance = injectedTradeService || new TradeService()
   const priceServiceInstance = injectedPriceService || new PriceService()
@@ -71,6 +73,23 @@ export function PositionDetail({ positionService: injectedPositionService, trade
       loadPriceHistory()
     }
   }, [position])
+
+  // Calculate plan vs execution for closed positions
+  useEffect(() => {
+    const calculatePlanVsExec = async () => {
+      if (position?.status === 'closed') {
+        try {
+          const comparison = await tradeServiceInstance.calculatePlanVsExecution(position.id)
+          setPlanVsExecution(comparison)
+        } catch (error) {
+          console.error('Failed to calculate plan vs execution:', error)
+        }
+      } else {
+        setPlanVsExecution(null)
+      }
+    }
+    calculatePlanVsExec()
+  }, [position?.status, position?.id])
 
   const loadPosition = async () => {
     if (!id) return
@@ -378,7 +397,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
         )}
 
         {/* Progress to Target */}
-        {hasTrades && (
+        {hasTrades && position.status !== 'closed' && (
           <section className="mb-6">
             <div className="px-4 py-3">
               <ProgressIndicator
@@ -386,6 +405,15 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                 stopLoss={stopLoss}
                 profitTarget={profitTarget}
               />
+            </div>
+          </section>
+        )}
+
+        {/* Plan vs Execution Analysis (Closed Positions Only) */}
+        {position.status === 'closed' && planVsExecution && (
+          <section className="mb-6">
+            <div className="px-4 py-3">
+              <PlanVsExecutionCard comparison={planVsExecution} />
             </div>
           </section>
         )}

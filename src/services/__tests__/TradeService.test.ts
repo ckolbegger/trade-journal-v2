@@ -74,19 +74,23 @@ describe('Batch 2: TradeService Core Functionality', () => {
       expect(mockPositionService.getById).toHaveBeenCalledWith('pos-123')
     })
 
-    it('[Unit] should add sell trade to position', async () => {
-      // Arrange
-      const sellTrade = createTestTrade({ trade_type: 'sell' })
-      mockPositionService.getById.mockResolvedValue(testPosition)
+    it('[Unit] should add sell trade to open position', async () => {
+      // Arrange - Position must be 'open' with existing buy trade
+      const openPosition = createTestPosition({
+        status: 'open',
+        trades: [createTestTrade({ id: 'buy-trade-1', trade_type: 'buy', quantity: 100, price: 150 })]
+      })
+      const sellTrade = createTestTrade({ trade_type: 'sell', quantity: 100, price: 155 })
+      mockPositionService.getById.mockResolvedValue(openPosition)
       mockPositionService.update.mockResolvedValue()
 
       // Act
       const result = await tradeService.addTrade(sellTrade)
 
       // Assert
-      expect(result).toHaveLength(1)
-      expect(result[0].trade_type).toBe('sell')
-      expect(result[0].position_id).toBe('pos-123')
+      expect(result).toHaveLength(2) // Now has buy + sell
+      expect(result[1].trade_type).toBe('sell')
+      expect(result[1].position_id).toBe('pos-123')
       expect(mockPositionService.getById).toHaveBeenCalledWith('pos-123')
       expect(mockPositionService.update).toHaveBeenCalled()
     })
@@ -140,17 +144,24 @@ describe('Batch 2: TradeService Core Functionality', () => {
       expect(result[0].id).toBeDefined() // Generated ID
     })
 
-    it('[Unit] should enforce Phase 1A single trade constraint', async () => {
-      // Arrange
+    it('[Unit] should allow multiple trades per position', async () => {
+      // Arrange - Position with one buy trade
       const positionWithTrade = createTestPosition({
-        trades: [createTestTrade({ id: 'existing-trade' })]
+        status: 'open',
+        trades: [createTestTrade({ id: 'existing-trade', trade_type: 'buy', quantity: 100, price: 150 })]
       })
-      const newTrade = createTestTrade({ id: 'new-trade' })
+      const secondBuyTrade = createTestTrade({ id: 'new-trade', trade_type: 'buy', quantity: 50, price: 152 })
       mockPositionService.getById.mockResolvedValue(positionWithTrade)
+      mockPositionService.update.mockResolvedValue()
 
-      // Act & Assert
-      await expect(tradeService.addTrade(newTrade))
-        .rejects.toThrow('Phase 1A allows only one trade per position')
+      // Act
+      const result = await tradeService.addTrade(secondBuyTrade)
+
+      // Assert - Should now have 2 trades
+      expect(result).toHaveLength(2)
+      expect(result[0].id).toBe('existing-trade')
+      expect(result[1].trade_type).toBe('buy')
+      expect(mockPositionService.update).toHaveBeenCalled()
     })
 
     it('[Unit] should allow first trade on empty position', async () => {

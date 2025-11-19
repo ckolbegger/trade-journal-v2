@@ -5,7 +5,7 @@ import type { Position } from '@/lib/position'
 
 export interface DashboardProps {
   positionService: PositionService
-  filter?: 'all' | 'planned' | 'open'
+  filter?: 'all' | 'planned' | 'open' | 'closed'
   onViewDetails?: (positionId: string) => void
 }
 
@@ -14,7 +14,7 @@ export interface DashboardProps {
  * Manages its own data using PositionService (Option A architecture)
  */
 export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 'all', onViewDetails }) => {
-  const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open'>(filter)
+  const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open' | 'closed'>(filter)
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,12 +38,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 
     }
   }
 
-  // Filter positions based on current filter
+  // Filter positions based on current filter using position.status
   const filteredPositions = positions.filter(position => {
     if (currentFilter === 'all') return true
-    if (currentFilter === 'planned') return position.trades.length === 0
-    if (currentFilter === 'open') return position.trades.length > 0
-    return true
+    return position.status === currentFilter
   })
 
   const handleViewDetails = (positionId: string) => {
@@ -111,7 +109,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Planned ({positions.filter(p => p.trades.length === 0).length})
+            Planned ({positions.filter(p => p.status === 'planned').length})
           </button>
           <button
             data-testid="filter-open"
@@ -122,7 +120,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
             }`}
           >
-            Open ({positions.filter(p => p.trades.length > 0).length})
+            Open ({positions.filter(p => p.status === 'open').length})
+          </button>
+          <button
+            data-testid="filter-closed"
+            onClick={() => setCurrentFilter('closed')}
+            className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              currentFilter === 'closed'
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            Closed ({positions.filter(p => p.status === 'closed').length})
           </button>
         </div>
       </div>

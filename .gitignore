@@ -25,3 +25,14 @@ dist-ssr
 
 # Git worktrees
 worktree/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Build outputs
+build/
+
+# Test coverage
+coverage/

@@ -2,18 +2,24 @@ import type { Trade } from '@/lib/position'
 
 /**
  * Compute position status from trades array
- * Phase 1A: Status derived dynamically from trades array, not stored
+ * Status derived dynamically from trades array, never stored
  *
  * @param trades - Array of trades for the position
- * @returns 'planned' if no trades exist, 'open' if any trades exist
+ * @returns 'planned' if no trades, 'open' if net qty > 0, 'closed' if net qty === 0
  */
-export function computePositionStatus(trades: Trade[]): 'planned' | 'open' {
+export function computePositionStatus(trades: Trade[]): 'planned' | 'open' | 'closed' {
   // Handle null/undefined trades arrays
   if (!trades || trades.length === 0) {
     return 'planned'
   }
 
-  // If any trades exist, status is 'open'
-  // Phase 1A: No 'closed' status yet
-  return 'open'
+  // Calculate net quantity (buys - sells)
+  const netQuantity = trades.reduce((net, trade) => {
+    return trade.trade_type === 'buy'
+      ? net + trade.quantity
+      : net - trade.quantity
+  }, 0)
+
+  // Return 'closed' if net quantity is 0, otherwise 'open'
+  return netQuantity === 0 ? 'closed' : 'open'
 }
