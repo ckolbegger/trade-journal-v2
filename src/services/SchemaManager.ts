@@ -9,9 +9,9 @@ export class SchemaManager {
    * Initialize all database object stores and indexes
    *
    * @param db - IDBDatabase instance during onupgradeneeded event
-   * @param version - Database version number
+   * @param _version - Database version number (reserved for future use)
    */
-  static initializeSchema(db: IDBDatabase, version: number): void {
+  static initializeSchema(db: IDBDatabase, _version: number): void {
     // Create positions object store
     if (!db.objectStoreNames.contains('positions')) {
       const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
