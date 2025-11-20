@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
-// import type { Position } from '@/lib/position'
 import { PositionService } from '@/lib/position'
-import { JournalService } from '@/services/JournalService'
-import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
-import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
-import type { JournalField } from '@/types/journal'
+import type { Position } from '@/lib/position'
 
 interface PositionFormData {
   symbol: string
@@ -33,49 +29,18 @@ interface ValidationErrors {
 
 interface PositionCreateProps {
   positionService?: PositionService
-  journalService?: JournalService
 }
 
 export function PositionCreate({
-  positionService: injectedPositionService,
-  journalService: injectedJournalService
+  positionService: injectedPositionService
 }: PositionCreateProps = {}) {
   const navigate = useNavigate()
-  const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
-  const [journalFields, setJournalFields] = useState<JournalField[]>([])
   const [isCreating, setIsCreating] = useState(false)
-
-  // Initialize journal fields with current prompts when component mounts
-  useEffect(() => {
-    const initializeJournalFields = async () => {
-      const journalService = await initJournalService()
-      const emptyEntry = await journalService.createEmptyJournalEntry('position_plan')
-      setJournalFields(emptyEntry.fields)
-    }
-
-    initializeJournalFields()
-  }, [])
 
   // Initialize services
   const positionService = injectedPositionService || new PositionService()
-
-  // For journal service, we need to wait for DB initialization
-  const initJournalService = async (): Promise<JournalService> => {
-    if (injectedJournalService) {
-      return injectedJournalService
-    }
-
-    // Open the same database that PositionService uses
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-    })
-
-    return new JournalService(db)
-  }
 
   const [formData, setFormData] = useState<PositionFormData>({
     symbol: '',
@@ -87,7 +52,7 @@ export function PositionCreate({
     position_thesis: ''
   })
 
-  const validateStep1 = (): boolean => {
+  const validateForm = (): boolean => {
     const newErrors: ValidationErrors = {}
 
     if (!formData.symbol.trim()) {
@@ -157,82 +122,41 @@ export function PositionCreate({
     }
   }
 
-  const handleNextStep = () => {
-    if (currentStep === 1 && validateStep1()) {
-      setCurrentStep(2)
-    } else if (currentStep === 2 && journalFields.length > 0) {
-      setCurrentStep(3)
-    } else if (currentStep === 3) {
-      setCurrentStep(4)
-    }
-  }
-
-  const handlePrevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
-
-  const handleJournalSave = (fields: JournalField[]) => {
-    setJournalFields(fields)
-    setCurrentStep(3)
-  }
-
-  const handleJournalCancel = () => {
-    setCurrentStep(1)
-  }
-
   const handleCreatePosition = async () => {
-    if (!immutableConfirmed || journalFields.length === 0) return
+    if (!immutableConfirmed || !validateForm()) return
 
     setIsCreating(true)
 
     try {
-      // Initialize journal service
-      const journalService = await initJournalService()
-
-      // Create transaction service
-      const transactionService = new PositionJournalTransaction(positionService, journalService)
-
-      // Execute UUID-based transaction
-      const result = await transactionService.createPositionWithJournal({
-        symbol: formData.symbol,
+      // Create position
+      const position: Position = {
+        id: `position-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        symbol: formData.symbol.toUpperCase(),
+        strategy_type: 'Long Stock',
         target_entry_price: parseFloat(formData.target_entry_price),
         target_quantity: parseInt(formData.target_quantity),
         profit_target: parseFloat(formData.profit_target),
         stop_loss: parseFloat(formData.stop_loss),
         position_thesis: formData.position_thesis,
-        journalFields: journalFields
-      })
+        created_date: new Date(),
+        status: 'planned',
+        journal_entry_ids: [],
+        trades: []
+      }
+
+      const createdPosition = await positionService.create(position)
 
       // Navigate to position detail on success
-      navigate(`/position/${result.position.id}`)
+      navigate(`/position/${createdPosition.id}`)
     } catch (error) {
-      console.error('Failed to create position and journal entry:', error)
+      console.error('Failed to create position:', error)
       alert('Failed to create position. Please check the console for details.')
     } finally {
       setIsCreating(false)
     }
   }
 
-  const renderStepIndicator = () => (
-    <div data-testid="step-indicator" className="bg-gray-50 p-3 border-b border-gray-200">
-      <div className="flex justify-center gap-2">
-        {[1, 2, 3, 4].map(step => (
-          <div
-            key={step}
-            data-testid="step-dot"
-            className={`w-2 h-2 rounded-full ${
-              step < currentStep ? 'bg-green-500 completed' :
-              step === currentStep ? 'bg-blue-500 active' :
-              'bg-gray-300'
-            }`}
-          />
-        ))}
-      </div>
-    </div>
-  )
-
+  
   const renderStep1 = () => (
     <div className="p-5 pb-32">
       <h2 className="text-2xl font-semibold mb-2">Position Plan</h2>
@@ -397,18 +321,7 @@ export function PositionCreate({
     )
   }
 
-  const renderStep3 = () => (
-    <div className="p-5 pb-32">
-      <EnhancedJournalEntryForm
-        entryType="position_plan"
-        onSave={handleJournalSave}
-        onCancel={handleJournalCancel}
-        submitButtonText="Next: Risk Assessment"
-        initialFields={journalFields}
-      />
-    </div>
-  )
-
+  
   const renderStep4 = () => (
     <div className="p-5 pb-32">
       <h2 className="text-2xl font-semibold mb-2">Confirmation</h2>
@@ -466,49 +379,7 @@ export function PositionCreate({
     </div>
   )
 
-  const renderBottomActions = () => {
-    // Step 2 (journal form) handles its own actions, so don't render bottom actions
-    if (currentStep === 2) {
-      return null
-    }
-
-    return (
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 p-4">
-        <div className="flex gap-3">
-          {currentStep > 1 && (
-            <Button
-              variant="outline"
-              onClick={handlePrevStep}
-              className="flex-1"
-              disabled={isCreating}
-            >
-              {currentStep === 2 ? 'Back to Position Plan' :
-               currentStep === 3 ? 'Back to Trading Journal' : 'Back to Risk Assessment'}
-            </Button>
-          )}
-
-          {currentStep < 4 ? (
-            <Button
-              onClick={handleNextStep}
-              className="flex-1 bg-blue-600 hover:bg-blue-500"
-            >
-              {currentStep === 1 ? 'Next: Trading Journal' :
-               currentStep === 2 ? 'Next: Risk Assessment' : 'Next: Confirmation'}
-            </Button>
-          ) : (
-            <Button
-              onClick={handleCreatePosition}
-              disabled={!immutableConfirmed || isCreating}
-              className="flex-1 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300"
-            >
-              {isCreating ? 'Creating...' : 'Create Position Plan'}
-            </Button>
-          )}
-        </div>
-      </div>
-    )
-  }
-
+  
   return (
     <div className="max-w-sm mx-auto min-h-screen bg-white">
       {/* Header */}
@@ -522,17 +393,23 @@ export function PositionCreate({
         <h1 className="text-lg font-semibold flex-1">Create Position</h1>
       </header>
 
-      {renderStepIndicator()}
-
-      {/* Step Content */}
+      {/* Position Form and Confirmation */}
       <main>
-        {currentStep === 1 && renderStep1()}
-        {currentStep === 2 && renderStep3()}
-        {currentStep === 3 && renderStep2()}
-        {currentStep === 4 && renderStep4()}
+        {renderStep1()}
+        {renderStep2()} {/* risk assessment */}
+        {renderStep4()} {/* confirmation */}
       </main>
 
-      {renderBottomActions()}
+      {/* Fixed Bottom Actions */}
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-sm bg-white border-t border-gray-200 p-4">
+        <Button
+          onClick={handleCreatePosition}
+          disabled={!immutableConfirmed || isCreating}
+          className="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-gray-300"
+        >
+          {isCreating ? 'Creating...' : 'Create Position Plan'}
+        </Button>
+      </div>
     </div>
   )
 }
