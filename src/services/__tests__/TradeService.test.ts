@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
+import { TradeValidator } from '@/domain/validators/TradeValidator'
 
 // Test data factories
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
@@ -186,6 +187,49 @@ describe('Batch 2: TradeService Core Functionality', () => {
       expect(mockPositionService.update).not.toHaveBeenCalled()
     })
 
+  })
+
+  describe('Delegation to TradeValidator', () => {
+    it('[Unit] should delegate validation to TradeValidator', async () => {
+      // Arrange
+      const validTrade = createTestTrade()
+      mockPositionService.getById.mockResolvedValue(testPosition)
+      mockPositionService.update.mockResolvedValue()
+
+      // Spy on TradeValidator
+      const validateSpy = vi.spyOn(TradeValidator, 'validateTrade')
+
+      // Act
+      await tradeService.addTrade(validTrade)
+
+      // Assert
+      expect(validateSpy).toHaveBeenCalledWith(expect.objectContaining({
+        position_id: validTrade.position_id,
+        trade_type: validTrade.trade_type,
+        quantity: validTrade.quantity,
+        price: validTrade.price
+      }))
+
+      validateSpy.mockRestore()
+    })
+
+    it('[Unit] should throw when TradeValidator rejects invalid trade', async () => {
+      // Arrange
+      const invalidTrade = createTestTrade({ quantity: -10 })
+      mockPositionService.getById.mockResolvedValue(testPosition)
+
+      // Spy on TradeValidator to let it execute normally
+      const validateSpy = vi.spyOn(TradeValidator, 'validateTrade')
+
+      // Act & Assert
+      await expect(tradeService.addTrade(invalidTrade))
+        .rejects.toThrow('Trade validation failed')
+
+      expect(validateSpy).toHaveBeenCalled()
+      expect(mockPositionService.update).not.toHaveBeenCalled()
+
+      validateSpy.mockRestore()
+    })
   })
 
 })

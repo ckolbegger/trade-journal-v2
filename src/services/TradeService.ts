@@ -2,6 +2,7 @@ import type { Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
 import { calculateCostBasis } from '@/utils/costBasis'
 import { computePositionStatus } from '@/utils/statusComputation'
+import { TradeValidator } from '@/domain/validators/TradeValidator'
 
 export class TradeService {
   private positionService: PositionService
@@ -9,43 +10,6 @@ export class TradeService {
   constructor(positionService?: PositionService) {
     // Allow dependency injection for testing
     this.positionService = positionService || new PositionService()
-  }
-
-  /**
-   * Validate trade data before processing
-   */
-  private validateTrade(trade: Omit<Trade, 'id'>): void {
-    // Validate required fields
-    if (!trade.position_id || !trade.trade_type ||
-        trade.quantity === undefined || trade.price === undefined ||
-        !trade.timestamp) {
-      throw new Error('Trade validation failed: Missing required fields')
-    }
-
-    // Validate trade_type
-    if (trade.trade_type !== 'buy' && trade.trade_type !== 'sell') {
-      throw new Error('Trade validation failed: Invalid trade type')
-    }
-
-    // Validate quantity
-    if (trade.quantity <= 0) {
-      throw new Error('Trade validation failed: Quantity must be positive')
-    }
-
-    // Validate price
-    if (trade.price <= 0) {
-      throw new Error('Trade validation failed: Price must be positive')
-    }
-
-    // Validate timestamp
-    if (trade.timestamp instanceof Date && isNaN(trade.timestamp.getTime())) {
-      throw new Error('Trade validation failed: Invalid timestamp')
-    }
-
-    // Validate underlying (if provided, must not be empty)
-    if (trade.underlying !== undefined && trade.underlying.trim() === '') {
-      throw new Error('Trade validation failed: underlying cannot be empty')
-    }
   }
 
   /**
@@ -75,8 +39,8 @@ export class TradeService {
       underlying: tradeData.underlying !== undefined ? tradeData.underlying : position.symbol
     }
 
-    // Validate trade data (after auto-population)
-    this.validateTrade(tradeWithUnderlying)
+    // Validate trade data (after auto-population) - delegate to TradeValidator
+    TradeValidator.validateTrade(tradeWithUnderlying)
 
     // Enforce Phase 1A single trade constraint
     if (position.trades.length > 0) {
