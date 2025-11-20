@@ -902,7 +902,82 @@ git commit -m "Refactor PositionService to use PositionStatusComputer"
 
 ---
 
-## Step 3.7: Refactor PriceService to Use PriceValidator
+## Step 3.7: Add Position Metrics Calculation to PositionService
+
+**Purpose:** Create service layer orchestration methods that delegate to domain calculators, providing a clean API for UI components.
+
+**RED - Write Test**:
+- Create/Update `src/services/__tests__/PositionService.test.ts`:
+  ```typescript
+  describe('calculatePositionMetrics', () => {
+    it('should delegate to CostBasisCalculator for cost metrics')
+    it('should delegate to PnLCalculator for P&L metrics')
+    it('should return complete metrics object')
+    it('should handle positions with no trades')
+    it('should handle positions with no price data')
+    it('should calculate correct pnlPercentage')
+  })
+  ```
+- Run: `npm test PositionService.test.ts`
+- **Expected**: ❌ FAIL
+
+**GREEN - Implement**:
+- Update `src/lib/position.ts` (PositionService class):
+  ```typescript
+  import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+  import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
+  import type { PriceHistory } from '@/types/priceHistory'
+
+  // Add interface for metrics return type
+  export interface PositionMetrics {
+    avgCost: number
+    costBasis: number
+    openQuantity: number
+    pnl: number | null
+    pnlPercentage: number | undefined
+  }
+
+  // Add to PositionService class:
+  calculatePositionMetrics(
+    position: Position,
+    priceMap: Map<string, PriceHistory>
+  ): PositionMetrics {
+    // Delegate to domain calculators
+    const avgCost = CostBasisCalculator.calculateAverageCost(
+      position.trades,
+      position.target_entry_price
+    )
+    const costBasis = CostBasisCalculator.calculateTotalCostBasis(position.trades)
+    const openQuantity = CostBasisCalculator.calculateOpenQuantity(position.trades)
+    const pnl = PnLCalculator.calculatePositionPnL(position, priceMap)
+    const pnlPercentage = pnl !== null && costBasis > 0
+      ? PnLCalculator.calculatePnLPercentage(pnl, costBasis)
+      : undefined
+
+    return { avgCost, costBasis, openQuantity, pnl, pnlPercentage }
+  }
+  ```
+- Run: `npm test PositionService.test.ts`
+- **Expected**: ✅ PASS
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/lib/position.ts src/services/__tests__/PositionService.test.ts
+git commit -m "Add position metrics calculation to PositionService"
+```
+
+**Notes:**
+- This creates proper service layer orchestration
+- UI components will use this method instead of importing utils directly
+- Maintains separation: Domain (calculators) ← Service (orchestration) ← UI (presentation)
+
+---
+
+## Step 3.8: Refactor PriceService to Use PriceValidator
 
 **RED - Write Test**:
 - Update `src/services/__tests__/PriceService.test.ts`:
@@ -936,7 +1011,7 @@ git commit -m "Refactor PriceService to use PriceValidator"
 
 ---
 
-## Step 3.8: Create PriceUpdateOrchestrator
+## Step 3.9: Create PriceUpdateOrchestrator
 
 **RED - Write Test**:
 - Create `src/services/__tests__/PriceUpdateOrchestrator.test.ts`:
@@ -973,7 +1048,7 @@ git commit -m "Add PriceUpdateOrchestrator for price update workflow"
 
 ---
 
-## Step 3.9: Create Price Update Integration Test
+## Step 3.10: Create Price Update Integration Test
 
 **RED - Write Test**:
 - Create `src/integration/__tests__/price-update-workflow.test.ts`:
