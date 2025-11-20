@@ -9,15 +9,15 @@ describe('Real Integration Tests - Import Resolution', () => {
   });
 
   it('should import EnhancedJournalEntryForm from @/components/EnhancedJournalEntryForm', async () => {
-    // This should match exactly what PositionCreate.tsx does
+    // This should match exactly what PositionDetail.tsx does (journal creation happens here now)
     const { EnhancedJournalEntryForm } = await import('@/components/EnhancedJournalEntryForm');
     expect(EnhancedJournalEntryForm).toBeDefined();
   });
 
-  it('should import JournalService from @/services/JournalService', async () => {
+  it('should import PositionService from @/lib/position', async () => {
     // This should match exactly what PositionCreate.tsx does
-    const { JournalService } = await import('@/services/JournalService');
-    expect(JournalService).toBeDefined();
+    const { PositionService } = await import('@/lib/position');
+    expect(PositionService).toBeDefined();
   });
 
   it('should NOT import TypeScript interfaces as runtime values', async () => {

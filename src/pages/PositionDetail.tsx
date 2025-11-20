@@ -235,7 +235,17 @@ export function PositionDetail({ positionService: injectedPositionService, trade
       const journalService = await getJournalService()
       const entryType = selectedTradeId ? 'trade_execution' : 'position_plan'
 
-      await journalService.create({
+      // Prevent duplicate position plan journal entries
+      if (entryType === 'position_plan') {
+        const hasPositionPlan = journalEntries.some(entry => entry.entry_type === 'position_plan')
+        if (hasPositionPlan) {
+          setJournalModalError('This position already has a position plan journal entry. You can only have one position plan journal per position.')
+          return
+        }
+      }
+
+      // Create journal entry
+      const journalEntry = await journalService.create({
         id: generateJournalId(),
         position_id: position.id,
         trade_id: selectedTradeId,
@@ -243,6 +253,12 @@ export function PositionDetail({ positionService: injectedPositionService, trade
         fields,
         created_at: new Date().toISOString()
       })
+
+      // Update position to reference the journal entry
+      if (position && !position.journal_entry_ids.includes(journalEntry.id)) {
+        position.journal_entry_ids.push(journalEntry.id)
+        await positionServiceInstance.update(position)
+      }
 
       setShowJournalModal(false)
       setSelectedTradeId(undefined)

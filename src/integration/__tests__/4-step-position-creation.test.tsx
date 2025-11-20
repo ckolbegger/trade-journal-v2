@@ -192,7 +192,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
 
       expect(createPositionButton).toBeEnabled()
 
-      // 6. Create position with journal transaction
+      // 6. Create position only (no journal in new flow)
       await runInAct(() => {
         fireEvent.click(createPositionButton)
       })
@@ -203,36 +203,26 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         expect(screen.getByText(/Long Stock.*100 shares/)).toBeInTheDocument()
       }, { timeout: 3000 })
 
-      // 8. INTEGRATION VERIFICATION: UUID-based transaction was successful
+      // 8. INTEGRATION VERIFICATION: Position creation was successful
       const savedPositions = await positionService.getAll()
       expect(savedPositions).toHaveLength(1)
 
       const savedPosition = savedPositions[0]
-      // Verify UUID format
-      expect(savedPosition.id).toMatch(/^pos-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/)
-      expect(savedPosition.journal_entry_ids).toHaveLength(1)
+      // Verify position created but NO journal entry in new flow
+      expect(savedPosition.id).toMatch(/^position-[0-9]+-[a-z0-9]+$/) // New ID format
+      expect(savedPosition.journal_entry_ids).toHaveLength(0) // Empty initially
 
-      // Verify journal entry was created with UUID and proper relationship
+      // Verify no journal entry was created during position creation
       const journalEntries = await journalService.findByPositionId(savedPosition.id)
-      expect(journalEntries).toHaveLength(1)
+      expect(journalEntries).toHaveLength(0) // No journal entries created with position
 
-      const journalEntry = journalEntries[0]
-      expect(journalEntry.id).toMatch(/^journal-[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/)
-      expect(journalEntry.position_id).toBe(savedPosition.id)
-      expect(journalEntry.entry_type).toBe('position_plan')
-
-      // Verify journal fields contain the data from the enhanced form
-      const rationaleField = journalEntry.fields.find(f => f.name === 'rationale')
-      expect(rationaleField?.response).toBe('Strong technical support at current levels with bullish momentum')
-
-      const emotionalField = journalEntry.fields.find(f => f.name === 'emotional_state')
-      expect(emotionalField?.response).toBe('Confident')
-
-      const marketField = journalEntry.fields.find(f => f.name === 'market_conditions')
-      expect(marketField?.response).toBe('Bullish trend with Fed pause expected')
-
-      const executionField = journalEntry.fields.find(f => f.name === 'execution_strategy')
-      expect(executionField?.response).toBe('Limit order at support level')
+      // Position data verification (core focus now)
+      expect(savedPosition.symbol).toBe('AAPL')
+      expect(savedPosition.target_entry_price).toBe(150)
+      expect(savedPosition.target_quantity).toBe(100)
+      expect(savedPosition.profit_target).toBe(180)
+      expect(savedPosition.stop_loss).toBe(135)
+      expect(savedPosition.position_thesis).toBe('Strong technical support with bullish momentum indicators')
     })
 
     it('should handle journal form validation in Step 3', async () => {
