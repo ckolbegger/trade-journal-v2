@@ -72,8 +72,8 @@ describe('Integration: 4-Step Position Creation Flow', () => {
     })
   }
 
-  describe('4-Step Workflow', () => {
-    it('should complete 4-step position creation with journal integration', async () => {
+  describe('Simplified Position Creation Flow', () => {
+    it('should complete position creation without journal (new user flow)', async () => {
       // This will fail until 4-step workflow is implemented
       window.history.pushState({}, 'Test', '/')
 
@@ -90,14 +90,10 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         fireEvent.click(createButton)
       })
 
-      // 2. STEP 1: Position Plan
+      // 2. Position Form is now single-page, no step navigation needed
       await waitFor(() => {
         expect(screen.getByText('Position Plan')).toBeInTheDocument()
       })
-
-      // Verify step indicators show 4 steps
-      const stepDots = screen.getAllByTestId('step-dot')
-      expect(stepDots).toHaveLength(4) // Should be 4 instead of 3
 
       // Fill out position form
       await runInAct(() => {
@@ -111,48 +107,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         })
       })
 
-      // Navigate to Step 2: NEW ORDER - Journal comes before Risk Assessment
-      const nextToStep2 = screen.getByText('Next: Trading Journal')
-      expect(nextToStep2).toBeVisible()
-      await runInAct(() => {
-        fireEvent.click(nextToStep2)
-      })
-
-      // 3. STEP 2: Trading Journal (NEW ORDER)
-      await waitFor(() => {
-        expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
-      })
-
-      // Verify enhanced journal form is displayed
-      expect(screen.getByLabelText(/Rationale/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Emotional State/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Market Conditions/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/Execution Strategy/i)).toBeInTheDocument()
-
-      // Fill out journal form
-      await runInAct(() => {
-        fireEvent.change(screen.getByLabelText(/Rationale/i), {
-          target: { value: 'Strong technical support at current levels with bullish momentum' }
-        })
-        fireEvent.change(screen.getByLabelText(/Emotional State/i), {
-          target: { value: 'Confident' }
-        })
-        fireEvent.change(screen.getByLabelText(/Market Conditions/i), {
-          target: { value: 'Bullish trend with Fed pause expected' }
-        })
-        fireEvent.change(screen.getByLabelText(/Execution Strategy/i), {
-          target: { value: 'Limit order at support level' }
-        })
-      })
-
-      // Navigate to Step 3: Risk Assessment (after journal)
-      const nextToStep3 = screen.getByRole('button', { name: /Next: Risk Assessment/i })
-      expect(nextToStep3).toBeVisible()
-      await runInAct(() => {
-        fireEvent.click(nextToStep3)
-      })
-
-      // 4. STEP 3: Risk Assessment (NEW ORDER)
+      // 3. Risk Assessment is now visible on same page (no navigation needed)
       await waitFor(() => {
         expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
       })
@@ -161,14 +116,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       expect(screen.getByText('$15,000.00')).toBeInTheDocument() // Total investment
       expect(screen.getAllByText('$1,500.00')).toHaveLength(2)   // Max profit and loss
 
-      // Navigate to Step 4: Confirmation
-      const nextToStep4 = screen.getByText('Next: Confirmation')
-      expect(nextToStep4).toBeVisible()
-      await runInAct(() => {
-        fireEvent.click(nextToStep4)
-      })
-
-      // 5. STEP 4: Confirmation
+      // 4. Confirmation section is also visible on same page
       await waitFor(() => {
         expect(screen.getByText('Confirmation')).toBeInTheDocument()
       })
@@ -225,7 +173,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
       expect(savedPosition.position_thesis).toBe('Strong technical support with bullish momentum indicators')
     })
 
-    it('should handle journal form validation in Step 3', async () => {
+    it('should handle position validation (removed journal step)', async () => {
       // This will fail until validation is implemented
       window.history.pushState({}, 'Test', '/')
       render(<App />)
@@ -254,48 +202,38 @@ describe('Integration: 4-Step Position Creation Flow', () => {
         fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
       })
 
-      await runInAct(() => {
-        fireEvent.click(screen.getByText('Next: Trading Journal'))
-      })
-
-      // Now at Step 2: Journal form (NEW ORDER)
+      // No step navigation needed - everything is on one page in new flow
       await waitFor(() => {
-        expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
+        expect(screen.getByText('Risk Assessment')).toBeInTheDocument() // Risk assessment visible
       })
 
-      // Form should be pre-populated with position thesis, so clear it to test validation
-      const contentField = screen.getByLabelText(/Rationale/i)
+      // Position validation: Try to create position without confirmation checkbox
+      const positionCreateButton = screen.getByText('Create Position Plan')
+      expect(positionCreateButton).toBeDisabled() // Should be disabled without checkbox confirmation
+
+      // Should show validation error for missing confirmation
+      const confirmationCheckbox = screen.getByRole('checkbox', {
+        name: /I understand this position plan will be immutable/i
+      })
+      expect(confirmationCheckbox).toBeInTheDocument()
+
+      // Test position form validation by clearing required field
       await runInAct(() => {
-        fireEvent.change(contentField, { target: { value: '' } })
+        fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: '' } })
       })
 
-      // Try to submit without required content
-      const submitButton = screen.getByRole('button', { name: /Next: Risk Assessment/i })
-      await runInAct(() => {
-        fireEvent.click(submitButton)
-      })
-
-      // Should show validation error and stay on Step 2 (Journal)
+      // Should show validation error
       await waitFor(() => {
-        expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
+        expect(screen.getByText(/Position thesis is required/i)).toBeInTheDocument()
       })
 
-      expect(screen.getByText('📝 Position Plan')).toBeInTheDocument() // Still on Step 2 (Journal)
-
-      // Fill the required field and then proceed past journal to show we're actually on step 2
+      // Fill missing field and complete validation test
       await runInAct(() => {
-        fireEvent.change(contentField, { target: { value: 'Valid rationale content' } })
+        fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Valid thesis for testing' } })
+        fireEvent.click(confirmationCheckbox) // Now button should be enabled
       })
 
-      await runInAct(() => {
-        fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
-      })
-
-      // Now at Step 3: Risk Assessment
-      await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-      })
+      expect(positionCreateButton).toBeEnabled()
     })
-
   })
 })
