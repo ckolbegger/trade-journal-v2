@@ -1,8 +1,8 @@
 import type { Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
-import { calculateCostBasis } from '@/utils/costBasis'
 import { TradeValidator } from '@/domain/validators/TradeValidator'
 import { PositionStatusComputer } from '@/domain/calculators/PositionStatusComputer'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 
 export class TradeService {
   private positionService: PositionService
@@ -81,10 +81,11 @@ export class TradeService {
 
   /**
    * Calculate simple cost basis (Phase 1A: first trade price only)
+   * Delegates to CostBasisCalculator for calculation logic
    */
   async calculateCostBasis(positionId: string): Promise<number> {
     const trades = await this.getTradesByPositionId(positionId)
-    return calculateCostBasis(trades)
+    return CostBasisCalculator.calculateFirstBuyPrice(trades)
   }
 
   /**

@@ -707,7 +707,7 @@ git commit -m "Add PositionStatusComputer for status calculation"
 
 # PHASE 3: SERVICE LAYER REFACTORING
 
-## Step 3.1: Refactor TradeService to Use TradeValidator
+## Step 3.1: Refactor TradeService to Use TradeValidator [COMPLETED]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/TradeService.test.ts`:
@@ -741,7 +741,7 @@ git commit -m "Refactor TradeService to use TradeValidator"
 
 ---
 
-## Step 3.2: Refactor TradeService to Use PositionStatusComputer
+## Step 3.2: Refactor TradeService to Use PositionStatusComputer [COMPLETED]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/TradeService.test.ts`:
@@ -773,7 +773,7 @@ git commit -m "Refactor TradeService to use PositionStatusComputer"
 
 ---
 
-## Step 3.3: Refactor TradeService to Use CostBasisCalculator
+## Step 3.3: Refactor TradeService to Use CostBasisCalculator [COMPLETED]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/TradeService.test.ts`:

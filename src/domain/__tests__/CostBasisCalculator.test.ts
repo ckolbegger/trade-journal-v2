@@ -135,4 +135,49 @@ describe('CostBasisCalculator', () => {
       expect(CostBasisCalculator.calculateOpenQuantity(trades)).toBe(-50)
     })
   })
+
+  describe('calculateFirstBuyPrice', () => {
+    it('should return first buy trade price', () => {
+      const trades = [
+        createTrade('buy', 100, 150),
+        createTrade('buy', 50, 155),
+        createTrade('sell', 25, 160)
+      ]
+      // First buy price is 150
+      expect(CostBasisCalculator.calculateFirstBuyPrice(trades)).toBe(150)
+    })
+
+    it('should return 0 for empty trades', () => {
+      expect(CostBasisCalculator.calculateFirstBuyPrice([])).toBe(0)
+    })
+
+    it('should return 0 for only sell trades', () => {
+      const trades = [
+        createTrade('sell', 50, 160)
+      ]
+      expect(CostBasisCalculator.calculateFirstBuyPrice(trades)).toBe(0)
+    })
+
+    it('should ignore sell trades when finding first buy', () => {
+      const trades = [
+        createTrade('sell', 25, 160), // First trade is a sell
+        createTrade('buy', 100, 150)  // First buy is at 150
+      ]
+      expect(CostBasisCalculator.calculateFirstBuyPrice(trades)).toBe(150)
+    })
+
+    it('should handle single buy trade', () => {
+      const trades = [
+        createTrade('buy', 100, 145.50)
+      ]
+      expect(CostBasisCalculator.calculateFirstBuyPrice(trades)).toBe(145.50)
+    })
+
+    it('should handle null/undefined trades array', () => {
+      // @ts-expect-error Testing runtime behavior
+      expect(CostBasisCalculator.calculateFirstBuyPrice(null)).toBe(0)
+      // @ts-expect-error Testing runtime behavior
+      expect(CostBasisCalculator.calculateFirstBuyPrice(undefined)).toBe(0)
+    })
+  })
 })

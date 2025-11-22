@@ -56,4 +56,19 @@ export class CostBasisCalculator {
       return total + (trade.trade_type === 'buy' ? trade.quantity : -trade.quantity)
     }, 0)
   }
+
+  /**
+   * Calculate first buy price (Phase 1A simplified cost basis)
+   *
+   * @param trades - Array of trades
+   * @returns Price of first buy trade, or 0 if no buy trades exist
+   */
+  static calculateFirstBuyPrice(trades: Trade[]): number {
+    if (!trades || trades.length === 0) {
+      return 0
+    }
+
+    const firstBuyTrade = trades.find(trade => trade.trade_type === 'buy')
+    return firstBuyTrade ? firstBuyTrade.price : 0
+  }
 }
