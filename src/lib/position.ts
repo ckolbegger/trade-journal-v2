@@ -1,5 +1,19 @@
 import { PositionValidator } from '@/domain/validators/PositionValidator'
 import { PositionStatusComputer } from '@/domain/calculators/PositionStatusComputer'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
+import type { PriceHistory } from '@/types/priceHistory'
+
+/**
+ * Position metrics calculated from trades and current prices
+ */
+export interface PositionMetrics {
+  avgCost: number
+  costBasis: number
+  openQuantity: number
+  pnl: number | null
+  pnlPercentage: number | undefined
+}
 
 // Trade Interface - Individual trade execution within a position
 export interface Trade {
@@ -208,6 +222,29 @@ export class PositionService {
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve()
     })
+  }
+
+  /**
+   * Calculate position metrics by delegating to domain calculators
+   * Provides a clean service layer API for UI components
+   */
+  calculatePositionMetrics(
+    position: Position,
+    priceMap: Map<string, PriceHistory>
+  ): PositionMetrics {
+    // Delegate to domain calculators
+    const avgCost = CostBasisCalculator.calculateAverageCost(
+      position.trades,
+      position.target_entry_price
+    )
+    const costBasis = CostBasisCalculator.calculateTotalCostBasis(position.trades)
+    const openQuantity = CostBasisCalculator.calculateOpenQuantity(position.trades)
+    const pnl = PnLCalculator.calculatePositionPnL(position, priceMap)
+    const pnlPercentage = pnl !== null && costBasis > 0
+      ? PnLCalculator.calculatePnLPercentage(pnl, costBasis)
+      : undefined
+
+    return { avgCost, costBasis, openQuantity, pnl, pnlPercentage }
   }
 
   close(): void {
