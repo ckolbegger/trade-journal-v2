@@ -805,7 +805,7 @@ git commit -m "Refactor TradeService to use CostBasisCalculator"
 
 ---
 
-## Step 3.4: Refactor TradeService to Use PnLCalculator
+## Step 3.4: Refactor TradeService to Use PnLCalculator [N/A - No P&L methods in TradeService]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/TradeService.test.ts`:
@@ -839,7 +839,7 @@ git commit -m "Refactor TradeService to use PnLCalculator"
 
 ---
 
-## Step 3.5: Refactor PositionService to Use PositionValidator
+## Step 3.5: Refactor PositionService to Use PositionValidator [COMPLETED]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/PositionService.test.ts`:
@@ -871,7 +871,7 @@ git commit -m "Refactor PositionService to use PositionValidator"
 
 ---
 
-## Step 3.6: Refactor PositionService to Use PositionStatusComputer
+## Step 3.6: Refactor PositionService to Use PositionStatusComputer [COMPLETED]
 
 **RED - Write Test**:
 - Update `src/services/__tests__/PositionService.test.ts`:
