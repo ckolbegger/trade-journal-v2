@@ -1011,7 +1011,14 @@ git commit -m "Refactor PriceService to use PriceValidator"
 
 ---
 
-## Step 3.9: Create PriceUpdateOrchestrator
+## Step 3.9: Create PriceUpdateOrchestrator [SKIPPED - N/A]
+
+**Reason:** PriceService already provides proper orchestration:
+- `validatePriceChange()` checks confirmation requirement
+- `createOrUpdate()` validates via PriceValidator and persists
+- No additional orchestration layer needed
+
+**Original plan (not implemented):**
 
 **RED - Write Test**:
 - Create `src/services/__tests__/PriceUpdateOrchestrator.test.ts`:
@@ -1048,7 +1055,12 @@ git commit -m "Add PriceUpdateOrchestrator for price update workflow"
 
 ---
 
-## Step 3.10: Create Price Update Integration Test
+## Step 3.10: Create Price Update Integration Test [SKIPPED - N/A]
+
+**Reason:** Depends on Step 3.9 orchestrator which was not needed.
+Price update workflow is already properly tested via PriceService tests.
+
+**Original plan (not implemented):**
 
 **RED - Write Test**:
 - Create `src/integration/__tests__/price-update-workflow.test.ts`:
