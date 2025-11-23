@@ -12,7 +12,7 @@ const ServiceContext = React.createContext<ServiceContainer | null>(null)
 /**
  * ServiceProvider - Provides ServiceContainer to children
  */
-export function ServiceProvider({ children }: { children: React.ReactNode }): JSX.Element {
+export function ServiceProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const services = useMemo(() => ServiceContainer.getInstance(), [])
 
   return (

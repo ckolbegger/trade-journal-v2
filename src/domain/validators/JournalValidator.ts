@@ -1,5 +1,4 @@
 import type { CreateJournalEntryRequest, UpdateJournalEntryRequest } from '@/services/JournalService'
-import type { JournalField } from '@/types/journal'
 
 /**
  * JournalValidator - Domain validation for journal entries

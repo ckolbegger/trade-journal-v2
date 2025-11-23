@@ -48,7 +48,7 @@ export interface Position {
   stop_loss: number
   position_thesis: string
   created_date: Date
-  status: 'planned' | 'open'
+  status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
   trades: Trade[] // New field for embedded trades (future-proof array)
 }

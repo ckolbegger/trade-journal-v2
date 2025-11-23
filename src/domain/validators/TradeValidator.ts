@@ -57,7 +57,7 @@ export class TradeValidator {
    * @param price - Exit price
    * @throws Error if validation fails
    */
-  static validateExitTrade(position: Position, quantity: number, price: number): void {
+  static validateExitTrade(position: Position, quantity: number, _price: number): void {
     // Cannot exit from planned position (no trades yet)
     if (position.status === 'planned') {
       throw new Error('Trade validation failed: Cannot exit from planned position')
