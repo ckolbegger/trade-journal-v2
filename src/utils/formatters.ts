@@ -14,3 +14,15 @@ export function formatDate(date: Date): string {
     day: 'numeric'
   }).format(date)
 }
+
+/**
+ * Format a number as US currency
+ * @param amount - The amount to format
+ * @returns Formatted currency string (e.g., "$150.50")
+ */
+export function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(amount)
+}
