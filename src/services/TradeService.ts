@@ -1,7 +1,7 @@
 import type { Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
 import { TradeValidator } from '@/domain/validators/TradeValidator'
-import { PositionStatusComputer } from '@/domain/calculators/PositionStatusComputer'
+import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 
 export class TradeService {
@@ -58,7 +58,7 @@ export class TradeService {
     const updatedPosition = {
       ...position,
       trades: updatedTrades,
-      status: PositionStatusComputer.computeStatus(updatedTrades)
+      status: PositionStatusCalculator.computeStatus(updatedTrades)
     }
 
     // Update position with new trade
@@ -90,14 +90,14 @@ export class TradeService {
 
   /**
    * Compute position status based on trade data
-   * Delegates to PositionStatusComputer for status computation
+   * Delegates to PositionStatusCalculator for status computation
    */
   async computePositionStatus(positionId: string): Promise<'planned' | 'open' | 'closed'> {
     const position = await this.positionService.getById(positionId)
     if (!position) {
       throw new Error(`Position not found: ${positionId}`)
     }
-    return PositionStatusComputer.computeStatus(position.trades)
+    return PositionStatusCalculator.computeStatus(position.trades)
   }
 
   /**

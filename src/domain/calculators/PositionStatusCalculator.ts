@@ -2,11 +2,11 @@ import type { Trade } from '@/lib/position'
 import { CostBasisCalculator } from './CostBasisCalculator'
 
 /**
- * PositionStatusComputer - Domain calculator for position status
+ * PositionStatusCalculator - Domain calculator for position status
  *
- * Provides pure function to compute position status from trades array.
+ * Provides pure function to calculate position status from trades array.
  */
-export class PositionStatusComputer {
+export class PositionStatusCalculator {
   /**
    * Compute position status from trades array
    *

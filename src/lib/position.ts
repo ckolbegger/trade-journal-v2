@@ -1,5 +1,5 @@
 import { PositionValidator } from '@/domain/validators/PositionValidator'
-import { PositionStatusComputer } from '@/domain/calculators/PositionStatusComputer'
+import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import type { PriceHistory } from '@/types/priceHistory'
@@ -148,7 +148,7 @@ export class PositionService {
             result.trades = []
           }
           // Compute status dynamically from trades
-          result.status = PositionStatusComputer.computeStatus(result.trades)
+          result.status = PositionStatusCalculator.computeStatus(result.trades)
           resolve(result)
         } else {
           resolve(null)
@@ -179,7 +179,7 @@ export class PositionService {
             position.trades = []
           }
           // Compute status dynamically from trades
-          position.status = PositionStatusComputer.computeStatus(position.trades)
+          position.status = PositionStatusCalculator.computeStatus(position.trades)
         })
         resolve(positions)
       }

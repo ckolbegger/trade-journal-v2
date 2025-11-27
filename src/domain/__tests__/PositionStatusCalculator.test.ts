@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { PositionStatusComputer } from '../calculators/PositionStatusComputer'
+import { PositionStatusCalculator } from '../calculators/PositionStatusCalculator'
 import type { Trade } from '@/lib/position'
 
-describe('PositionStatusComputer', () => {
+describe('PositionStatusCalculator', () => {
   const createTrade = (type: 'buy' | 'sell', quantity: number, price: number): Trade => ({
     id: `trade-${Math.random()}`,
     position_id: 'pos-123',
@@ -15,14 +15,14 @@ describe('PositionStatusComputer', () => {
 
   describe('computeStatus', () => {
     it('should return "planned" for no trades', () => {
-      expect(PositionStatusComputer.computeStatus([])).toBe('planned')
+      expect(PositionStatusCalculator.computeStatus([])).toBe('planned')
     })
 
     it('should return "open" for net positive quantity', () => {
       const trades = [
         createTrade('buy', 100, 150)
       ]
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('open')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('open')
     })
 
     it('should return "closed" for net zero quantity', () => {
@@ -30,7 +30,7 @@ describe('PositionStatusComputer', () => {
         createTrade('buy', 100, 150),
         createTrade('sell', 100, 160)
       ]
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('closed')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('closed')
     })
 
     it('should handle multiple buys', () => {
@@ -40,7 +40,7 @@ describe('PositionStatusComputer', () => {
         createTrade('buy', 25, 160)
       ]
       // Net quantity = 175 (all buys)
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('open')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('open')
     })
 
     it('should handle multiple sells', () => {
@@ -51,7 +51,7 @@ describe('PositionStatusComputer', () => {
         createTrade('sell', 25, 155)
       ]
       // Net quantity = 100 - 75 = 25 (still open)
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('open')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('open')
     })
 
     it('should handle mixed buy/sell trades', () => {
@@ -62,14 +62,14 @@ describe('PositionStatusComputer', () => {
         createTrade('sell', 100, 165)
       ]
       // Net quantity = (100 + 50) - (50 + 100) = 0 (closed)
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('closed')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('closed')
     })
 
     it('should handle null/undefined trades array gracefully', () => {
       // @ts-expect-error Testing runtime behavior
-      expect(PositionStatusComputer.computeStatus(null)).toBe('planned')
+      expect(PositionStatusCalculator.computeStatus(null)).toBe('planned')
       // @ts-expect-error Testing runtime behavior
-      expect(PositionStatusComputer.computeStatus(undefined)).toBe('planned')
+      expect(PositionStatusCalculator.computeStatus(undefined)).toBe('planned')
     })
 
     it('should handle partial position closure', () => {
@@ -78,7 +78,7 @@ describe('PositionStatusComputer', () => {
         createTrade('sell', 60, 160)
       ]
       // Net quantity = 40 (still open)
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('open')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('open')
     })
 
     it('should handle complete position closure with multiple trades', () => {
@@ -88,7 +88,7 @@ describe('PositionStatusComputer', () => {
         createTrade('sell', 100, 160)
       ]
       // Net quantity = (50 + 50) - 100 = 0 (closed)
-      expect(PositionStatusComputer.computeStatus(trades)).toBe('closed')
+      expect(PositionStatusCalculator.computeStatus(trades)).toBe('closed')
     })
   })
 })
