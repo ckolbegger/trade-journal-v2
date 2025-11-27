@@ -17,7 +17,8 @@ import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { PriceUpdateCard } from '@/components/PriceUpdateCard'
 import type { JournalField } from '@/types/journal'
 import { generateJournalId } from '@/lib/uuid'
-import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
 
@@ -271,30 +272,16 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const hasTrades = position.trades && position.trades.length > 0
   const isPlannedPosition = !hasTrades
 
-  // Calculate average cost from trades
-  const avgCost = position.trades.length > 0
-    ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
-    : targetEntryPrice
-
-  // Calculate total quantity from trades
+  // Calculate metrics using domain calculators
+  const avgCost = CostBasisCalculator.calculateAverageCost(position.trades, targetEntryPrice)
+  const costBasis = CostBasisCalculator.calculateTotalCostBasis(position.trades)
   const totalQuantity = position.trades.reduce((sum, trade) => sum + trade.quantity, 0)
 
-  // Calculate total cost - unused for now
-  // const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
-
-  // Calculate P&L from price history
+  // Calculate P&L using domain calculators
   const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
-  const pnl = hasTrades ? calculatePositionPnL(position, priceMap) : null
-
-  const costBasis = position.trades.reduce((sum, trade) => {
-    if (trade.trade_type === 'buy') {
-      return sum + (trade.price * trade.quantity)
-    }
-    return sum
-  }, 0)
-
+  const pnl = PnLCalculator.calculatePositionPnL(position, priceMap)
   const pnlPercentage = pnl !== null && costBasis > 0
-    ? calculatePnLPercentage(pnl, costBasis)
+    ? PnLCalculator.calculatePnLPercentage(pnl, costBasis)
     : undefined
 
   const currentPrice = priceHistory?.close || avgCost
