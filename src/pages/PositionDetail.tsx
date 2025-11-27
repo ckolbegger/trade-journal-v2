@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
-import { PositionService } from '@/lib/position'
+import { useServices } from '@/contexts/ServiceContext'
 import type { Position, Trade } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
-import { JournalService } from '@/services/JournalService'
-import { PriceService } from '@/services/PriceService'
 import type { JournalEntry } from '@/types/journal'
 import type { PriceHistory } from '@/types/priceHistory'
 import { Button } from '@/components/ui/button'
@@ -22,15 +19,9 @@ import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
 
-interface PositionDetailProps {
-  positionService?: PositionService
-  tradeService?: TradeService
-  journalService?: JournalService
-  priceService?: PriceService
-}
-
-export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService, priceService: injectedPriceService }: PositionDetailProps = {}) {
+export function PositionDetail() {
   const navigate = useNavigate()
+  const services = useServices()
   const { id} = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
   const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null)
@@ -43,41 +34,24 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [showJournalModal, setShowJournalModal] = useState(false)
   const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
   const [journalModalError, setJournalModalError] = useState<string | null>(null)
-  const positionServiceInstance = injectedPositionService || new PositionService()
-  const tradeServiceInstance = injectedTradeService || new TradeService()
-  const priceServiceInstance = injectedPriceService || new PriceService()
-
-  
-  const getJournalService = async (): Promise<JournalService> => {
-    if (injectedJournalService) {
-      return injectedJournalService
-    }
-
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-    })
-
-    return new JournalService(db)
-  }
 
   useEffect(() => {
     loadPosition()
     loadJournalEntries()
-  }, [id])
+  }, [id, services])
 
   useEffect(() => {
     if (position) {
       loadPriceHistory()
     }
-  }, [position])
+  }, [position, services])
 
   const loadPosition = async () => {
     if (!id) return
 
     try {
-      const loadedPosition = await positionServiceInstance.getById(id)
+      const positionService = services.getPositionService()
+      const loadedPosition = await positionService.getById(id)
       setPosition(loadedPosition)
     } catch (error) {
       console.error('Failed to load position:', error)
@@ -91,7 +65,8 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     if (!position) return
 
     try {
-      const latestPrice = await priceServiceInstance.getLatestPrice(position.symbol)
+      const priceService = services.getPriceService()
+      const latestPrice = await priceService.getLatestPrice(position.symbol)
       setPriceHistory(latestPrice)
     } catch (error) {
       console.error('Failed to load price history:', error)
@@ -105,7 +80,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     try {
       setJournalLoading(true)
       setJournalError(null)
-      const journalService = await getJournalService()
+      const journalService = await services.getJournalService()
       const entries = await journalService.getByPositionId(id)
 
       // Sort entries chronologically (oldest first)
@@ -167,8 +142,9 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeAdded = async (trade: Trade) => {
     try {
+      const tradeService = services.getTradeService()
       // addTrade returns all trades including the newly added one
-      const updatedTrades = await tradeServiceInstance.addTrade(trade)
+      const updatedTrades = await tradeService.addTrade(trade)
       setShowTradeModal(false)
 
       // Refresh position to include the new trade
@@ -214,7 +190,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
     try {
       setJournalModalError(null) // Clear previous errors
-      const journalService = await getJournalService()
+      const journalService = await services.getJournalService()
       const entryType = selectedTradeId ? 'trade_execution' : 'position_plan'
 
       await journalService.create({
@@ -358,7 +334,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
           <section className="p-4">
             <PriceUpdateCard
               underlying={position.symbol}
-              priceService={priceServiceInstance}
+              priceService={services.getPriceService()}
               onPriceUpdated={handlePriceUpdated}
             />
           </section>

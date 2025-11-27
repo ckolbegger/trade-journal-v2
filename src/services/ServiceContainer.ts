@@ -107,4 +107,35 @@ export class ServiceContainer {
     this.journalService = undefined
     this.priceService = undefined
   }
+
+  /**
+   * Testing API: Inject mock services
+   * Only use in tests to provide custom service implementations
+   */
+  setPositionService(service: PositionService): void {
+    this.positionService = service
+  }
+
+  setTradeService(service: TradeService): void {
+    this.tradeService = service
+  }
+
+  setJournalService(service: JournalService): void {
+    this.journalService = service
+  }
+
+  setPriceService(service: PriceService): void {
+    this.priceService = service
+  }
+
+  /**
+   * Testing API: Reset singleton instance
+   * Use in test cleanup to ensure tests start with fresh state
+   */
+  static resetInstance(): void {
+    if (ServiceContainer.instance) {
+      ServiceContainer.instance.cleanup()
+      ServiceContainer.instance = null
+    }
+  }
 }
