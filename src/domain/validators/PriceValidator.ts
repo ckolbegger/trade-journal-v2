@@ -1,4 +1,5 @@
 import type { PriceHistoryInput } from '@/types/priceHistory'
+import { PRICE_CHANGE_THRESHOLD_PERCENT } from '@/config/constants'
 
 /**
  * PriceValidator - Domain validation for price data
@@ -68,7 +69,7 @@ export class PriceValidator {
    *
    * @param oldPrice - Previous price (null if first price)
    * @param newPrice - New price to validate
-   * @returns true if change exceeds 20% threshold
+   * @returns true if change exceeds threshold
    */
   static requiresConfirmation(oldPrice: number | null, newPrice: number): boolean {
     // No previous price - no confirmation needed
@@ -79,7 +80,7 @@ export class PriceValidator {
     // Calculate percentage change
     const percentChange = Math.abs(((newPrice - oldPrice) / oldPrice) * 100)
 
-    // Require confirmation if change exceeds 20%
-    return percentChange > 20
+    // Require confirmation if change exceeds threshold
+    return percentChange > PRICE_CHANGE_THRESHOLD_PERCENT
   }
 }
