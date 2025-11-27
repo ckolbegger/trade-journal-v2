@@ -5,9 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ArrowLeft } from 'lucide-react'
-// import type { Position } from '@/lib/position'
-import { PositionService } from '@/lib/position'
-import { JournalService } from '@/services/JournalService'
+import { useServices } from '@/contexts/ServiceContext'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import type { JournalField } from '@/types/journal'
@@ -31,16 +29,9 @@ interface ValidationErrors {
   position_thesis?: string
 }
 
-interface PositionCreateProps {
-  positionService?: PositionService
-  journalService?: JournalService
-}
-
-export function PositionCreate({
-  positionService: injectedPositionService,
-  journalService: injectedJournalService
-}: PositionCreateProps = {}) {
+export function PositionCreate() {
   const navigate = useNavigate()
+  const services = useServices()
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState<ValidationErrors>({})
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
@@ -50,32 +41,13 @@ export function PositionCreate({
   // Initialize journal fields with current prompts when component mounts
   useEffect(() => {
     const initializeJournalFields = async () => {
-      const journalService = await initJournalService()
+      const journalService = await services.getJournalService()
       const emptyEntry = await journalService.createEmptyJournalEntry('position_plan')
       setJournalFields(emptyEntry.fields)
     }
 
     initializeJournalFields()
-  }, [])
-
-  // Initialize services
-  const positionService = injectedPositionService || new PositionService()
-
-  // For journal service, we need to wait for DB initialization
-  const initJournalService = async (): Promise<JournalService> => {
-    if (injectedJournalService) {
-      return injectedJournalService
-    }
-
-    // Open the same database that PositionService uses
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-    })
-
-    return new JournalService(db)
-  }
+  }, [services])
 
   const [formData, setFormData] = useState<PositionFormData>({
     symbol: '',
@@ -188,8 +160,9 @@ export function PositionCreate({
     setIsCreating(true)
 
     try {
-      // Initialize journal service
-      const journalService = await initJournalService()
+      // Get services from container
+      const positionService = services.getPositionService()
+      const journalService = await services.getJournalService()
 
       // Create transaction service
       const transactionService = new PositionJournalTransaction(positionService, journalService)

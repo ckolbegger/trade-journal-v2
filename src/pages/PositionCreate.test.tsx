@@ -14,7 +14,6 @@ import {
   assertImmutableConfirmationVisible,
   assertImmutableConfirmationComplete
 } from '@/test/assertion-helpers'
-import type { PositionService } from '@/lib/position'
 
 // Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
@@ -236,7 +235,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 4: Confirmation', () => {
     beforeEach(async () => {
       // Navigate to step 4
-      renderWithRouterAndProps(<PositionCreate />, { positionService: mockPositionService })
+      renderWithRouterAndProps(<PositionCreate />)
 
       // Fill step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
