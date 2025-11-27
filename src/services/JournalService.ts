@@ -103,26 +103,20 @@ export class JournalService {
     });
   }
 
-  async findById(id: string): Promise<JournalEntry | undefined> {
+  async getById(id: string): Promise<JournalEntry | null> {
     return new Promise((resolve, reject) => {
       const transaction = this.db.transaction(['journal_entries'], 'readonly');
       const store = transaction.objectStore('journal_entries');
       const request = store.get(id);
 
       request.onsuccess = () => {
-        resolve(request.result);
+        resolve(request.result || null);
       };
 
       request.onerror = () => {
         reject(new Error('Failed to find journal entry'));
       };
     });
-  }
-
-  // Standardized method name alias for consistency with glm-code branch
-  async getById(id: string): Promise<JournalEntry | null> {
-    const result = await this.findById(id);
-    return result || null;
   }
 
   async findByPositionId(positionId: string): Promise<JournalEntry[]> {
@@ -180,7 +174,7 @@ export class JournalService {
         return;
       }
 
-      const existing = await this.findById(id);
+      const existing = await this.getById(id);
       if (!existing) {
         reject(new Error('Journal entry not found'));
         return;

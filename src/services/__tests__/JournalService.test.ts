@@ -196,7 +196,7 @@ describe('JournalService', () => {
     });
   });
 
-  describe('findById', () => {
+  describe('getById', () => {
     it('should return journal entry by id', async () => {
       const created = await journalService.create({
         position_id: 'pos-123',
@@ -208,14 +208,14 @@ describe('JournalService', () => {
         }]
       });
 
-      const found = await journalService.findById(created.id);
+      const found = await journalService.getById(created.id);
 
       expect(found).toEqual(created);
     });
 
-    it('should return undefined for non-existent id', async () => {
-      const found = await journalService.findById('non-existent');
-      expect(found).toBeUndefined();
+    it('should return null for non-existent id', async () => {
+      const found = await journalService.getById('non-existent');
+      expect(found).toBeNull();
     });
   });
 
@@ -303,8 +303,8 @@ describe('JournalService', () => {
 
       await journalService.delete(created.id);
 
-      const found = await journalService.findById(created.id);
-      expect(found).toBeUndefined();
+      const found = await journalService.getById(created.id);
+      expect(found).toBeNull();
     });
 
     it('should handle deletion of non-existent entry', async () => {
@@ -447,7 +447,7 @@ describe('JournalService', () => {
 
       // Note: This test would need the same database instance to truly test persistence
       // For now, we'll test that the original service still has the data
-      const retrieved = await journalService.findById(created.id);
+      const retrieved = await journalService.getById(created.id);
       expect(retrieved).toEqual(created);
     });
   });
