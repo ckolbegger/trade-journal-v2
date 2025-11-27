@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
-import { calculateCostBasis } from '@/utils/costBasis'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import type { Position } from '@/lib/position'
 import 'fake-indexeddb/auto'
 
@@ -45,7 +45,7 @@ describe('TradeService - Cost Basis Integration', () => {
     })
 
     const retrieved = await positionService.getById('pos-123')
-    const costBasis = calculateCostBasis(retrieved!.trades)
+    const costBasis = CostBasisCalculator.calculateFirstBuyPrice(retrieved!.trades)
 
     expect(costBasis).toBe(150.50)
   })
@@ -68,7 +68,7 @@ describe('TradeService - Cost Basis Integration', () => {
     await positionService.create(position)
 
     const retrieved = await positionService.getById('pos-123')
-    const costBasis = calculateCostBasis(retrieved!.trades)
+    const costBasis = CostBasisCalculator.calculateFirstBuyPrice(retrieved!.trades)
 
     expect(costBasis).toBe(0)
   })
@@ -99,12 +99,12 @@ describe('TradeService - Cost Basis Integration', () => {
     })
 
     // Cost basis should be calculated from updated trades
-    const costBasis = calculateCostBasis(updatedTrades)
+    const costBasis = CostBasisCalculator.calculateFirstBuyPrice(updatedTrades)
     expect(costBasis).toBe(150.50)
 
     // Also verify it's persisted
     const retrieved = await positionService.getById('pos-123')
-    const persistedCostBasis = calculateCostBasis(retrieved!.trades)
+    const persistedCostBasis = CostBasisCalculator.calculateFirstBuyPrice(retrieved!.trades)
     expect(persistedCostBasis).toBe(150.50)
   })
 })
