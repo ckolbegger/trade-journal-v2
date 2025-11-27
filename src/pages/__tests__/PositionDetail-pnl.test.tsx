@@ -185,19 +185,72 @@ describe('PositionDetail - P&L Integration', () => {
   })
 
   describe('Progress Indicator', () => {
-    // NOTE: ProgressIndicator component renders correctly in manual testing
-    // but text matching in these integration tests is fragile due to
-    // how the DOM structure renders. Component unit tests pass (13/13).
-    // Marking these as integration test limitations rather than component bugs.
+    it('[Integration] should show progress indicator', async () => {
+      // Arrange
+      // Stop: $145, Current: $155, Target: $160
+      // Progress: ($155 - $145) / ($160 - $145) * 100 = 66.7%
+      const position = { ...basePosition }
+      const priceHistory = { ...basePriceHistory, close: 155.00 }
 
-    it.skip('[Integration] should show progress indicator', async () => {
-      // SKIPPED: Text matching fragile in integration test
-      // Component verified working in unit tests
+      // Act
+      renderPositionDetail(position, priceHistory)
+
+      // Assert - Check for ProgressIndicator elements
+      await waitFor(() => {
+        expect(screen.getByText('Captured Profit')).toBeInTheDocument()
+        expect(screen.getByText('66.7%')).toBeInTheDocument()
+        // Note: "Stop" and "Target" text appears in multiple places (Trade Plan + ProgressIndicator)
+        // so we verify the component by checking for "Captured Profit" and percentage instead
+      })
     })
 
-    it.skip('[Integration] should update progress indicator when price changes', async () => {
-      // SKIPPED: Text matching fragile in integration test
-      // Component verified working in unit tests
+    it('[Integration] should update progress indicator when price changes', async () => {
+      // Arrange
+      // Initial: Stop $145, Current $155, Target $160 → 66.7%
+      // Updated: Stop $145, Current $160, Target $160 → 100.0%
+      const position = { ...basePosition }
+      const initialPrice = { ...basePriceHistory, close: 155.00 }
+
+      mockPriceService.getLatestPrice.mockResolvedValueOnce(initialPrice)
+      mockPriceService.validatePriceChange.mockResolvedValue({
+        requiresConfirmation: false,
+        percentChange: 3.2,
+        oldPrice: 155.00,
+        newPrice: 160.00
+      })
+      mockPriceService.createOrUpdateSimple.mockResolvedValue({
+        ...basePriceHistory,
+        close: 160.00
+      })
+
+      // Act
+      renderPositionDetail(position, initialPrice)
+
+      // Wait for initial progress indicator
+      await waitFor(() => {
+        expect(screen.getByText('66.7%')).toBeInTheDocument()
+      })
+
+      // Click "Edit Price" button to show price update panel
+      const editPriceButton = screen.getByRole('button', { name: /edit price/i })
+      fireEvent.click(editPriceButton)
+
+      // Wait for price input to appear
+      await waitFor(() => {
+        expect(screen.getByLabelText(/current price/i)).toBeInTheDocument()
+      })
+
+      // Update price to $160 (profit target)
+      const priceInput = screen.getByLabelText(/current price/i)
+      fireEvent.change(priceInput, { target: { value: '160' } })
+
+      const updateButton = screen.getByRole('button', { name: /update price/i })
+      fireEvent.click(updateButton)
+
+      // Assert - Progress should update to 100.0%
+      await waitFor(() => {
+        expect(screen.getByText('100.0%')).toBeInTheDocument()
+      })
     })
   })
 
