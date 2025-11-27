@@ -18,6 +18,7 @@ import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
+import { formatDate } from '@/utils/formatters'
 
 export function PositionDetail() {
   const navigate = useNavigate()
@@ -95,14 +96,6 @@ export function PositionDetail() {
     } finally {
       setJournalLoading(false)
     }
-  }
-
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date)
   }
 
   const formatCurrency = (amount: number) => {
