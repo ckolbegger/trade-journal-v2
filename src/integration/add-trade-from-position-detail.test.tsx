@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
@@ -6,6 +6,8 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import type { Position } from '@/lib/position'
 import { createIntegrationTestData } from '@/test/data-factories'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Add Trade from Position Detail', () => {
@@ -14,6 +16,9 @@ describe('Integration: Add Trade from Position Detail', () => {
   let testPosition: Position
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Clear IndexedDB
     indexedDB.deleteDatabase('TradingJournalDB')
 
@@ -21,27 +26,33 @@ describe('Integration: Add Trade from Position Detail', () => {
     positionService = new PositionService()
     tradeService = new TradeService()
 
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
+
     // Create a test position using data factory
     const testData = createIntegrationTestData()
     testPosition = await positionService.create(testData.multiple[0])
   })
 
+  afterEach(() => {
+    ServiceContainer.resetInstance()
+  })
+
   it('should complete Add Trade flow: Click button → Fill form → Save trade', async () => {
     // Render PositionDetail with the test position
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Wait for position to load
@@ -92,19 +103,16 @@ describe('Integration: Add Trade from Position Detail', () => {
     const initialTradeCount = testPosition.trades.length
 
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     await waitFor(() => {

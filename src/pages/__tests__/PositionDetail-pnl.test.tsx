@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
@@ -6,6 +6,8 @@ import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { PriceService } from '@/services/PriceService'
 import type { PriceHistory } from '@/types/priceHistory'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 /**
@@ -55,11 +57,14 @@ describe('PositionDetail - P&L Integration', () => {
   }
 
   beforeEach(() => {
+    ServiceContainer.resetInstance()
+
     mockPositionService = {
       getById: vi.fn(),
       getAll: vi.fn(),
       create: vi.fn(),
-      update: vi.fn()
+      update: vi.fn(),
+      close: vi.fn()
     }
 
     mockPriceService = {
@@ -68,7 +73,16 @@ describe('PositionDetail - P&L Integration', () => {
       validatePriceChange: vi.fn()
     }
 
+    // Inject mock services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(mockPositionService as any)
+    services.setPriceService(mockPriceService as any)
+
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    ServiceContainer.resetInstance()
   })
 
   const renderPositionDetail = (position: Position, priceHistory: PriceHistory | null = null) => {
@@ -80,19 +94,16 @@ describe('PositionDetail - P&L Integration', () => {
     }
 
     return render(
-      <MemoryRouter initialEntries={[`/position/${position.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={mockPositionService}
-                priceService={mockPriceService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${position.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
   }
 

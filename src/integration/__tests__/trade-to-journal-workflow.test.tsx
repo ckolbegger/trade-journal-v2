@@ -6,6 +6,8 @@ import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
 import { TradeService } from '@/services/TradeService'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 
 /**
  * Integration Test: Trade Execution → Journal Entry Workflow
@@ -36,6 +38,9 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
   }
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Open database
     db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('TradingJournalDB', 3)
@@ -64,6 +69,12 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
     journalService = new JournalService(db)
     tradeService = new TradeService()
 
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setJournalService(journalService)
+    services.setTradeService(tradeService)
+
     // Clear all data
     await positionService.clearAll()
     await journalService.clearAll()
@@ -73,24 +84,21 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
     if (positionService) positionService.close()
     if (journalService) journalService.close()
     if (db) db.close()
+    ServiceContainer.resetInstance()
   })
 
   const renderPositionDetail = () => {
     return render(
-      <MemoryRouter initialEntries={[`/position/${mockPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${mockPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
   }
 

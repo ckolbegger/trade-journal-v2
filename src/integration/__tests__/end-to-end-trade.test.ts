@@ -8,6 +8,8 @@ import { JournalService } from '@/services/JournalService'
 import { Home } from '@/pages/Home'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
@@ -34,6 +36,9 @@ describe('End-to-End: Add Trade Functionality', () => {
   let db: IDBDatabase
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Clear and initialize IndexedDB
     indexedDB.deleteDatabase('TradingJournalDB')
 
@@ -66,6 +71,12 @@ describe('End-to-End: Add Trade Functionality', () => {
     ;(positionService as any).dbName = testDbName
     tradeService = new TradeService(positionService)
     journalService = new JournalService(db)
+
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
+    services.setJournalService(journalService)
   })
 
   afterEach(async () => {
@@ -80,6 +91,7 @@ describe('End-to-End: Add Trade Functionality', () => {
     if (tradeService && typeof tradeService.close === 'function') {
       tradeService.close()
     }
+    ServiceContainer.resetInstance()
   }, 10000)
 
   it('[End-to-End] should allow complete trade execution flow from Position Detail', async () => {
@@ -94,10 +106,12 @@ describe('End-to-End: Add Trade Functionality', () => {
 
     // Act - Render app with routes
     render(
-      React.createElement(MemoryRouter, { initialEntries: ['/'] },
-        React.createElement(Routes, {},
-          React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) }),
-          React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, { positionService, tradeService, journalService }) })
+      React.createElement(ServiceProvider, {},
+        React.createElement(MemoryRouter, { initialEntries: ['/'] },
+          React.createElement(Routes, {},
+            React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) }),
+            React.createElement(Route, { path: '/position/:id', element: React.createElement(PositionDetail, {}) })
+          )
         )
       )
     )
@@ -185,9 +199,11 @@ describe('End-to-End: Add Trade Functionality', () => {
 
     // Act - Render app with routes
     render(
-      React.createElement(MemoryRouter, { initialEntries: ['/'] },
-        React.createElement(Routes, {},
-          React.createElement(Route, { path: '/', element: React.createElement(Home, { positionService }) })
+      React.createElement(ServiceProvider, {},
+        React.createElement(MemoryRouter, { initialEntries: ['/'] },
+          React.createElement(Routes, {},
+            React.createElement(Route, { path: '/', element: React.createElement(Home, {}) })
+          )
         )
       )
     )

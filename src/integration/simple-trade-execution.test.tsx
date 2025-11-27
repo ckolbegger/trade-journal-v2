@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
@@ -6,6 +6,8 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
 import type { Position } from '@/lib/position'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Simple Trade Execution Test', () => {
@@ -16,6 +18,9 @@ describe('Integration: Simple Trade Execution Test', () => {
   let db: IDBDatabase
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Clear IndexedDB
     indexedDB.deleteDatabase('TradingJournalDB')
 
@@ -49,6 +54,12 @@ describe('Integration: Simple Trade Execution Test', () => {
     tradeService = new TradeService()
     journalService = new JournalService(db)
 
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
+    services.setJournalService(journalService)
+
     // Create a test position
     testPosition = await positionService.create({
       id: `simple-pos-${Date.now()}`,
@@ -66,23 +77,23 @@ describe('Integration: Simple Trade Execution Test', () => {
     })
   })
 
+  afterEach(() => {
+    ServiceContainer.resetInstance()
+  })
+
   it('should open trade execution modal and save trade without TradeService errors', async () => {
     // Step 1: Render PositionDetail page
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Wait for position to load
@@ -134,20 +145,16 @@ describe('Integration: Simple Trade Execution Test', () => {
   it('should have proper TradeService instance available', async () => {
     // This test verifies that the TradeService is properly injected
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     await waitFor(() => {

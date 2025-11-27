@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
@@ -7,6 +7,8 @@ import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
 import type { Position, Trade } from '@/lib/position'
 import type { JournalEntry } from '@/types/journal'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Position Detail Trade Journal Workflow', () => {
@@ -17,6 +19,9 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
   let db: IDBDatabase
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Clear IndexedDB
     indexedDB.deleteDatabase('TradingJournalDB')
 
@@ -50,6 +55,12 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
     tradeService = new TradeService()
     journalService = new JournalService(db)
 
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
+    services.setJournalService(journalService)
+
     // Create a test position
     testPosition = await positionService.create({
       id: `integration-pos-${Date.now()}`,
@@ -65,6 +76,10 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
       journal_entry_ids: [],
       trades: []
     })
+  })
+
+  afterEach(() => {
+    ServiceContainer.resetInstance()
   })
 
   it('should complete full trade journal workflow: Add trade → Add journal → Verify status', async () => {
@@ -87,20 +102,16 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
 
     // Step 3: Render PositionDetail with the updated position
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Wait for position to load
@@ -169,20 +180,16 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
 
     // Step 2: Render PositionDetail
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Step 3: Click Add Journal Entry button
@@ -235,20 +242,16 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
 
     // Step 2: Render PositionDetail
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Step 3: Open journal modal

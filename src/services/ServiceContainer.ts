@@ -95,12 +95,18 @@ export class ServiceContainer {
    */
   cleanup(): void {
     if (this.positionService) {
-      this.positionService.close()
+      // Only call close if the method exists (for compatibility with mocks)
+      if (typeof this.positionService.close === 'function') {
+        this.positionService.close()
+      }
       this.positionService = undefined
     }
 
     if (this.tradeService) {
-      this.tradeService.close()
+      // Only call close if the method exists (for compatibility with mocks)
+      if (typeof this.tradeService.close === 'function') {
+        this.tradeService.close()
+      }
       this.tradeService = undefined
     }
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
@@ -6,6 +6,8 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { JournalService } from '@/services/JournalService'
 import type { Position } from '@/lib/position'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
@@ -15,6 +17,9 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
   let testPosition: Position
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     // Clear IndexedDB
     indexedDB.deleteDatabase('TradingJournalDB')
 
@@ -50,6 +55,12 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
     })
     journalService = new JournalService(db)
 
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
+    services.setJournalService(journalService)
+
     // Create a test position
     testPosition = await positionService.create({
       id: `twostep-pos-${Date.now()}`,
@@ -67,23 +78,23 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
     })
   })
 
+  afterEach(() => {
+    ServiceContainer.resetInstance()
+  })
+
   it('should complete separate modal flow: Trade modal closes → Journal modal opens → Skip journal', async () => {
     // Step 1: Render PositionDetail page
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     // Wait for position to load
@@ -151,20 +162,16 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
   it('should complete flow with journal saving: Trade → Journal modal → Save journal', async () => {
     // Step 1: Render PositionDetail page
     render(
-      <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
-        <Routes>
-          <Route
-            path="/position/:id"
-            element={
-              <PositionDetail
-                positionService={positionService}
-                tradeService={tradeService}
-                journalService={journalService}
-              />
-            }
-          />
-        </Routes>
-      </MemoryRouter>
+      <ServiceProvider>
+        <MemoryRouter initialEntries={[`/position/${testPosition.id}`]}>
+          <Routes>
+            <Route
+              path="/position/:id"
+              element={<PositionDetail />}
+            />
+          </Routes>
+        </MemoryRouter>
+      </ServiceProvider>
     )
 
     await waitFor(() => {

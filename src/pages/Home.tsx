@@ -1,17 +1,14 @@
 import { useState, useEffect } from 'react'
 import { EmptyState } from './EmptyState'
 import { Dashboard } from './Dashboard'
-import { PositionService } from '@/lib/position'
+import { useServices } from '@/contexts/ServiceContext'
 
-interface HomeProps {
-  positionService?: PositionService
-}
-
-export function Home({ positionService: injectedPositionService }: HomeProps = {}) {
+export function Home() {
   const [hasPositions, setHasPositions] = useState<boolean>(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const positionService = injectedPositionService || new PositionService()
+  const services = useServices()
+  const positionService = services.getPositionService()
 
 
   useEffect(() => {
