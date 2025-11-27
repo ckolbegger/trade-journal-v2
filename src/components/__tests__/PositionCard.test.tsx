@@ -19,12 +19,19 @@ describe('PositionCard', () => {
     trades: []
   }
 
+  const mockMetrics = {
+    avgCost: 150,
+    pnl: null,
+    pnlPercentage: undefined
+  }
+
   describe('Card Appearance (Mockup Styling)', () => {
     it('should have rounded corners (rounded-xl = 12px)', () => {
       const { container } = render(
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -37,6 +44,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -49,6 +57,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -62,6 +71,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -76,6 +86,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -87,6 +98,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -100,6 +112,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={handleViewDetails}
+          {...mockMetrics}
         />
       )
 
@@ -114,6 +127,7 @@ describe('PositionCard', () => {
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
@@ -123,17 +137,18 @@ describe('PositionCard', () => {
   })
 
   describe('Position Status Display', () => {
-    it('should show position metrics', () => {
+    it('should show position metrics from props', () => {
       render(
         <PositionCard
           position={mockPosition}
           onViewDetails={vi.fn()}
+          {...mockMetrics}
         />
       )
 
       expect(screen.getByText('AAPL')).toBeInTheDocument()
       expect(screen.getByText('Long Stock')).toBeInTheDocument()
-      expect(screen.getByText('$150.00')).toBeInTheDocument() // Avg Cost
+      expect(screen.getByText('$150.00')).toBeInTheDocument() // Avg Cost from props
       expect(screen.getByText('$160.00')).toBeInTheDocument() // Target
       expect(screen.getByText('$145.00')).toBeInTheDocument() // Stop
     })

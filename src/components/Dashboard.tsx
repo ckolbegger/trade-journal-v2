@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { PositionCard } from './PositionCard'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 
 export interface DashboardProps {
   positionService: PositionService
@@ -138,13 +139,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredPositions.map(position => (
-            <PositionCard
-              key={position.id}
-              position={position}
-              onViewDetails={handleViewDetails}
-            />
-          ))}
+          {filteredPositions.map(position => {
+            // Calculate metrics for display
+            const avgCost = CostBasisCalculator.calculateAverageCost(
+              position.trades,
+              position.target_entry_price
+            )
+            // Note: P&L requires price data which Dashboard doesn't have yet
+            // Will be fixed in Step 4.9 when Dashboard uses ServiceContainer
+            const pnl = null
+            const pnlPercentage = undefined
+
+            return (
+              <PositionCard
+                key={position.id}
+                position={position}
+                onViewDetails={handleViewDetails}
+                avgCost={avgCost}
+                pnl={pnl}
+                pnlPercentage={pnlPercentage}
+              />
+            )
+          })}
         </div>
       )}
     </div>

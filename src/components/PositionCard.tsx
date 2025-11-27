@@ -2,40 +2,27 @@ import React from 'react'
 import { StatusBadge } from './StatusBadge'
 import { PnLDisplay } from './PnLDisplay'
 import type { Position } from '@/lib/position'
-import type { PriceHistory } from '@/types/priceHistory'
-import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
 
 export interface PositionCardProps {
   position: Position
-  priceHistory?: PriceHistory | null
   onViewDetails: (positionId: string) => void
+  // Metrics calculated by parent (pure presentation component)
+  avgCost: number
+  pnl: number | null
+  pnlPercentage: number | undefined
 }
 
 /**
  * PositionCard component displays a position card matching the mockup design
+ * Pure presentation component - receives all metrics as props
  */
-export const PositionCard: React.FC<PositionCardProps> = ({ position, priceHistory, onViewDetails }) => {
-  // Calculate average cost from trades
-  const avgCost = position.trades.length > 0
-    ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
-    : position.target_entry_price
-
-  // Calculate P&L if price data exists and position has trades
-  const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
-  const pnl = position.trades.length > 0 ? calculatePositionPnL(position, priceMap) : null
-
-  // Calculate cost basis for percentage
-  const costBasis = position.trades.reduce((sum, trade) => {
-    if (trade.trade_type === 'buy') {
-      return sum + (trade.price * trade.quantity)
-    }
-    return sum
-  }, 0)
-
-  const pnlPercentage = pnl !== null && costBasis > 0
-    ? calculatePnLPercentage(pnl, costBasis)
-    : undefined
-
+export const PositionCard: React.FC<PositionCardProps> = ({
+  position,
+  onViewDetails,
+  avgCost,
+  pnl,
+  pnlPercentage
+}) => {
   // Determine card styling based on position status
   const isPlanned = position.trades.length === 0
 
