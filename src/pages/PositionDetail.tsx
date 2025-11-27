@@ -18,7 +18,7 @@ import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
-import { formatDate, formatCurrency } from '@/utils/formatters'
+import { formatDate, formatCurrency, formatTradeSummary } from '@/utils/formatters'
 
 export function PositionDetail() {
   const navigate = useNavigate()
@@ -96,14 +96,6 @@ export function PositionDetail() {
     } finally {
       setJournalLoading(false)
     }
-  }
-
-  const formatTradeSummary = (trade: Trade): string => {
-    const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
-    const quantity = trade.quantity
-    const price = formatCurrency(trade.price)
-    const date = formatDate(trade.timestamp)
-    return `${type} ${quantity} @ ${price} on ${date}`
   }
 
   const handlePriceUpdated = (updatedPrice: PriceHistory) => {

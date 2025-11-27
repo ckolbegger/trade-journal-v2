@@ -2,6 +2,8 @@
  * Date and number formatting utilities
  */
 
+import type { Trade } from '@/lib/position'
+
 /**
  * Format a Date object to a localized date string
  * @param date - The date to format
@@ -25,4 +27,17 @@ export function formatCurrency(amount: number): string {
     style: 'currency',
     currency: 'USD'
   }).format(amount)
+}
+
+/**
+ * Format a trade as a summary string
+ * @param trade - The trade to format
+ * @returns Formatted summary string (e.g., "Buy 100 @ $150.50 on Mar 15, 2024")
+ */
+export function formatTradeSummary(trade: Trade): string {
+  const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
+  const quantity = trade.quantity
+  const price = formatCurrency(trade.price)
+  const date = formatDate(trade.timestamp)
+  return `${type} ${quantity} @ ${price} on ${date}`
 }

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { formatDate, formatCurrency } from '../formatters'
+import { formatDate, formatCurrency, formatTradeSummary } from '../formatters'
+import type { Trade } from '@/lib/position'
 
 describe('formatters', () => {
   describe('formatDate', () => {
@@ -51,6 +52,47 @@ describe('formatters', () => {
 
     it('should round to 2 decimal places', () => {
       expect(formatCurrency(10.999)).toBe('$11.00')
+    })
+  })
+
+  describe('formatTradeSummary', () => {
+    it('should format buy trade correctly', () => {
+      const trade: Trade = {
+        id: 'trade-1',
+        position_id: 'pos-1',
+        trade_type: 'buy',
+        quantity: 100,
+        price: 150.50,
+        timestamp: new Date('2024-03-15T12:00:00Z'),
+        underlying: 'AAPL'
+      }
+      expect(formatTradeSummary(trade)).toBe('Buy 100 @ $150.50 on Mar 15, 2024')
+    })
+
+    it('should format sell trade correctly', () => {
+      const trade: Trade = {
+        id: 'trade-2',
+        position_id: 'pos-1',
+        trade_type: 'sell',
+        quantity: 50,
+        price: 155.75,
+        timestamp: new Date('2024-03-20T14:30:00Z'),
+        underlying: 'AAPL'
+      }
+      expect(formatTradeSummary(trade)).toBe('Sell 50 @ $155.75 on Mar 20, 2024')
+    })
+
+    it('should format trade with zero price', () => {
+      const trade: Trade = {
+        id: 'trade-3',
+        position_id: 'pos-1',
+        trade_type: 'sell',
+        quantity: 100,
+        price: 0,
+        timestamp: new Date('2024-03-25T10:00:00Z'),
+        underlying: 'AAPL'
+      }
+      expect(formatTradeSummary(trade)).toBe('Sell 100 @ $0.00 on Mar 25, 2024')
     })
   })
 })
