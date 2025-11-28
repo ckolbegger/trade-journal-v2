@@ -1,4 +1,5 @@
 import type { PriceHistory, PriceHistoryInput, SimplePriceInput } from '@/types/priceHistory'
+import { PriceValidator } from '@/domain/validators/PriceValidator'
 
 /**
  * Validation result for price change confirmation
@@ -67,50 +68,10 @@ export class PriceService {
   }
 
   /**
-   * Validate price data before storing
-   */
-  private validatePrice(price: number, fieldName: string = 'Price'): void {
-    if (price < 0) {
-      throw new Error(`${fieldName} cannot be negative`)
-    }
-    if (price === 0) {
-      throw new Error(`${fieldName} must be greater than zero`)
-    }
-  }
-
-  /**
-   * Validate all OHLC prices in a record
+   * Validate price record - delegates to PriceValidator
    */
   private validatePriceRecord(input: PriceHistoryInput): void {
-    this.validatePrice(input.open, 'Open price')
-    this.validatePrice(input.high, 'High price')
-    this.validatePrice(input.low, 'Low price')
-    this.validatePrice(input.close, 'Close price')
-
-    if (!input.underlying || input.underlying.trim() === '') {
-      throw new Error('Underlying cannot be empty')
-    }
-
-    if (!input.date || input.date.trim() === '') {
-      throw new Error('Date cannot be empty')
-    }
-
-    // Validate date format YYYY-MM-DD
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(input.date)) {
-      throw new Error('Date must be in YYYY-MM-DD format')
-    }
-
-    // Validate OHLC relationships
-    if (input.high < input.low) {
-      throw new Error('High price cannot be less than low price')
-    }
-    if (input.open > input.high || input.open < input.low) {
-      throw new Error('Open price must be between low and high')
-    }
-    if (input.close > input.high || input.close < input.low) {
-      throw new Error('Close price must be between low and high')
-    }
+    PriceValidator.validatePriceRecord(input)
   }
 
   /**
@@ -256,6 +217,7 @@ export class PriceService {
 
   /**
    * Validate price change and determine if confirmation is required
+   * Delegates confirmation logic to PriceValidator
    *
    * Returns confirmation requirement when:
    * - Price change exceeds 20% (positive or negative)
@@ -263,22 +225,18 @@ export class PriceService {
   async validatePriceChange(underlying: string, newPrice: number): Promise<PriceChangeValidation> {
     const latestPrice = await this.getLatestPrice(underlying)
 
-    // No previous price - no confirmation needed
-    if (!latestPrice) {
-      return {
-        requiresConfirmation: false,
-        percentChange: 0,
-        oldPrice: null,
-        newPrice
-      }
-    }
+    // No previous price - delegate to PriceValidator
+    const oldPrice = latestPrice?.close ?? null
+    const requiresConfirmation = PriceValidator.requiresConfirmation(oldPrice, newPrice)
 
-    const oldPrice = latestPrice.close
-    const percentChange = ((newPrice - oldPrice) / oldPrice) * 100
+    // Calculate percent change for display purposes
+    const percentChange = oldPrice !== null
+      ? parseFloat((((newPrice - oldPrice) / oldPrice) * 100).toFixed(2))
+      : 0
 
     return {
-      requiresConfirmation: Math.abs(percentChange) > 20,
-      percentChange: parseFloat(percentChange.toFixed(2)),
+      requiresConfirmation,
+      percentChange,
       oldPrice,
       newPrice
     }

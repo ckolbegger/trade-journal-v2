@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react'
 import { PositionDetail } from './PositionDetail'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
@@ -10,6 +10,7 @@ import {
 } from '@/test/assertion-helpers'
 import type { Position } from '@/lib/position'
 import type { JournalEntry } from '@/types/journal'
+import { ServiceContainer } from '@/services/ServiceContainer'
 
 // Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
@@ -88,6 +89,7 @@ describe('PositionDetail', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
+    ServiceContainer.resetInstance() // Reset singleton for clean test state
     mockPosition = TEST_POSITIONS.single
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
@@ -100,6 +102,10 @@ describe('PositionDetail', () => {
     mockJournalService.delete.mockReset()
     mockJournalService.getAll.mockReset()
     mockJournalService.deleteByPositionId.mockReset()
+  })
+
+  afterEach(() => {
+    ServiceContainer.resetInstance() // Clean up singleton after each test
   })
 
   it('should display position not found when position does not exist', async () => {

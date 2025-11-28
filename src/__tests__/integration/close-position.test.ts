@@ -15,7 +15,7 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { processFIFO } from '@/lib/utils/fifo'
 import { calculatePlanVsExecution } from '@/lib/utils/planVsExecution'
-import { computePositionStatus } from '@/utils/statusComputation'
+import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
 
 describe('Position Closing Integration Tests', () => {
   let positionService: PositionService

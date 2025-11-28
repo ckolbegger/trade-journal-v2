@@ -7,6 +7,7 @@ import { TradeService } from '@/services/TradeService'
 import { PositionCard } from '@/components/PositionCard'
 import { Dashboard } from '@/components/Dashboard'
 import type { Position, Trade } from '@/lib/position'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -34,6 +35,15 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   notes: 'Test trade execution',
   ...overrides
 })
+
+// Helper to calculate metrics for PositionCard
+const calculateMetrics = (position: Position) => {
+  const avgCost = CostBasisCalculator.calculateAverageCost(position.trades, position.target_entry_price)
+  // Integration tests don't have price data, so pnl is always null
+  const pnl = null
+  const pnlPercentage = undefined
+  return { avgCost, pnl, pnlPercentage }
+}
 
 describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   let positionService: PositionService
@@ -89,10 +99,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       const retrievedPosition = await positionService.getById('card-header-pos-123')
 
       const mockOnViewDetails = vi.fn()
+      const metrics = calculateMetrics(retrievedPosition!)
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onViewDetails: mockOnViewDetails
+          onViewDetails: mockOnViewDetails,
+          ...metrics
         })
       )
 
@@ -113,10 +125,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       const retrievedPosition = await positionService.getById('button-pos-123')
 
       const mockOnViewDetails = vi.fn()
+      const metrics = calculateMetrics(retrievedPosition!)
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onViewDetails: mockOnViewDetails
+          onViewDetails: mockOnViewDetails,
+          ...metrics
         })
       )
 
@@ -145,10 +159,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       await positionService.create(openPosition)
       const retrievedPosition = await positionService.getById('open-button-pos-123')
 
+      const metrics = calculateMetrics(retrievedPosition!)
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onViewDetails: vi.fn()
+          onViewDetails: vi.fn(),
+          ...metrics
         })
       )
 
@@ -180,10 +196,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       expect(updatedPosition).toBeTruthy()
       expect(updatedPosition!.status).toBe('open')
 
+      const metrics = calculateMetrics(updatedPosition!)
       const { unmount } = render(
         React.createElement(PositionCard, {
           position: updatedPosition!,
-          onViewDetails: vi.fn()
+          onViewDetails: vi.fn(),
+          ...metrics
         })
       )
 
@@ -229,10 +247,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       expect(refreshedPosition!.status).toBe('open')
       expect(refreshedPosition!.trades).toHaveLength(1)
 
+      const metrics = calculateMetrics(refreshedPosition!)
       render(
         React.createElement(PositionCard, {
           position: refreshedPosition!,
-          onViewDetails: vi.fn()
+          onViewDetails: vi.fn(),
+          ...metrics
         })
       )
 
@@ -254,10 +274,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       expect(retrievedPosition!.status).toBe('planned')
 
+      const metrics = calculateMetrics(retrievedPosition!)
       render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onViewDetails: vi.fn()
+          onViewDetails: vi.fn(),
+          ...metrics
         })
       )
 
@@ -477,11 +499,13 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
       const retrievedPosition = await positionService.getById('corrupted-pos-123')
 
+      const metrics = calculateMetrics(retrievedPosition!)
       expect(() => {
         render(
         React.createElement(PositionCard, {
           position: retrievedPosition!,
-          onViewDetails: vi.fn()
+          onViewDetails: vi.fn(),
+          ...metrics
         })
       )
       }).not.toThrow()

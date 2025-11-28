@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { PositionCard } from '@/components/PositionCard'
 import type { Position } from '@/lib/position'
 import type { PriceHistory } from '@/types/priceHistory'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 
 /**
  * Tests for PositionCard P&L Integration
@@ -47,19 +49,32 @@ describe('PositionCard - P&L Integration', () => {
     ]
   }
 
+  // Helper to calculate metrics for tests
+  const calculateMetrics = (position: Position, priceHistory?: PriceHistory | null) => {
+    const avgCost = CostBasisCalculator.calculateAverageCost(position.trades, position.target_entry_price)
+    const costBasis = CostBasisCalculator.calculateTotalCostBasis(position.trades)
+    const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
+    const pnl = PnLCalculator.calculatePositionPnL(position, priceMap)
+    const pnlPercentage = pnl !== null && costBasis > 0
+      ? PnLCalculator.calculatePnLPercentage(pnl, costBasis)
+      : undefined
+    return { avgCost, pnl, pnlPercentage }
+  }
+
   describe('P&L Display with Price Data', () => {
     it('[Unit] should display positive P&L in green when price is up', async () => {
       // Arrange
       // Cost basis: $150, Current: $155, P&L: +$500 (+3.3%)
       const position = { ...basePosition }
       const priceHistory = { ...basePriceHistory, close: 155.00 }
+      const metrics = calculateMetrics(position, priceHistory)
 
       // Act
       const { container } = render(
         <PositionCard
           position={position}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -75,13 +90,14 @@ describe('PositionCard - P&L Integration', () => {
       // Cost basis: $150, Current: $145, P&L: -$500 (-3.3%)
       const position = { ...basePosition }
       const priceHistory = { ...basePriceHistory, close: 145.00 }
+      const metrics = calculateMetrics(position, priceHistory)
 
       // Act
       const { container } = render(
         <PositionCard
           position={position}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -97,13 +113,14 @@ describe('PositionCard - P&L Integration', () => {
       // Cost basis: $150, Current: $150, P&L: $0 (0%)
       const position = { ...basePosition }
       const priceHistory = { ...basePriceHistory, close: 150.00 }
+      const metrics = calculateMetrics(position, priceHistory)
 
       // Act
       const { container } = render(
         <PositionCard
           position={position}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -119,13 +136,14 @@ describe('PositionCard - P&L Integration', () => {
       // Cost basis: $150, Current: $157.50, P&L: +$750 (+5%)
       const position = { ...basePosition }
       const priceHistory = { ...basePriceHistory, close: 157.50 }
+      const metrics = calculateMetrics(position, priceHistory)
 
       // Act
       render(
         <PositionCard
           position={position}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -141,13 +159,14 @@ describe('PositionCard - P&L Integration', () => {
     it('[Unit] should display "—" when no price data exists', async () => {
       // Arrange
       const position = { ...basePosition }
+      const metrics = calculateMetrics(position, null)
 
       // Act
       render(
         <PositionCard
           position={position}
-          priceHistory={null}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -165,13 +184,14 @@ describe('PositionCard - P&L Integration', () => {
         status: 'planned'
       }
       const priceHistory = { ...basePriceHistory }
+      const metrics = calculateMetrics(plannedPosition, priceHistory)
 
       // Act
       render(
         <PositionCard
           position={plannedPosition}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 
@@ -213,13 +233,14 @@ describe('PositionCard - P&L Integration', () => {
       // Current: 155
       // P&L: (155-151) * 100 = +$400
       const priceHistory = { ...basePriceHistory, close: 155.00 }
+      const metrics = calculateMetrics(multiTradePosition, priceHistory)
 
       // Act
       render(
         <PositionCard
           position={multiTradePosition}
-          priceHistory={priceHistory}
           onViewDetails={vi.fn()}
+          {...metrics}
         />
       )
 

@@ -101,16 +101,18 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     })
 
     it('[Unit] should allow trade with zero price (worthless exit)', async () => {
-      // Arrange - Zero price allowed for worthless exits
-      const zeroPriceTrade = createTestTrade({ price: 0 })
-      mockPositionService.getById.mockResolvedValue(testPosition)
+      // Arrange - Zero price allowed for worthless exits (sell trades only)
+      const zeroPriceTrade = createTestTrade({ price: 0, trade_type: 'sell' })
+      // Need an open position to sell from
+      const openPosition = createTestPosition({ status: 'open', trades: [createTestTrade()] })
+      mockPositionService.getById.mockResolvedValue(openPosition)
       mockPositionService.update.mockResolvedValue()
 
       // Act
       const result = await tradeService.addTrade(zeroPriceTrade)
 
       // Assert - Should succeed with price 0
-      expect(result[0].price).toBe(0)
+      expect(result[1].price).toBe(0) // Second trade (index 1) is the zero-price sell
     })
 
     it('[Unit] should reject trade with negative price', async () => {

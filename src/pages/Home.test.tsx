@@ -1,5 +1,5 @@
 import { render, screen, waitFor, act } from '@testing-library/react'
-import { vi, describe, it, expect, beforeEach } from 'vitest'
+import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { Home } from './Home'
 import { mockPositionServiceModule, resetMockService } from '@/test/mocks/position-service-mock'
 import { TEST_POSITIONS, createPosition } from '@/test/data-factories'
@@ -14,6 +14,7 @@ import {
   assertButtonState
 } from '@/test/assertion-helpers'
 import type { Position } from '@/lib/position'
+import { ServiceContainer } from '@/services/ServiceContainer'
 
 // Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
@@ -30,9 +31,20 @@ describe('Home', () => {
   let mockPositions: Position[]
 
   beforeEach(() => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     mockPositions = [TEST_POSITIONS.single]
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
+
+    // Inject mock service into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(mockPositionService)
+  })
+
+  afterEach(() => {
+    ServiceContainer.resetInstance()
   })
 
 

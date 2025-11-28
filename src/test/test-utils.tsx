@@ -2,10 +2,15 @@ import type { RenderOptions } from '@testing-library/react'
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { BrowserRouter } from 'react-router-dom'
+import { ServiceProvider } from '@/contexts/ServiceContext'
 
-// Custom render function that includes Router context
+// Custom render function that includes Router and Service context
 const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
-  return <BrowserRouter>{children}</BrowserRouter>
+  return (
+    <ServiceProvider>
+      <BrowserRouter>{children}</BrowserRouter>
+    </ServiceProvider>
+  )
 }
 
 const customRender = (

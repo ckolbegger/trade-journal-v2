@@ -1,9 +1,11 @@
 import React from 'react'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position } from '@/lib/position'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'test-pos-123',
@@ -22,6 +24,14 @@ const createTestPosition = (overrides?: Partial<Position>): Position => ({
 })
 
 describe('PositionDetail Component', () => {
+  beforeEach(() => {
+    ServiceContainer.resetInstance()
+  })
+
+  afterEach(() => {
+    ServiceContainer.resetInstance()
+  })
+
   it('[Component] should display trade data when position has trades', () => {
     // Arrange - Create position with trade
     const positionWithTrade = createTestPosition({
@@ -49,10 +59,16 @@ describe('PositionDetail Component', () => {
       close: vi.fn()
     }
 
-    // Act - Render component with mocked service
+    // Inject mock service into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(mockPositionService as any)
+
+    // Act - Render component with ServiceProvider
     render(
-      React.createElement(BrowserRouter, {},
-        React.createElement(PositionDetail, { positionService: mockPositionService })
+      React.createElement(ServiceProvider, {},
+        React.createElement(BrowserRouter, {},
+          React.createElement(PositionDetail)
+        )
       )
     )
 
@@ -80,10 +96,16 @@ describe('PositionDetail Component', () => {
       close: vi.fn()
     }
 
+    // Inject mock service into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(mockPositionService as any)
+
     // Act
     render(
-      React.createElement(BrowserRouter, {},
-        React.createElement(PositionDetail, { positionService: mockPositionService })
+      React.createElement(ServiceProvider, {},
+        React.createElement(BrowserRouter, {},
+          React.createElement(PositionDetail)
+        )
       )
     )
 

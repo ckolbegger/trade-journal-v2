@@ -7,6 +7,8 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
   id: 'pos-123',
@@ -29,10 +31,18 @@ describe('PositionDetail Trade Data Integration', () => {
   let tradeService: TradeService
 
   beforeEach(async () => {
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
     positionService = new PositionService()
     // Clear IndexedDB before each test
     await positionService.clearAll()
     tradeService = new TradeService(positionService)
+
+    // Inject services into ServiceContainer
+    const services = ServiceContainer.getInstance()
+    services.setPositionService(positionService)
+    services.setTradeService(tradeService)
   })
 
   afterEach(async () => {
@@ -44,6 +54,7 @@ describe('PositionDetail Trade Data Integration', () => {
     if (positionService && typeof positionService.close === 'function') {
       positionService.close()
     }
+    ServiceContainer.resetInstance()
   })
 
   it('[Integration] should display trade data in position detail when position has trades', async () => {
@@ -77,12 +88,14 @@ describe('PositionDetail Trade Data Integration', () => {
 
     // Act - Render PositionDetail component with proper routing AFTER trade is added
     render(
-      React.createElement(MemoryRouter, { initialEntries: ['/position/detail-test-pos-123'] },
-        React.createElement(Routes, {},
-          React.createElement(Route, {
-            path: '/position/:id',
-            element: React.createElement(PositionDetail, { positionService })
-          })
+      React.createElement(ServiceProvider, {},
+        React.createElement(MemoryRouter, { initialEntries: ['/position/detail-test-pos-123'] },
+          React.createElement(Routes, {},
+            React.createElement(Route, {
+              path: '/position/:id',
+              element: React.createElement(PositionDetail, {})
+            })
+          )
         )
       )
     )
@@ -122,12 +135,14 @@ describe('PositionDetail Trade Data Integration', () => {
 
     // Act - Render PositionDetail component with proper routing
     render(
-      React.createElement(MemoryRouter, { initialEntries: ['/position/detail-test-no-trades-123'] },
-        React.createElement(Routes, {},
-          React.createElement(Route, {
-            path: '/position/:id',
-            element: React.createElement(PositionDetail, { positionService })
-          })
+      React.createElement(ServiceProvider, {},
+        React.createElement(MemoryRouter, { initialEntries: ['/position/detail-test-no-trades-123'] },
+          React.createElement(Routes, {},
+            React.createElement(Route, {
+              path: '/position/:id',
+              element: React.createElement(PositionDetail, {})
+            })
+          )
         )
       )
     )
@@ -183,12 +198,14 @@ describe('PositionDetail Trade Data Integration', () => {
 
     // Act - Render PositionDetail component with proper routing
     render(
-      React.createElement(MemoryRouter, { initialEntries: ['/position/detail-status-test-123'] },
-        React.createElement(Routes, {},
-          React.createElement(Route, {
-            path: '/position/:id',
-            element: React.createElement(PositionDetail, { positionService })
-          })
+      React.createElement(ServiceProvider, {},
+        React.createElement(MemoryRouter, { initialEntries: ['/position/detail-status-test-123'] },
+          React.createElement(Routes, {},
+            React.createElement(Route, {
+              path: '/position/:id',
+              element: React.createElement(PositionDetail, {})
+            })
+          )
         )
       )
     )

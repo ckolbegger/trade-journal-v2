@@ -190,6 +190,7 @@ describe('Dashboard Option A: PositionService Integration', () => {
         createTestPosition({
           id: 'open-1',
           symbol: 'MSFT',
+          status: 'open', // Position with trades should have 'open' status
           trades: [{
             id: 'trade-1',
             position_id: 'open-1',

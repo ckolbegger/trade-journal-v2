@@ -1,11 +1,8 @@
 import { useState, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
-import { PositionService } from '@/lib/position'
+import { useServices } from '@/contexts/ServiceContext'
 import type { Position, Trade } from '@/lib/position'
-import { TradeService } from '@/services/TradeService'
-import { JournalService } from '@/services/JournalService'
-import { PriceService } from '@/services/PriceService'
 import type { JournalEntry } from '@/types/journal'
 import type { PriceHistory } from '@/types/priceHistory'
 import { Button } from '@/components/ui/button'
@@ -15,22 +12,17 @@ import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import { PnLDisplay } from '@/components/PnLDisplay'
 import { ProgressIndicator } from '@/components/ProgressIndicator'
 import { PriceUpdateCard } from '@/components/PriceUpdateCard'
-import { PlanVsExecutionCard } from '@/components/PlanVsExecutionCard'
 import type { JournalField } from '@/types/journal'
 import { generateJournalId } from '@/lib/uuid'
-import { calculatePositionPnL, calculatePnLPercentage } from '@/utils/pnl'
+import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
 import { ArrowLeft, Edit, MoreHorizontal } from 'lucide-react'
 import { JournalCarousel } from '@/components/JournalCarousel'
+import { formatDate, formatCurrency, formatTradeSummary } from '@/utils/formatters'
 
-interface PositionDetailProps {
-  positionService?: PositionService
-  tradeService?: TradeService
-  journalService?: JournalService
-  priceService?: PriceService
-}
-
-export function PositionDetail({ positionService: injectedPositionService, tradeService: injectedTradeService, journalService: injectedJournalService, priceService: injectedPriceService }: PositionDetailProps = {}) {
+export function PositionDetail() {
   const navigate = useNavigate()
+  const services = useServices()
   const { id} = useParams<{ id: string }>()
   const [position, setPosition] = useState<Position | null>(null)
   const [priceHistory, setPriceHistory] = useState<PriceHistory | null>(null)
@@ -43,59 +35,24 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const [showJournalModal, setShowJournalModal] = useState(false)
   const [selectedTradeId, setSelectedTradeId] = useState<string | undefined>(undefined)
   const [journalModalError, setJournalModalError] = useState<string | null>(null)
-  const [planVsExecution, setPlanVsExecution] = useState<any>(null)
-  const positionServiceInstance = injectedPositionService || new PositionService()
-  const tradeServiceInstance = injectedTradeService || new TradeService()
-  const priceServiceInstance = injectedPriceService || new PriceService()
-
-  
-  const getJournalService = async (): Promise<JournalService> => {
-    if (injectedJournalService) {
-      return injectedJournalService
-    }
-
-    const db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-    })
-
-    return new JournalService(db)
-  }
 
   useEffect(() => {
     loadPosition()
     loadJournalEntries()
-  }, [id])
+  }, [id, services])
 
   useEffect(() => {
     if (position) {
       loadPriceHistory()
     }
-  }, [position])
-
-  // Calculate plan vs execution for closed positions
-  useEffect(() => {
-    const calculatePlanVsExec = async () => {
-      if (position?.status === 'closed') {
-        try {
-          const comparison = await tradeServiceInstance.calculatePlanVsExecution(position.id)
-          setPlanVsExecution(comparison)
-        } catch (error) {
-          console.error('Failed to calculate plan vs execution:', error)
-        }
-      } else {
-        setPlanVsExecution(null)
-      }
-    }
-    calculatePlanVsExec()
-  }, [position?.status, position?.id])
+  }, [position, services])
 
   const loadPosition = async () => {
     if (!id) return
 
     try {
-      const loadedPosition = await positionServiceInstance.getById(id)
+      const positionService = services.getPositionService()
+      const loadedPosition = await positionService.getById(id)
       setPosition(loadedPosition)
     } catch (error) {
       console.error('Failed to load position:', error)
@@ -109,7 +66,8 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     if (!position) return
 
     try {
-      const latestPrice = await priceServiceInstance.getLatestPrice(position.symbol)
+      const priceService = services.getPriceService()
+      const latestPrice = await priceService.getLatestPrice(position.symbol)
       setPriceHistory(latestPrice)
     } catch (error) {
       console.error('Failed to load price history:', error)
@@ -123,7 +81,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     try {
       setJournalLoading(true)
       setJournalError(null)
-      const journalService = await getJournalService()
+      const journalService = await services.getJournalService()
       const entries = await journalService.getByPositionId(id)
 
       // Sort entries chronologically (oldest first)
@@ -140,41 +98,6 @@ export function PositionDetail({ positionService: injectedPositionService, trade
     }
   }
 
-  const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date)
-  }
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount)
-  }
-
-  // Unused function - kept for potential future use
-  // const formatEntryType = (entryType: string) => {
-  //   switch (entryType) {
-  //     case 'position_plan':
-  //       return 'Position Plan'
-  //     case 'trade_execution':
-  //       return 'Trade Execution'
-  //     default:
-  //       return entryType
-  //   }
-  // }
-
-  const formatTradeSummary = (trade: Trade): string => {
-    const type = trade.trade_type === 'buy' ? 'Buy' : 'Sell'
-    const quantity = trade.quantity
-    const price = formatCurrency(trade.price)
-    const date = formatDate(trade.timestamp)
-    return `${type} ${quantity} @ ${price} on ${date}`
-  }
-
   const handlePriceUpdated = (updatedPrice: PriceHistory) => {
     setPriceHistory(updatedPrice)
   }
@@ -185,8 +108,9 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
   const handleTradeAdded = async (trade: Trade) => {
     try {
+      const tradeService = services.getTradeService()
       // addTrade returns all trades including the newly added one
-      const updatedTrades = await tradeServiceInstance.addTrade(trade)
+      const updatedTrades = await tradeService.addTrade(trade)
       setShowTradeModal(false)
 
       // Refresh position to include the new trade
@@ -232,7 +156,7 @@ export function PositionDetail({ positionService: injectedPositionService, trade
 
     try {
       setJournalModalError(null) // Clear previous errors
-      const journalService = await getJournalService()
+      const journalService = await services.getJournalService()
       const entryType = selectedTradeId ? 'trade_execution' : 'position_plan'
 
       await journalService.create({
@@ -290,30 +214,16 @@ export function PositionDetail({ positionService: injectedPositionService, trade
   const hasTrades = position.trades && position.trades.length > 0
   const isPlannedPosition = !hasTrades
 
-  // Calculate average cost from trades
-  const avgCost = position.trades.length > 0
-    ? position.trades.reduce((sum, trade) => sum + trade.price, 0) / position.trades.length
-    : targetEntryPrice
-
-  // Calculate total quantity from trades
+  // Calculate metrics using domain calculators
+  const avgCost = CostBasisCalculator.calculateAverageCost(position.trades, targetEntryPrice)
+  const costBasis = CostBasisCalculator.calculateTotalCostBasis(position.trades)
   const totalQuantity = position.trades.reduce((sum, trade) => sum + trade.quantity, 0)
 
-  // Calculate total cost - unused for now
-  // const totalCost = position.trades.reduce((sum, trade) => sum + (trade.price * trade.quantity), 0)
-
-  // Calculate P&L from price history
+  // Calculate P&L using domain calculators
   const priceMap = priceHistory ? new Map([[priceHistory.underlying, priceHistory]]) : new Map()
-  const pnl = hasTrades ? calculatePositionPnL(position, priceMap) : null
-
-  const costBasis = position.trades.reduce((sum, trade) => {
-    if (trade.trade_type === 'buy') {
-      return sum + (trade.price * trade.quantity)
-    }
-    return sum
-  }, 0)
-
+  const pnl = PnLCalculator.calculatePositionPnL(position, priceMap)
   const pnlPercentage = pnl !== null && costBasis > 0
-    ? calculatePnLPercentage(pnl, costBasis)
+    ? PnLCalculator.calculatePnLPercentage(pnl, costBasis)
     : undefined
 
   const currentPrice = priceHistory?.close || avgCost
@@ -390,14 +300,14 @@ export function PositionDetail({ positionService: injectedPositionService, trade
           <section className="p-4">
             <PriceUpdateCard
               underlying={position.symbol}
-              priceService={priceServiceInstance}
+              priceService={services.getPriceService()}
               onPriceUpdated={handlePriceUpdated}
             />
           </section>
         )}
 
         {/* Progress to Target */}
-        {hasTrades && position.status !== 'closed' && (
+        {hasTrades && (
           <section className="mb-6">
             <div className="px-4 py-3">
               <ProgressIndicator
@@ -405,15 +315,6 @@ export function PositionDetail({ positionService: injectedPositionService, trade
                 stopLoss={stopLoss}
                 profitTarget={profitTarget}
               />
-            </div>
-          </section>
-        )}
-
-        {/* Plan vs Execution Analysis (Closed Positions Only) */}
-        {position.status === 'closed' && planVsExecution && (
-          <section className="mb-6">
-            <div className="px-4 py-3">
-              <PlanVsExecutionCard comparison={planVsExecution} />
             </div>
           </section>
         )}

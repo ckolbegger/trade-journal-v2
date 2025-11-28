@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { JournalEntry } from '@/types/journal'
+import { formatDate as formatDateUtil } from '@/utils/formatters'
 
 interface JournalCarouselProps {
   entries: JournalEntry[]
@@ -62,12 +63,7 @@ export function JournalCarousel({
   const showNavigation = entries.length > 1
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    }).format(date)
+    return formatDateUtil(new Date(dateString))
   }
 
   const formatEntryType = (entryType: string) => {

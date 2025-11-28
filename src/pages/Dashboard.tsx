@@ -1,16 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom'
 import { Dashboard as DashboardComponent } from '@/components/Dashboard'
-import { PositionService } from '@/lib/position'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { useServices } from '@/contexts/ServiceContext'
 
-interface DashboardProps {
-  positionService?: PositionService
-}
-
-export function Dashboard({ positionService: injectedPositionService }: DashboardProps = {}) {
+export function Dashboard() {
   const navigate = useNavigate()
-  const positionService = injectedPositionService || new PositionService()
+  const services = useServices()
+  const positionService = services.getPositionService()
 
   const handleViewDetails = (positionId: string) => {
     navigate(`/position/${positionId}`)
