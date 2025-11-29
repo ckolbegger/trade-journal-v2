@@ -70,8 +70,9 @@ export class ServiceContainer {
    * Get PositionService instance (lazy initialization)
    */
   getPositionService(): PositionService {
+    const db = this.getDatabase() // Throws if not initialized
     if (!this.positionService) {
-      this.positionService = new PositionService()
+      this.positionService = new PositionService(db)
     }
     return this.positionService
   }

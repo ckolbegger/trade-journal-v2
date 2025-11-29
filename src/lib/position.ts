@@ -127,54 +127,11 @@ export interface Position {
 
 // Position Service - IndexedDB CRUD operations
 export class PositionService {
-  private dbName = 'TradingJournalDB'
-  private version = 3 // Incremented for price_history store
-  private positionStore = 'positions'
-  private dbConnection: IDBDatabase | null = null
+  private readonly positionStore = 'positions'
+  private db: IDBDatabase
 
-  private async getDB(): Promise<IDBDatabase> {
-    if (this.dbConnection) {
-      return this.dbConnection
-    }
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.version)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        this.dbConnection = request.result
-        resolve(request.result)
-      }
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        // Create positions object store
-        if (!db.objectStoreNames.contains(this.positionStore)) {
-          const store = db.createObjectStore(this.positionStore, { keyPath: 'id' })
-          store.createIndex('symbol', 'symbol', { unique: false })
-          store.createIndex('status', 'status', { unique: false })
-          store.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        // Create journal_entries object store
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-
-        // Create price_history object store (Slice 3.1)
-        if (!db.objectStoreNames.contains('price_history')) {
-          const priceStore = db.createObjectStore('price_history', { keyPath: 'id' })
-          priceStore.createIndex('underlying_date', ['underlying', 'date'], { unique: true })
-          priceStore.createIndex('underlying', 'underlying', { unique: false })
-          priceStore.createIndex('date', 'date', { unique: false })
-          priceStore.createIndex('updated_at', 'updated_at', { unique: false })
-        }
-      }
-    })
+  constructor(db: IDBDatabase) {
+    this.db = db
   }
 
   /**
@@ -187,7 +144,7 @@ export class PositionService {
   async create(position: Position): Promise<Position> {
     this.validatePosition(position)
 
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readwrite')
       const store = transaction.objectStore(this.positionStore)
@@ -199,7 +156,7 @@ export class PositionService {
   }
 
   async getById(id: string): Promise<Position | null> {
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readonly')
       const store = transaction.objectStore(this.positionStore)
@@ -230,7 +187,7 @@ export class PositionService {
   }
 
   async getAll(): Promise<Position[]> {
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readonly')
       const store = transaction.objectStore(this.positionStore)
@@ -261,7 +218,7 @@ export class PositionService {
   async update(position: Position): Promise<void> {
     this.validatePosition(position)
 
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readwrite')
       const store = transaction.objectStore(this.positionStore)
@@ -273,7 +230,7 @@ export class PositionService {
   }
 
   async delete(id: string): Promise<void> {
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readwrite')
       const store = transaction.objectStore(this.positionStore)
@@ -285,7 +242,7 @@ export class PositionService {
   }
 
   async clearAll(): Promise<void> {
-    const db = await this.getDB()
+    const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readwrite')
       const store = transaction.objectStore(this.positionStore)
@@ -320,9 +277,7 @@ export class PositionService {
   }
 
   close(): void {
-    if (this.dbConnection) {
-      this.dbConnection.close()
-      this.dbConnection = null
-    }
+    // Database connection is managed by ServiceContainer
+    // Do not close database here
   }
 }
