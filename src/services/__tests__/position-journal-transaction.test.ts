@@ -37,7 +37,7 @@ describe('Position-Journal Transaction Flow', () => {
     // Create service with injected database
     positionService = new PositionService(db)
     journalService = new JournalService(db)
-    transactionService = new PositionJournalTransaction(positionService, journalService, db)
+    transactionService = new PositionJournalTransaction(positionService, journalService)
   })
 
   afterEach(() => {
@@ -122,7 +122,7 @@ describe('Position-Journal Transaction Flow', () => {
       await expect(transactionService.createPositionWithJournal(invalidPositionData)).rejects.toThrow()
 
       // Verify no journal entries were left behind
-      const allJournals = await transactionService.getAllJournalEntries()
+      const allJournals = await journalService.getAll()
       expect(allJournals).toHaveLength(0)
     })
 
