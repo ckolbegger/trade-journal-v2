@@ -42,61 +42,50 @@ describe('PositionDetail - Full Carousel Workflow', () => {
   }
 
   beforeEach(async () => {
-    // Reset ServiceContainer singleton before each test
-    ServiceContainer.resetInstance()
-
-    // Open database
-    db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        if (!db.objectStoreNames.contains('positions')) {
-          const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
-          positionStore.createIndex('symbol', 'symbol', { unique: false })
-          positionStore.createIndex('status', 'status', { unique: false })
-          positionStore.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-      }
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
     })
 
-    positionService = new PositionService()
+    // Reset ServiceContainer singleton to clear any previous instance
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer (which will open database and initialize schema)
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+
+    // Get the initialized database
+    db = (container as any).db
+
+    // Create services with database injection
+    positionService = new PositionService(db)
     journalService = new JournalService(db)
     tradeService = new TradeService(positionService)
 
-    // Inject mock services into ServiceContainer
-    const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setJournalService(journalService)
-    services.setTradeService(tradeService)
-
-    // Clear data
-    await new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction(['positions', 'journal_entries'], 'readwrite')
-      transaction.objectStore('positions').clear()
-      transaction.objectStore('journal_entries').clear()
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
-    })
+    // Inject services into ServiceContainer
+    container.setPositionService(positionService)
+    container.setJournalService(journalService)
+    container.setTradeService(tradeService)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     // Reset ServiceContainer singleton after each test
     ServiceContainer.resetInstance()
 
     if (db) {
       db.close()
     }
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   // Helper function to render PositionDetail with proper routing

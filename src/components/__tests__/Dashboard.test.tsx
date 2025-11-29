@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { Dashboard } from '../Dashboard'
 import { ServiceProvider } from '@/contexts/ServiceContext'
@@ -11,10 +11,36 @@ describe('Dashboard Component with ServiceContext', () => {
   let mockPositionService: PositionService
   let container: ServiceContainer
 
-  beforeEach(() => {
-    // Create a fresh ServiceContainer with mock
+  beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
     container = ServiceContainer.getInstance()
+    await container.initialize()
+
+    // Get PositionService
     mockPositionService = container.getPositionService()
+  })
+
+  afterEach(async () => {
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should use ServiceContext instead of receiving positionService as prop', async () => {

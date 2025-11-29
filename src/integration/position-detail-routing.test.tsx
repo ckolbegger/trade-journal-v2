@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
+import { ServiceContainer } from '@/services/ServiceContainer'
+import 'fake-indexeddb/auto'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
@@ -14,16 +16,39 @@ describe('Integration: Position Detail Routing', () => {
   let positionService: PositionService
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    // Clear IndexedDB before each test
-    await positionService.clearAll()
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
   })
 
-  afterEach(() => {
-    // Close database connection to prevent memory leaks
+  afterEach(async () => {
+    // Clear all positions before closing
     if (positionService) {
-      positionService.close()
+      await positionService.clearAll()
     }
+
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should navigate from Dashboard to Position Detail when position is clicked', async () => {

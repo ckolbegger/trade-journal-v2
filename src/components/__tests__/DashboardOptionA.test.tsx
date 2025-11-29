@@ -31,14 +31,36 @@ describe('Dashboard Option A: PositionService Integration', () => {
   let positionService: PositionService
 
   beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
     container = ServiceContainer.getInstance()
+    await container.initialize()
+
+    // Get and clear PositionService
     positionService = container.getPositionService()
-    // Clear all positions before each test
     await positionService.clearAll()
   })
 
   afterEach(async () => {
-    await positionService.close()
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   describe('[Integration] Dashboard data management with PositionService', () => {

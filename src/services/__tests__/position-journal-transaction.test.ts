@@ -1,10 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { generatePositionId, generateJournalId } from '@/lib/uuid'
 import type { Position } from '@/lib/position'
 import type { JournalField } from '@/types/journal'
+import { SchemaManager } from '@/services/SchemaManager'
+import 'fake-indexeddb/auto'
 
 describe('Position-Journal Transaction Flow', () => {
   let positionService: PositionService
@@ -13,44 +15,35 @@ describe('Position-Journal Transaction Flow', () => {
   let db: IDBDatabase
 
   beforeEach(async () => {
-    // Use a unique database name for each test to ensure isolation
-    const dbName = `TransactionTestDB_${Date.now()}_${Math.random()}`
-    db = await openDatabase(dbName)
+    // Delete database to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase('TestDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
 
-    positionService = new PositionService()
-    journalService = new JournalService(db)
-    transactionService = new PositionJournalTransaction(positionService, journalService)
-  })
-
-  async function openDatabase(dbName: string): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 3)
-
+    // Create test database with schema
+    db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('TestDB', 1)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
-
       request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        // Create positions object store
-        if (!db.objectStoreNames.contains('positions')) {
-          const store = db.createObjectStore('positions', { keyPath: 'id' })
-          store.createIndex('symbol', 'symbol', { unique: false })
-          store.createIndex('status', 'status', { unique: false })
-          store.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        // Create journal_entries object store
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
+        const database = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(database, 1)
       }
     })
-  }
+
+    // Create service with injected database
+    positionService = new PositionService(db)
+    journalService = new JournalService(db)
+    transactionService = new PositionJournalTransaction(positionService, journalService, db)
+  })
+
+  afterEach(() => {
+    db?.close()
+    indexedDB.deleteDatabase('TestDB')
+  })
 
   describe('UUID Generation', () => {
     it('should generate position IDs with UUID format', () => {

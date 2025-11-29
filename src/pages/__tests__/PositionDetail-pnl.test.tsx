@@ -56,8 +56,21 @@ describe('PositionDetail - P&L Integration', () => {
     updated_at: new Date()
   }
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
     ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
 
     mockPositionService = {
       getById: vi.fn(),
@@ -74,15 +87,22 @@ describe('PositionDetail - P&L Integration', () => {
     }
 
     // Inject mock services into ServiceContainer
-    const services = ServiceContainer.getInstance()
     services.setPositionService(mockPositionService as any)
     services.setPriceService(mockPriceService as any)
 
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   const renderPositionDetail = (position: Position, priceHistory: PriceHistory | null = null) => {

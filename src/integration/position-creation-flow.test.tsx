@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
+import { ServiceContainer } from '@/services/ServiceContainer'
+import 'fake-indexeddb/auto'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
@@ -17,21 +19,40 @@ describe('Integration: Position Creation Flow', () => {
   let journalService: JournalService
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    // Clear IndexedDB before each test
-    await positionService.clearAll()
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
 
-    // Initialize JournalService with the same database
-    const db = await positionService['getDB']() // Access private method for testing
-    journalService = new JournalService(db)
-    await journalService.clearAll()
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    journalService = await services.getJournalService()
   })
 
-  afterEach(() => {
-    // Close database connection to prevent memory leaks
+  afterEach(async () => {
+    // Clear all positions before closing
     if (positionService) {
-      positionService.close()
+      await positionService.clearAll()
     }
+
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should complete full user journey: Empty State → Position Creation → Save to IndexedDB', async () => {

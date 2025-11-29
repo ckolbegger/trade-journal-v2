@@ -15,7 +15,6 @@ export interface DashboardProps {
  */
 export const Dashboard: React.FC<DashboardProps> = ({ filter = 'all', onViewDetails }) => {
   const services = useServices()
-  const positionService = services.getPositionService()
   const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open' | 'closed'>(filter)
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
@@ -31,6 +30,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ filter = 'all', onViewDeta
     try {
       setLoading(true)
       setError(null)
+      const positionService = services.getPositionService()
       const loadedPositions = await positionService.getAll()
       setPositions(loadedPositions)
     } catch (err) {

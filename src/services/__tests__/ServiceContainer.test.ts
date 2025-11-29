@@ -47,7 +47,8 @@ describe('ServiceContainer', () => {
     expect(instance1).toBeInstanceOf(ServiceContainer)
   })
 
-  it('should create PositionService lazily', () => {
+  it('should create PositionService lazily', async () => {
+    await container.initialize()
     const service1 = container.getPositionService()
     const service2 = container.getPositionService()
 
@@ -55,7 +56,8 @@ describe('ServiceContainer', () => {
     expect(service1).toBe(service2) // Same instance returned
   })
 
-  it('should create TradeService lazily', () => {
+  it('should create TradeService lazily', async () => {
+    await container.initialize()
     const service1 = container.getTradeService()
     const service2 = container.getTradeService()
 
@@ -64,6 +66,7 @@ describe('ServiceContainer', () => {
   })
 
   it('should create JournalService lazily', async () => {
+    await container.initialize()
     const service1 = await container.getJournalService()
     const service2 = await container.getJournalService()
 
@@ -71,7 +74,8 @@ describe('ServiceContainer', () => {
     expect(service1).toBe(service2)
   })
 
-  it('should create PriceService lazily', () => {
+  it('should create PriceService lazily', async () => {
+    await container.initialize()
     const service1 = container.getPriceService()
     const service2 = container.getPriceService()
 
@@ -79,7 +83,8 @@ describe('ServiceContainer', () => {
     expect(service1).toBe(service2)
   })
 
-  it('should return same service instance on multiple calls', () => {
+  it('should return same service instance on multiple calls', async () => {
+    await container.initialize()
     const positionService1 = container.getPositionService()
     const positionService2 = container.getPositionService()
     const tradeService1 = container.getTradeService()
@@ -89,7 +94,8 @@ describe('ServiceContainer', () => {
     expect(tradeService1).toBe(tradeService2)
   })
 
-  it('should inject dependencies correctly (TradeService gets PositionService)', () => {
+  it('should inject dependencies correctly (TradeService gets PositionService)', async () => {
+    await container.initialize()
     const positionService = container.getPositionService()
     const tradeService = container.getTradeService()
 
@@ -101,8 +107,9 @@ describe('ServiceContainer', () => {
     expect(tradeService.positionService).toBe(positionService)
   })
 
-  it('should cleanup all services', () => {
+  it('should cleanup all services', async () => {
     // Create services
+    await container.initialize()
     container.getPositionService()
     container.getTradeService()
 

@@ -31,30 +31,35 @@ describe('PositionDetail Trade Data Integration', () => {
   let tradeService: TradeService
 
   beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
-    positionService = new PositionService()
-    // Clear IndexedDB before each test
-    await positionService.clearAll()
-    tradeService = new TradeService(positionService)
-
-    // Inject services into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setTradeService(tradeService)
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
   })
 
   afterEach(async () => {
-    try {
-      await positionService.clearAll()
-    } catch (error) {
-      // Ignore errors during cleanup
-    }
-    if (positionService && typeof positionService.close === 'function') {
-      positionService.close()
-    }
     ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('[Integration] should display trade data in position detail when position has trades', async () => {

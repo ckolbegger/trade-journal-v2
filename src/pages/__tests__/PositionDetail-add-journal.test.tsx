@@ -11,7 +11,6 @@ import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
 
 describe('PositionDetail - Add Journal Entry', () => {
-  let db: IDBDatabase
   let positionService: PositionService
   let journalService: JournalService
   let tradeService: TradeService
@@ -42,61 +41,41 @@ describe('PositionDetail - Add Journal Entry', () => {
   }
 
   beforeEach(async () => {
-    // Reset ServiceContainer singleton before each test
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
-    // Open database
-    db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        if (!db.objectStoreNames.contains('positions')) {
-          const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
-          positionStore.createIndex('symbol', 'symbol', { unique: false })
-          positionStore.createIndex('status', 'status', { unique: false })
-          positionStore.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-      }
-    })
-
-    positionService = new PositionService()
-    journalService = new JournalService(db)
-    tradeService = new TradeService(positionService)
-
-    // Inject mock services into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setJournalService(journalService)
-    services.setTradeService(tradeService)
+    await services.initialize()
 
-    // Clear data
-    await new Promise<void>((resolve, reject) => {
-      const transaction = db.transaction(['positions', 'journal_entries'], 'readwrite')
-      transaction.objectStore('positions').clear()
-      transaction.objectStore('journal_entries').clear()
-      transaction.oncomplete = () => resolve()
-      transaction.onerror = () => reject(transaction.error)
-    })
+    positionService = services.getPositionService()
+    journalService = await services.getJournalService()
+    tradeService = services.getTradeService()
   })
 
-  afterEach(() => {
-    // Reset ServiceContainer singleton after each test
+  afterEach(async () => {
+    // Clear all positions before closing
+    if (positionService) {
+      await positionService.clearAll()
+    }
+
     ServiceContainer.resetInstance()
 
-    if (db) {
-      db.close()
-    }
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   // Helper function to render PositionDetail with proper routing

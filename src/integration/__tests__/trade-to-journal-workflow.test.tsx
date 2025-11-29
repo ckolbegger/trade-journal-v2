@@ -38,53 +38,41 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
   }
 
   beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
-    // Open database
-    db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        if (!db.objectStoreNames.contains('positions')) {
-          const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
-          positionStore.createIndex('symbol', 'symbol', { unique: false })
-          positionStore.createIndex('status', 'status', { unique: false })
-        }
-
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-      }
-    })
-
-    positionService = new PositionService()
-    journalService = new JournalService(db)
-    tradeService = new TradeService()
-
-    // Inject services into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setJournalService(journalService)
-    services.setTradeService(tradeService)
+    await services.initialize()
 
-    // Clear all data
-    await positionService.clearAll()
-    await journalService.clearAll()
+    positionService = services.getPositionService()
+    journalService = await services.getJournalService()
+    tradeService = services.getTradeService()
   })
 
-  afterEach(() => {
-    if (positionService) positionService.close()
-    if (journalService) journalService.close()
-    if (db) db.close()
+  afterEach(async () => {
+    // Clear all positions before closing
+    if (positionService) {
+      await positionService.clearAll()
+    }
+
     ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   const renderPositionDetail = () => {

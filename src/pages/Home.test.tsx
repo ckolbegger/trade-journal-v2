@@ -30,7 +30,15 @@ describe('Home', () => {
   let mockPositionService: any
   let mockPositions: Position[]
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
@@ -38,13 +46,24 @@ describe('Home', () => {
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
 
-    // Inject mock service into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    // Inject mock service into ServiceContainer
     services.setPositionService(mockPositionService)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
 

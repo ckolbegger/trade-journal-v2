@@ -3,67 +3,49 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
+import { ServiceContainer } from '@/services/ServiceContainer'
+import 'fake-indexeddb/auto'
 
 describe('Integration: 4-Step Position Creation Flow', () => {
   let positionService: PositionService
   let journalService: JournalService
-  let db: IDBDatabase
 
   beforeEach(async () => {
-    // Use the same database name that PositionService uses by default
-    const dbName = 'TradingJournalDB'
-    db = await openDatabase(dbName)
-
-    positionService = new PositionService()
-    journalService = new JournalService(db)
-
-    // Clear all data but keep the schema
-    await positionService.clearAll()
-    await journalService.clearAll()
-  })
-
-  afterEach(() => {
-    // Close all database connections to prevent memory leaks
-    if (positionService) {
-      positionService.close()
-    }
-    if (journalService) {
-      journalService.close()
-    }
-    if (db) {
-      db.close()
-    }
-  })
-
-  async function openDatabase(dbName: string): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(dbName, 3)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        // Create positions object store
-        if (!db.objectStoreNames.contains('positions')) {
-          const store = db.createObjectStore('positions', { keyPath: 'id' })
-          store.createIndex('symbol', 'symbol', { unique: false })
-          store.createIndex('status', 'status', { unique: false })
-          store.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        // Create journal_entries object store
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-      }
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
     })
-  }
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    journalService = await services.getJournalService()
+  })
+
+  afterEach(async () => {
+    // Clear all positions before closing
+    if (positionService) {
+      await positionService.clearAll()
+    }
+
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+  })
 
   const runInAct = async (callback: () => void) => {
     await new Promise(resolve => {

@@ -1,19 +1,41 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
+import { SchemaManager } from '@/services/SchemaManager'
 import 'fake-indexeddb/auto'
 
 describe('PositionService - Trades Array Integration', () => {
+  let db: IDBDatabase
   let positionService: PositionService
-  const dbName = 'TradingJournalDB'
+  const dbName = 'TestDB'
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    await positionService.clearAll()
+    // Delete database to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase(dbName)
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Create test database with schema
+    db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open(dbName, 1)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+      request.onupgradeneeded = (event) => {
+        const database = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(database, 1)
+      }
+    })
+
+    // Create service with injected database
+    positionService = new PositionService(db)
   })
 
   afterEach(() => {
-    positionService.close()
+    db?.close()
+    indexedDB.deleteDatabase(dbName)
   })
 
   describe('Persistence with trades array', () => {
@@ -101,7 +123,6 @@ describe('PositionService - Trades Array Integration', () => {
   describe('Backward compatibility with legacy data', () => {
     it('[Service] should load legacy Position without trades field and initialize empty array', async () => {
       // Manually insert legacy position into database without trades field
-      const db = await openDatabase(dbName)
       const transaction = db.transaction(['positions'], 'readwrite')
       const store = transaction.objectStore('positions')
 
@@ -126,8 +147,6 @@ describe('PositionService - Trades Array Integration', () => {
         request.onerror = () => reject(request.error)
       })
 
-      db.close()
-
       // Retrieve using PositionService
       const retrieved = await positionService.getById('pos-legacy')
 
@@ -139,7 +158,6 @@ describe('PositionService - Trades Array Integration', () => {
 
     it('[Service] should save legacy Position with trades array added', async () => {
       // Create legacy position structure
-      const db = await openDatabase(dbName)
       const transaction = db.transaction(['positions'], 'readwrite')
       const store = transaction.objectStore('positions')
 
@@ -162,8 +180,6 @@ describe('PositionService - Trades Array Integration', () => {
         request.onsuccess = () => resolve(undefined)
         request.onerror = () => reject(request.error)
       })
-
-      db.close()
 
       // Load and update with trades
       const loaded = await positionService.getById('pos-legacy')
@@ -188,7 +204,6 @@ describe('PositionService - Trades Array Integration', () => {
 
     it('[Service] should handle mixed database with legacy and new positions', async () => {
       // Insert legacy position without trades
-      const db = await openDatabase(dbName)
       const transaction = db.transaction(['positions'], 'readwrite')
       const store = transaction.objectStore('positions')
 
@@ -211,8 +226,6 @@ describe('PositionService - Trades Array Integration', () => {
         request.onsuccess = () => resolve(undefined)
         request.onerror = () => reject(request.error)
       })
-
-      db.close()
 
       // Create new position with trades
       const newPosition: Position = {
@@ -247,31 +260,3 @@ describe('PositionService - Trades Array Integration', () => {
     })
   })
 })
-
-async function openDatabase(dbName: string): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 3)
-
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result
-
-      if (!db.objectStoreNames.contains('positions')) {
-        const store = db.createObjectStore('positions', { keyPath: 'id' })
-        store.createIndex('symbol', 'symbol', { unique: false })
-        store.createIndex('status', 'status', { unique: false })
-        store.createIndex('created_date', 'created_date', { unique: false })
-      }
-
-      if (!db.objectStoreNames.contains('journal_entries')) {
-        const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-        journalStore.createIndex('position_id', 'position_id', { unique: false })
-        journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-        journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-        journalStore.createIndex('created_at', 'created_at', { unique: false })
-      }
-    }
-  })
-}

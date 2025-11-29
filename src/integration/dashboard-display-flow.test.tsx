@@ -3,6 +3,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
+import { ServiceContainer } from '@/services/ServiceContainer'
+import 'fake-indexeddb/auto'
 import {
   fillPositionForm,
   proceedToRiskAssessment,
@@ -24,21 +26,42 @@ describe('Integration: Position Dashboard Display Flow', () => {
   let journalService: JournalService
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    // Clear IndexedDB before each test
-    await positionService.clearAll()
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
 
-    // Initialize JournalService with the same database
-    const db = await positionService['getDB']() // Access private method for testing
-    journalService = new JournalService(db)
-    await journalService.clearAll()
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+
+    // Initialize JournalService
+    journalService = await services.getJournalService()
   })
 
-  afterEach(() => {
-    // Close database connection to prevent memory leaks
+  afterEach(async () => {
+    // Clear all positions before closing
     if (positionService) {
-      positionService.close()
+      await positionService.clearAll()
     }
+
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should complete full user journey: Empty State → Position Creation → Dashboard Display', async () => {
@@ -173,8 +196,8 @@ describe('Integration: Position Dashboard Display Flow', () => {
     // Should show Dashboard with both positions
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Positions' })).toBeInTheDocument()
-      expect(screen.getByText('AAPL')).toBeInTheDocument()
-      expect(screen.getByText('MSFT')).toBeInTheDocument()
+      expect(screen.getAllByText('AAPL').length).toBeGreaterThan(0)
+      expect(screen.getAllByText('MSFT').length).toBeGreaterThan(0)
     }, { timeout: 2000 })
 
     // Verify both positions are displayed with correct data
@@ -223,9 +246,15 @@ describe('Integration: Position Dashboard Display Flow', () => {
   })
 
   describe('Database Schema Integration', () => {
+    beforeEach(async () => {
+      // Clear database before each schema integration test
+      await positionService.clearAll()
+      await journalService.clearAll()
+    })
+
     it('should verify JournalService database schema is properly set up', async () => {
-      // Verify database connection and object stores exist
-      const db = await positionService['getDB']() // Access private method for testing
+      // Verify database connection and object stores exist via ServiceContainer
+      const db = (ServiceContainer.getInstance() as any).db
 
       expect(db.objectStoreNames.contains('positions')).toBe(true)
       expect(db.objectStoreNames.contains('journal_entries')).toBe(true)

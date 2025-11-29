@@ -13,6 +13,7 @@ import 'fake-indexeddb/auto'
 import type { Position, Trade } from '@/lib/position'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import { processFIFO } from '@/lib/utils/fifo'
 import { calculatePlanVsExecution } from '@/lib/utils/planVsExecution'
 import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
@@ -21,15 +22,36 @@ describe('Position Closing Integration Tests', () => {
   let positionService: PositionService
   let tradeService: TradeService
 
-  beforeEach(() => {
-    // Reset IndexedDB before each test
-    positionService = new PositionService()
-    tradeService = new TradeService(positionService)
+  beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
   })
 
-  afterEach(() => {
-    positionService.close()
-    tradeService.close()
+  afterEach(async () => {
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   describe('User Story 1: Complete Position Exit', () => {

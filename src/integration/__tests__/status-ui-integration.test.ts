@@ -66,31 +66,36 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   }
 
   beforeEach(async () => {
-    const container = ServiceContainer.getInstance()
-    positionService = container.getPositionService()
-    tradeService = container.getTradeService()
-    await positionService.clearAll()
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
   })
 
   afterEach(async () => {
-    try {
-      // Clear all data from services
-      await positionService.clearAll()
-      if (tradeService && typeof tradeService.clearAll === 'function') {
-        await tradeService.clearAll()
-      }
-    } catch (error) {
-      // Ignore errors during cleanup
-    }
+    ServiceContainer.resetInstance()
 
-    // Close connections
-    if (positionService && typeof positionService.close === 'function') {
-      positionService.close()
-    }
-    if (tradeService && typeof tradeService.close === 'function') {
-      tradeService.close()
-    }
-  }, 10000)
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+  })
 
   describe('[Integration] Status badge display across components', () => {
     it('[Integration] should show correct status in PositionCard header', async () => {

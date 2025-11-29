@@ -7,9 +7,8 @@ import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 export class TradeService {
   private positionService: PositionService
 
-  constructor(positionService?: PositionService) {
-    // Allow dependency injection for testing
-    this.positionService = positionService || new PositionService()
+  constructor(positionService: PositionService) {
+    this.positionService = positionService
   }
 
   /**

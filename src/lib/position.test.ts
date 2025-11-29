@@ -1,14 +1,40 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import type { Position } from './position'
 import { PositionService } from './position'
+import { SchemaManager } from '@/services/SchemaManager'
+import 'fake-indexeddb/auto'
 
 describe('Position - Phase 1A: Basic Position Planning', () => {
+  let db: IDBDatabase
   let positionService: PositionService
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    // Clear IndexedDB before each test
-    await positionService.clearAll()
+    // Delete database to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase('TestDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Create test database with schema
+    db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('TestDB', 1)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+      request.onupgradeneeded = (event) => {
+        const database = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(database, 1)
+      }
+    })
+
+    // Create service with injected database
+    positionService = new PositionService(db)
+  })
+
+  afterEach(() => {
+    db?.close()
+    indexedDB.deleteDatabase('TestDB')
   })
 
   describe('Position Interface', () => {

@@ -16,28 +16,40 @@ describe('Integration: Add Trade from Position Detail', () => {
   let testPosition: Position
 
   beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
-    // Clear IndexedDB
-    indexedDB.deleteDatabase('TradingJournalDB')
-
-    // Create fresh service instances
-    positionService = new PositionService()
-    tradeService = new TradeService()
-
-    // Inject services into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setTradeService(tradeService)
+    await services.initialize()
+
+    // Create fresh service instances with database injection
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
 
     // Create a test position using data factory
     const testData = createIntegrationTestData()
     testPosition = await positionService.create(testData.multiple[0])
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should complete Add Trade flow: Click button → Fill form → Save trade', async () => {

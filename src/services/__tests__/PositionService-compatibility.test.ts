@@ -1,23 +1,44 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
+import { SchemaManager } from '@/services/SchemaManager'
 import 'fake-indexeddb/auto'
 
 describe('PositionService - Additional Backward Compatibility', () => {
+  let db: IDBDatabase
   let positionService: PositionService
 
   beforeEach(async () => {
-    positionService = new PositionService()
-    await positionService.clearAll()
+    // Delete database to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase('TestDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Create test database with schema
+    db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('TestDB', 1)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+      request.onupgradeneeded = (event) => {
+        const database = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(database, 1)
+      }
+    })
+
+    // Create service with injected database
+    positionService = new PositionService(db)
   })
 
   afterEach(() => {
-    positionService.close()
+    db?.close()
+    indexedDB.deleteDatabase('TestDB')
   })
 
   it('[Service] should handle positions created before trades feature', async () => {
     // Simulate legacy position from database
-    const db = await openDatabase('TradingJournalDB')
     const transaction = db.transaction(['positions'], 'readwrite')
     const store = transaction.objectStore('positions')
 
@@ -41,8 +62,6 @@ describe('PositionService - Additional Backward Compatibility', () => {
       request.onsuccess = () => resolve(undefined)
       request.onerror = () => reject(request.error)
     })
-
-    db.close()
 
     // Retrieve and verify migration
     const retrieved = await positionService.getById('pos-legacy')
@@ -152,7 +171,6 @@ describe('PositionService - Additional Backward Compatibility', () => {
   })
 
   it('[Integration] should recover from corrupted trades array', async () => {
-    const db = await openDatabase('TradingJournalDB')
     const transaction = db.transaction(['positions'], 'readwrite')
     const store = transaction.objectStore('positions')
 
@@ -176,8 +194,6 @@ describe('PositionService - Additional Backward Compatibility', () => {
       request.onsuccess = () => resolve(undefined)
       request.onerror = () => reject(request.error)
     })
-
-    db.close()
 
     // Should recover gracefully
     const retrieved = await positionService.getById('pos-corrupted')
@@ -218,30 +234,3 @@ describe('PositionService - Additional Backward Compatibility', () => {
   })
 })
 
-async function openDatabase(dbName: string): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(dbName, 3)
-
-    request.onerror = () => reject(request.error)
-    request.onsuccess = () => resolve(request.result)
-
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result
-
-      if (!db.objectStoreNames.contains('positions')) {
-        const store = db.createObjectStore('positions', { keyPath: 'id' })
-        store.createIndex('symbol', 'symbol', { unique: false })
-        store.createIndex('status', 'status', { unique: false })
-        store.createIndex('created_date', 'created_date', { unique: false })
-      }
-
-      if (!db.objectStoreNames.contains('journal_entries')) {
-        const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-        journalStore.createIndex('position_id', 'position_id', { unique: false })
-        journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-        journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-        journalStore.createIndex('created_at', 'created_at', { unique: false })
-      }
-    }
-  })
-}

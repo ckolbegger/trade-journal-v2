@@ -13,6 +13,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import type { Position } from '@/lib/position'
 import 'fake-indexeddb/auto'
 
@@ -37,16 +38,35 @@ describe('Position Lifecycle Integration', () => {
   let tradeService: TradeService
 
   beforeEach(async () => {
-    // Clear IndexedDB before each test
-    indexedDB.deleteDatabase('TradingJournalDB')
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
 
-    positionService = new PositionService()
-    tradeService = new TradeService(positionService)
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
   })
 
-  afterEach(() => {
-    positionService.close()
-    tradeService.close()
+  afterEach(async () => {
+    ServiceContainer.resetInstance()
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   describe('Full Lifecycle: planned → open → closed', () => {

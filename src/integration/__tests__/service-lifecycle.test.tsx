@@ -20,18 +20,32 @@ import 'fake-indexeddb/auto'
  * - Services are properly cleaned up
  */
 describe('Service Lifecycle Integration', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     ServiceContainer.resetInstance()
-    indexedDB.deleteDatabase('TradingJournalDB')
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     ServiceContainer.resetInstance()
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
   })
 
   it('should provide the same service instance to multiple components', async () => {
-    // Arrange - Create a position
-    const positionService = new PositionService()
+    // Arrange - Initialize ServiceContainer and create a position
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+    const positionService = services.getPositionService()
+
     await positionService.create({
       id: 'test-pos-1',
       symbol: 'AAPL',
@@ -46,10 +60,6 @@ describe('Service Lifecycle Integration', () => {
       journal_entry_ids: [],
       trades: []
     })
-
-    // Inject the service
-    const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
 
     // Act - Render Home component which internally uses Dashboard
     render(
@@ -71,7 +81,7 @@ describe('Service Lifecycle Integration', () => {
     expect(positions[0].symbol).toBe('AAPL')
   })
 
-  it('should allow mock service injection for testing', () => {
+  it('should allow mock service injection for testing', async () => {
     // Arrange - Create mock service
     const mockPositionService = {
       getAll: async () => [] as Position[],
@@ -83,8 +93,9 @@ describe('Service Lifecycle Integration', () => {
       close: () => {}
     }
 
-    // Act - Inject mock service
+    // Act - Get services and initialize first
     const services = ServiceContainer.getInstance()
+    await services.initialize()
     services.setPositionService(mockPositionService as any)
 
     // Assert - Service should be retrievable
@@ -92,15 +103,17 @@ describe('Service Lifecycle Integration', () => {
     expect(retrievedService).toBe(mockPositionService)
   })
 
-  it('should properly reset service instances', () => {
+  it('should properly reset service instances', async () => {
     // Arrange - Create and inject services
     const services1 = ServiceContainer.getInstance()
+    await services1.initialize()
     const mockService1 = { test: 'service1' }
     services1.setPositionService(mockService1 as any)
 
     // Act - Reset and create new instance
     ServiceContainer.resetInstance()
     const services2 = ServiceContainer.getInstance()
+    await services2.initialize()
 
     // Assert - New instance should not have old service
     expect(services2).not.toBe(services1)
@@ -110,9 +123,10 @@ describe('Service Lifecycle Integration', () => {
     expect(newService).not.toBe(mockService1)
   })
 
-  it('should lazily initialize services', () => {
+  it('should lazily initialize services', async () => {
     // Arrange
     const services = ServiceContainer.getInstance()
+    await services.initialize()
 
     // Act & Assert - Services should be created on first access
     const positionService1 = services.getPositionService()
@@ -140,13 +154,14 @@ describe('Service Lifecycle Integration', () => {
     expect(closeCalled).toBe(true)
   })
 
-  it('should properly inject all service types', () => {
+  it('should properly inject all service types', async () => {
     // Arrange
     const mockPositionService = { type: 'position' } as any
     const mockTradeService = { type: 'trade' } as any
 
     // Act
     const services = ServiceContainer.getInstance()
+    await services.initialize()
     services.setPositionService(mockPositionService)
     services.setTradeService(mockTradeService)
 
@@ -157,8 +172,9 @@ describe('Service Lifecycle Integration', () => {
 
   it('should maintain service instances across multiple component renders', async () => {
     // Arrange
-    const positionService = new PositionService()
     const services = ServiceContainer.getInstance()
+    await services.initialize()
+    const positionService = services.getPositionService()
     services.setPositionService(positionService)
 
     // Act - Render Dashboard twice

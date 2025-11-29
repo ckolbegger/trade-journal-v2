@@ -2,6 +2,7 @@ import 'fake-indexeddb/auto'
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import type { Position, Trade } from '@/lib/position'
 
 const createTestPosition = (overrides?: Partial<Position>): Position => ({
@@ -34,37 +35,36 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
 describe('Batch 8: Final Integration & Polish', () => {
   let positionService: PositionService
   let tradeService: TradeService
-  let testDbName: string
 
   beforeEach(async () => {
-    // Generate unique test database name
-    testDbName = `TradingJournalDB_Final_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
 
-    // Create services with test database
-    positionService = new PositionService()
-    ;(positionService as any).dbName = testDbName
-    tradeService = new TradeService(positionService)
+    // Reset ServiceContainer
+    ServiceContainer.resetInstance()
+
+    // Initialize ServiceContainer with database
+    const services = ServiceContainer.getInstance()
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
   })
 
   afterEach(async () => {
-    // Clean up test database
-    try {
-      await positionService.clearAll()
-    } catch (error) {
-      // Ignore errors during cleanup
-    }
-    if (positionService && typeof positionService.close === 'function') {
-      positionService.close()
-    }
-    if (tradeService && typeof tradeService.close === 'function') {
-      tradeService.close()
-    }
+    ServiceContainer.resetInstance()
 
-    // Delete the test database
-    return new Promise<void>((resolve) => {
-      const request = indexedDB.deleteDatabase(testDbName)
-      request.onsuccess = () => resolve()
-      request.onerror = () => resolve() // Ignore errors
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
     })
   })
 

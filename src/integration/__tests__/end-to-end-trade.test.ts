@@ -32,67 +32,44 @@ describe('End-to-End: Add Trade Functionality', () => {
   let positionService: PositionService
   let tradeService: TradeService
   let journalService: JournalService
-  let testDbName: string
-  let db: IDBDatabase
 
   beforeEach(async () => {
+    // Delete database for clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset ServiceContainer
     ServiceContainer.resetInstance()
 
-    // Clear and initialize IndexedDB
-    indexedDB.deleteDatabase('TradingJournalDB')
-
-    db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        if (!db.objectStoreNames.contains('positions')) {
-          const store = db.createObjectStore('positions', { keyPath: 'id' })
-          store.createIndex('symbol', 'symbol', { unique: false })
-          store.createIndex('status', 'status', { unique: false })
-          store.createIndex('created_date', 'created_date', { unique: false })
-        }
-
-        if (!db.objectStoreNames.contains('journal_entries')) {
-          const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-          journalStore.createIndex('position_id', 'position_id', { unique: false })
-          journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-          journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-          journalStore.createIndex('created_at', 'created_at', { unique: false })
-        }
-      }
-    })
-
-    testDbName = `TradingJournalDB_EndToEnd_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    positionService = new PositionService()
-    ;(positionService as any).dbName = testDbName
-    tradeService = new TradeService(positionService)
-    journalService = new JournalService(db)
-
-    // Inject services into ServiceContainer
+    // Initialize ServiceContainer with database
     const services = ServiceContainer.getInstance()
-    services.setPositionService(positionService)
-    services.setTradeService(tradeService)
-    services.setJournalService(journalService)
+    await services.initialize()
+
+    positionService = services.getPositionService()
+    tradeService = services.getTradeService()
+    journalService = await services.getJournalService()
   })
 
   afterEach(async () => {
-    try {
+    // Clear all positions before closing
+    if (positionService) {
       await positionService.clearAll()
-    } catch (error) {
-      // Ignore errors during cleanup
     }
-    if (positionService && typeof positionService.close === 'function') {
-      positionService.close()
-    }
-    if (tradeService && typeof tradeService.close === 'function') {
-      tradeService.close()
-    }
+
     ServiceContainer.resetInstance()
-  }, 10000)
+
+    // Clean up database
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+  })
 
   it('[End-to-End] should allow complete trade execution flow from Position Detail', async () => {
     // Arrange - Create a planned position

@@ -22,13 +22,16 @@ export interface TransactionResult {
 export class PositionJournalTransaction {
   private positionService: PositionService
   private journalService: JournalService
+  private db: IDBDatabase
 
   constructor(
     positionService: PositionService,
-    journalService: JournalService
+    journalService: JournalService,
+    db?: IDBDatabase
   ) {
     this.positionService = positionService
     this.journalService = journalService
+    this.db = db!
   }
 
   /**
@@ -98,23 +101,16 @@ export class PositionJournalTransaction {
    */
   async getAllJournalEntries(): Promise<JournalEntry[]> {
     // This is a helper method for testing - in practice we'd query by position/trade ID
-    const db = await this.getDB()
+    if (!this.db) {
+      throw new Error('Database not initialized')
+    }
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(['journal_entries'], 'readonly')
+      const transaction = this.db.transaction(['journal_entries'], 'readonly')
       const store = transaction.objectStore('journal_entries')
       const request = store.getAll()
 
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result || [])
-    })
-  }
-
-  private async getDB(): Promise<IDBDatabase> {
-    // Access the same database as the services
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
     })
   }
 }
