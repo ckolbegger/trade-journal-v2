@@ -7,7 +7,15 @@ import 'fake-indexeddb/auto'
 describe('ServiceContainer', () => {
   let container: ServiceContainer
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    // Delete database first to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
     // Reset singleton
     // @ts-expect-error - accessing private static for testing
     ServiceContainer.instance = null
@@ -106,5 +114,53 @@ describe('ServiceContainer', () => {
     // This will be useful for testing - container should support
     // injecting mock services. For now, just verify container exists.
     expect(container).toBeDefined()
+  })
+
+  describe('Database Initialization', () => {
+    it('should initialize database connection', async () => {
+      await container.initialize()
+      // Verify database is accessible by checking internal state
+      // @ts-expect-error - accessing private field for testing
+      expect(container.db).toBeDefined()
+      // @ts-expect-error - accessing private field for testing
+      expect(container.db).toBeInstanceOf(IDBDatabase)
+    })
+
+    it('should only initialize database once', async () => {
+      await container.initialize()
+      // @ts-expect-error - accessing private field for testing
+      const firstDb = container.db
+
+      await container.initialize() // Second call should be no-op
+      // @ts-expect-error - accessing private field for testing
+      const secondDb = container.db
+
+      expect(secondDb).toBe(firstDb) // Same instance
+    })
+
+    it('should throw error if getDatabase() called before initialization', () => {
+      ServiceContainer.resetInstance()
+      const newContainer = ServiceContainer.getInstance()
+      // Don't call initialize()
+
+      // @ts-expect-error - testing private method
+      expect(() => newContainer.getDatabase()).toThrow('Database not initialized')
+    })
+
+    it('should use SchemaManager to initialize schema', async () => {
+      await container.initialize()
+
+      // @ts-expect-error - accessing private field for testing
+      const db = container.db as IDBDatabase
+
+      // Verify database was created with correct name and version
+      expect(db).toBeDefined()
+      expect(db.name).toBe('TradingJournalDB')
+      expect(db.version).toBe(3)
+
+      // Note: Schema correctness is verified by SchemaManager.test.ts
+      // We trust that SchemaManager.initializeSchema() creates the stores
+      // Integration tests will verify the full workflow works end-to-end
+    })
   })
 })

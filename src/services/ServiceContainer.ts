@@ -2,6 +2,7 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from './TradeService'
 import { JournalService } from './JournalService'
 import { PriceService } from './PriceService'
+import { SchemaManager } from './SchemaManager'
 
 /**
  * ServiceContainer - Dependency injection container
@@ -12,6 +13,7 @@ import { PriceService } from './PriceService'
 export class ServiceContainer {
   private static instance: ServiceContainer | null = null
 
+  private db: IDBDatabase | null = null
   private positionService?: PositionService
   private tradeService?: TradeService
   private journalService?: JournalService
@@ -29,6 +31,39 @@ export class ServiceContainer {
       ServiceContainer.instance = new ServiceContainer()
     }
     return ServiceContainer.instance
+  }
+
+  /**
+   * Initialize database connection
+   * Must be called once at application startup before accessing any services
+   */
+  async initialize(): Promise<void> {
+    if (this.db) {
+      return // Already initialized
+    }
+
+    this.db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open('TradingJournalDB', 3)
+
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+
+      request.onupgradeneeded = (event) => {
+        const db = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(db, 3)
+      }
+    })
+  }
+
+  /**
+   * Get database connection (internal use only)
+   * Throws if not initialized
+   */
+  private getDatabase(): IDBDatabase {
+    if (!this.db) {
+      throw new Error('Database not initialized. Call initialize() first.')
+    }
+    return this.db
   }
 
   /**
@@ -112,6 +147,12 @@ export class ServiceContainer {
 
     this.journalService = undefined
     this.priceService = undefined
+
+    // Close database connection
+    if (this.db) {
+      this.db.close()
+      this.db = null
+    }
   }
 
   /**
