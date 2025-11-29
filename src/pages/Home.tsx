@@ -57,7 +57,7 @@ export function Home() {
   }
 
   if (hasPositions) {
-    return <Dashboard positionService={positionService} />
+    return <Dashboard />
   }
 
   return <EmptyState />

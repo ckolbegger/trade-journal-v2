@@ -1,29 +1,31 @@
 import React, { useState, useEffect } from 'react'
 import { PositionCard } from './PositionCard'
-import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
+import { useServices } from '@/contexts/ServiceContext'
 
 export interface DashboardProps {
-  positionService: PositionService
   filter?: 'all' | 'planned' | 'open' | 'closed'
   onViewDetails?: (positionId: string) => void
 }
 
 /**
  * Dashboard component displays all positions with filtering capabilities
- * Manages its own data using PositionService (Option A architecture)
+ * Uses ServiceContext for dependency injection
  */
-export const Dashboard: React.FC<DashboardProps> = ({ positionService, filter = 'all', onViewDetails }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ filter = 'all', onViewDetails }) => {
+  const services = useServices()
+  const positionService = services.getPositionService()
   const [currentFilter, setCurrentFilter] = useState<'all' | 'planned' | 'open' | 'closed'>(filter)
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load positions on mount and when positionService changes
+  // Load positions on mount
   useEffect(() => {
     loadPositions()
-  }, [positionService])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const loadPositions = async () => {
     try {

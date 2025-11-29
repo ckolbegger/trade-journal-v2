@@ -2,12 +2,9 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Dashboard as DashboardComponent } from '@/components/Dashboard'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import { useServices } from '@/contexts/ServiceContext'
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const services = useServices()
-  const positionService = services.getPositionService()
 
   const handleViewDetails = (positionId: string) => {
     navigate(`/position/${positionId}`)
@@ -31,7 +28,6 @@ export function Dashboard() {
       {/* Main Content */}
       <div className="p-4 pb-24">
         <DashboardComponent
-          positionService={positionService}
           onViewDetails={handleViewDetails}
         />
       </div>
