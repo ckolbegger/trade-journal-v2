@@ -1640,3 +1640,592 @@ IndexedDB
 **Estimated Time**: 10-14 hours following this conservative plan
 **Risk**: Minimal - any failure isolated to single step
 **Confidence**: Maximum - continuous verification throughout
+
+---
+
+# PHASE 6: DATABASE CONNECTION CONSOLIDATION
+
+**Goal**: Eliminate duplicate database connection code by centralizing database initialization in ServiceContainer and injecting IDBDatabase into all services.
+
+**Benefits**:
+- Remove ~107 lines of duplicate `getDB()` methods
+- Remove ~35 lines of duplicate schema initialization
+- Single database connection shared across all services
+- Schema defined once in SchemaManager, initialized once in ServiceContainer
+- All service getters remain synchronous (no breaking changes)
+
+**Current State**:
+- PositionService has `getDB()` + schema initialization (46 lines)
+- PriceService has `getDB()` + schema initialization (43 lines)
+- ServiceContainer has `openDatabase()` (10 lines)
+- PositionJournalTransaction has `getDB()` (8 lines)
+- JournalService already uses injected IDBDatabase pattern ✅
+
+**Target State**:
+- ServiceContainer eagerly initializes database with SchemaManager
+- All services accept IDBDatabase in constructor
+- All service getters are synchronous
+- No duplicate connection or schema code
+
+---
+
+## Step 6.1: Add Database Initialization to ServiceContainer
+
+### 6.1.1: Write ServiceContainer.initialize() Test
+
+**RED - Write Test**:
+- Update `src/services/__tests__/ServiceContainer.test.ts`:
+  ```typescript
+  describe('ServiceContainer database initialization', () => {
+    it('should initialize database connection', async () => {
+      const container = ServiceContainer.getInstance()
+      await container.initialize()
+      // Verify database is accessible (internal state check)
+    })
+
+    it('should only initialize database once', async () => {
+      const container = ServiceContainer.getInstance()
+      await container.initialize()
+      await container.initialize() // Second call should be no-op
+      // Should not throw, should not re-initialize
+    })
+
+    it('should throw error if service accessed before initialization', () => {
+      ServiceContainer.resetInstance()
+      const container = ServiceContainer.getInstance()
+      // Don't call initialize()
+      expect(() => container.getPositionService()).toThrow('Database not initialized')
+    })
+
+    it('should use SchemaManager for schema initialization', async () => {
+      const container = ServiceContainer.getInstance()
+      await container.initialize()
+      // Verify schema was initialized (check DB has correct stores)
+    })
+  })
+  ```
+- Run: `npm test ServiceContainer.test.ts`
+- **Expected**: ❌ FAIL (initialize() doesn't exist)
+
+**GREEN - Implement**:
+- Update `src/services/ServiceContainer.ts`:
+  ```typescript
+  import { SchemaManager } from './SchemaManager'
+
+  export class ServiceContainer {
+    private static instance: ServiceContainer | null = null
+    private db: IDBDatabase | null = null
+
+    // ... existing code ...
+
+    /**
+     * Initialize database connection
+     * Must be called once at application startup before accessing any services
+     */
+    async initialize(): Promise<void> {
+      if (this.db) {
+        return // Already initialized
+      }
+
+      this.db = await new Promise<IDBDatabase>((resolve, reject) => {
+        const request = indexedDB.open('TradingJournalDB', 3)
+        
+        request.onerror = () => reject(request.error)
+        request.onsuccess = () => resolve(request.result)
+        
+        request.onupgradeneeded = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result
+          SchemaManager.initializeSchema(db, 3)
+        }
+      })
+    }
+
+    /**
+     * Get database connection (internal use only)
+     * Throws if not initialized
+     */
+    private getDatabase(): IDBDatabase {
+      if (!this.db) {
+        throw new Error('Database not initialized. Call initialize() first.')
+      }
+      return this.db
+    }
+  }
+  ```
+- Run: `npm test ServiceContainer.test.ts`
+- **Expected**: ✅ PASS
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/services/ServiceContainer.ts src/services/__tests__/ServiceContainer.test.ts
+git commit -m "Add database initialization to ServiceContainer"
+```
+
+---
+
+## Step 6.2: Refactor PositionService to Accept IDBDatabase
+
+### 6.2.1: Write PositionService Constructor Test
+
+**RED - Write Test**:
+- Create `src/services/__tests__/PositionService-db-injection.test.ts`:
+  ```typescript
+  describe('PositionService with IDBDatabase injection', () => {
+    let db: IDBDatabase
+
+    beforeEach(async () => {
+      // Create test database
+      db = await new Promise((resolve, reject) => {
+        const request = indexedDB.open('TestDB', 1)
+        request.onerror = () => reject(request.error)
+        request.onsuccess = () => resolve(request.result)
+        request.onupgradeneeded = (event) => {
+          const db = (event.target as IDBOpenDBRequest).result
+          const store = db.createObjectStore('positions', { keyPath: 'id' })
+          store.createIndex('symbol', 'symbol', { unique: false })
+          store.createIndex('status', 'status', { unique: false })
+          store.createIndex('created_date', 'created_date', { unique: false })
+        }
+      })
+    })
+
+    afterEach(() => {
+      db?.close()
+      indexedDB.deleteDatabase('TestDB')
+    })
+
+    it('should accept IDBDatabase in constructor', () => {
+      const service = new PositionService(db)
+      expect(service).toBeDefined()
+    })
+
+    it('should use injected database for operations', async () => {
+      const service = new PositionService(db)
+      const position = createTestPosition()
+      await service.create(position)
+      const retrieved = await service.getById(position.id)
+      expect(retrieved).toBeDefined()
+      expect(retrieved!.id).toBe(position.id)
+    })
+
+    it('should not manage database connection lifecycle', () => {
+      const service = new PositionService(db)
+      // Service should not have getDB() method
+      expect((service as any).getDB).toBeUndefined()
+    })
+  })
+  ```
+- Run: `npm test PositionService-db-injection.test.ts`
+- **Expected**: ❌ FAIL (PositionService doesn't accept db parameter)
+
+**GREEN - Implement**:
+- Update `src/lib/position.ts`:
+  ```typescript
+  export class PositionService {
+    // Remove these lines:
+    // private dbName = 'TradingJournalDB'
+    // private version = 3
+    // private positionStore = 'positions'
+    // private dbConnection: IDBDatabase | null = null
+
+    private readonly positionStore = 'positions'
+    private db: IDBDatabase
+
+    constructor(db: IDBDatabase) {
+      this.db = db
+    }
+
+    // Remove entire getDB() method (lines 135-178, ~44 lines)
+
+    // Update all methods that call await this.getDB() to use this.db:
+    async create(position: Position): Promise<Position> {
+      this.validatePosition(position)
+      const db = this.db // Changed from: await this.getDB()
+      // ... rest of method
+    }
+
+    async getById(id: string): Promise<Position | null> {
+      const db = this.db // Changed from: await this.getDB()
+      // ... rest of method
+    }
+
+    // ... update all other methods similarly
+  }
+  ```
+- Run: `npm test PositionService-db-injection.test.ts`
+- **Expected**: ✅ PASS
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ❌ FAIL (existing tests expect no-arg constructor)
+
+**GREEN - Fix Existing Tests**:
+- Update all PositionService tests to provide database:
+  ```typescript
+  let db: IDBDatabase
+  let positionService: PositionService
+
+  beforeEach(async () => {
+    db = await createTestDatabase()
+    positionService = new PositionService(db)
+  })
+  ```
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/lib/position.ts src/services/__tests__/PositionService-db-injection.test.ts src/lib/__tests__/position.test.ts
+git commit -m "Refactor PositionService to accept IDBDatabase in constructor"
+```
+
+---
+
+## Step 6.3: Refactor PriceService to Accept IDBDatabase
+
+### 6.3.1: Write PriceService Constructor Test
+
+**RED - Write Test**:
+- Create `src/services/__tests__/PriceService-db-injection.test.ts`:
+  ```typescript
+  describe('PriceService with IDBDatabase injection', () => {
+    let db: IDBDatabase
+
+    beforeEach(async () => {
+      db = await createTestDatabase()
+    })
+
+    afterEach(() => {
+      db?.close()
+      indexedDB.deleteDatabase('TestDB')
+    })
+
+    it('should accept IDBDatabase in constructor', () => {
+      const service = new PriceService(db)
+      expect(service).toBeDefined()
+    })
+
+    it('should use injected database for operations', async () => {
+      const service = new PriceService(db)
+      const price = createTestPrice()
+      await service.savePrice(price)
+      const retrieved = await service.getPrice(price.underlying, price.date)
+      expect(retrieved).toBeDefined()
+    })
+  })
+  ```
+- Run: `npm test PriceService-db-injection.test.ts`
+- **Expected**: ❌ FAIL
+
+**GREEN - Implement**:
+- Update `src/services/PriceService.ts`:
+  ```typescript
+  export class PriceService {
+    private readonly priceHistoryStore = 'price_history'
+    private db: IDBDatabase
+
+    constructor(db: IDBDatabase) {
+      this.db = db
+    }
+
+    // Remove getDB() method (lines 33-68, ~36 lines)
+
+    // Update all methods to use this.db instead of await this.getDB()
+  }
+  ```
+- Fix existing PriceService tests
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/services/PriceService.ts src/services/__tests__/PriceService-db-injection.test.ts
+git commit -m "Refactor PriceService to accept IDBDatabase in constructor"
+```
+
+---
+
+## Step 6.4: Update ServiceContainer to Inject Database
+
+### 6.4.1: Update Service Getters
+
+**RED - Write Test**:
+- Update `src/services/__tests__/ServiceContainer.test.ts`:
+  ```typescript
+  it('should inject database into PositionService', async () => {
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+    const service = container.getPositionService()
+    expect(service).toBeDefined()
+    // Service should work without additional initialization
+    const positions = await service.getAll()
+    expect(Array.isArray(positions)).toBe(true)
+  })
+
+  it('should inject database into PriceService', async () => {
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+    const service = container.getPriceService()
+    expect(service).toBeDefined()
+  })
+
+  it('should inject database into JournalService', async () => {
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+    const service = container.getJournalService()
+    expect(service).toBeDefined()
+  })
+  ```
+- Run: `npm test ServiceContainer.test.ts`
+- **Expected**: ❌ FAIL (getters don't inject database yet)
+
+**GREEN - Implement**:
+- Update `src/services/ServiceContainer.ts`:
+  ```typescript
+  getPositionService(): PositionService {
+    const db = this.getDatabase() // Throws if not initialized
+    if (!this.positionService) {
+      this.positionService = new PositionService(db)
+    }
+    return this.positionService
+  }
+
+  getJournalService(): JournalService {
+    const db = this.getDatabase() // Now synchronous!
+    if (!this.journalService) {
+      this.journalService = new JournalService(db)
+    }
+    return this.journalService
+  }
+
+  getPriceService(): PriceService {
+    const db = this.getDatabase()
+    if (!this.priceService) {
+      this.priceService = new PriceService(db)
+    }
+    return this.priceService
+  }
+
+  // Remove openDatabase() method - no longer needed
+  ```
+- Run: `npm test ServiceContainer.test.ts`
+- **Expected**: ✅ PASS
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ❌ FAIL (tests don't call initialize())
+
+**GREEN - Fix Tests**:
+- Update all tests that use ServiceContainer to call initialize():
+  ```typescript
+  beforeEach(async () => {
+    ServiceContainer.resetInstance()
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+    // Now can get services
+  })
+  ```
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/services/ServiceContainer.ts src/services/__tests__/ServiceContainer.test.ts
+git commit -m "Update ServiceContainer to inject database into all services"
+```
+
+---
+
+## Step 6.5: Update Application Initialization
+
+### 6.5.1: Add Database Initialization to App Startup
+
+**RED - Write Test**:
+- Update integration tests to verify app initialization pattern works
+
+**GREEN - Implement**:
+- Update `src/contexts/ServiceContext.tsx`:
+  ```typescript
+  export const ServiceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [container] = useState(() => {
+      const instance = ServiceContainer.getInstance()
+      // Initialize database asynchronously
+      instance.initialize().catch(console.error)
+      return instance
+    })
+
+    return (
+      <ServiceContext.Provider value={container}>
+        {children}
+      </ServiceContext.Provider>
+    )
+  }
+  ```
+- Or update `src/main.tsx` for eager initialization:
+  ```typescript
+  async function initializeApp() {
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+    
+    const root = ReactDOM.createRoot(document.getElementById('root')!)
+    root.render(
+      <React.StrictMode>
+        <ServiceProvider>
+          <App />
+        </ServiceProvider>
+      </React.StrictMode>
+    )
+  }
+
+  initializeApp().catch(console.error)
+  ```
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+
+**VERIFY - Build**:
+- Run: `npm run build`
+- **Expected**: ✅ SUCCESS
+
+**VERIFY - Manual**:
+- Run: `npm run dev`
+- Test app functionality:
+  - [ ] Create position → ✅
+  - [ ] Add trade → ✅
+  - [ ] View dashboard → ✅
+  - [ ] Close position → ✅
+
+**COMMIT**:
+```bash
+git add src/contexts/ServiceContext.tsx src/main.tsx
+git commit -m "Add database initialization to app startup"
+```
+
+---
+
+## Step 6.6: Refactor PositionJournalTransaction
+
+### 6.6.1: Update to Use Injected Database
+
+**RED - Write Test**:
+- Similar pattern to PositionService
+
+**GREEN - Implement**:
+- Update `src/services/PositionJournalTransaction.ts`:
+  ```typescript
+  export class PositionJournalTransaction {
+    constructor(private db: IDBDatabase) {}
+
+    // Remove getDB() method (lines 112-119, ~8 lines)
+
+    // Update methods to use this.db
+  }
+  ```
+- Update callers to inject database
+- Run tests
+- **Expected**: ✅ ALL PASS
+
+**COMMIT**:
+```bash
+git add src/services/PositionJournalTransaction.ts
+git commit -m "Refactor PositionJournalTransaction to accept IDBDatabase"
+```
+
+---
+
+## Step 6.7: Remove Unused DatabaseConnection Singleton
+
+### 6.7.1: Clean Up Dead Code
+
+**Analysis**:
+- DatabaseConnection.ts (83 lines) - never used
+- SchemaManager.ts (45 lines) - now used by ServiceContainer ✅ (keep this)
+- DatabaseConnection tests (110 lines) - testing unused code
+- SchemaManager tests (152 lines) - keep these ✅
+- Integration tests (35 lines, 3 skipped) - testing unused code
+
+**CLEAN - Remove Dead Code**:
+- Delete `src/services/DatabaseConnection.ts`
+- Delete `src/services/__tests__/DatabaseConnection.test.ts`
+- Delete `src/integration/__tests__/database-connection.test.ts`
+- Keep `src/services/SchemaManager.ts` (used by ServiceContainer)
+- Keep `src/services/__tests__/SchemaManager.test.ts`
+
+**VERIFY - Full Suite**:
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS
+- Test count should decrease by ~11 tests (6 DatabaseConnection + 3 integration + 2 others)
+- Skipped tests should decrease from 4 to 1
+
+**COMMIT**:
+```bash
+git add -u
+git commit -m "Remove unused DatabaseConnection singleton and tests"
+```
+
+---
+
+## Step 6.8: Update Documentation
+
+**Update Comments**:
+- Remove TODO comments about "Step 1.3" from ServiceContainer
+- Update ServiceContainer class documentation
+- Update README if applicable
+
+**COMMIT**:
+```bash
+git add -u
+git commit -m "Update documentation for database consolidation"
+```
+
+---
+
+## PHASE 6 CHECKPOINT
+
+**Final Verification**:
+- Run: `npm test -- --run`
+- **Expected**: ✅ ALL PASS (~672 tests, 1 skipped)
+
+**Build**:
+- Run: `npm run build`
+- **Expected**: ✅ SUCCESS
+
+**Manual Testing**:
+- [ ] App loads successfully → ✅
+- [ ] Create position → ✅
+- [ ] Add trade → ✅
+- [ ] Update price → ✅
+- [ ] Close position → ✅
+- [ ] View journal → ✅
+
+**Code Cleanup Summary**:
+- **Removed**: ~107 lines of duplicate getDB() methods
+- **Removed**: ~35 lines of duplicate schema initialization
+- **Removed**: 193 lines of unused DatabaseConnection code
+- **Removed**: 145 lines of tests for dead code
+- **Net reduction**: ~480 lines
+- **Services simplified**: All services now just accept IDBDatabase
+- **Schema centralized**: SchemaManager is single source of truth
+- **Connection centralized**: ServiceContainer manages single connection
+
+**Architecture After Phase 6**:
+```
+ServiceContainer
+  ↓ (initialize database once)
+SchemaManager.initializeSchema()
+  ↓ (inject IDBDatabase to all services)
+PositionService, JournalService, PriceService, PositionJournalTransaction
+  ↓ (all share same connection)
+IndexedDB
+```
+
+---
+
+**Estimated Time**: 2-3 hours following this conservative plan
+**Risk**: Minimal - each service refactored independently with full test coverage
+**Confidence**: High - pattern already proven with JournalService
