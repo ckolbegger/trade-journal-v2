@@ -2,6 +2,8 @@ import 'fake-indexeddb/auto'
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { ServiceProvider } from '@/contexts/ServiceContext'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { PositionCard } from '@/components/PositionCard'
@@ -45,15 +47,18 @@ const calculateMetrics = (position: Position) => {
   return { avgCost, pnl, pnlPercentage }
 }
 
-describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE FOR SERVICE CONTEXT', () => {
+describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   let positionService: PositionService
   let tradeService: TradeService
-  let testDbName: string
 
   // Helper function to render Dashboard and wait for it to load
-  const renderDashboardAndWait = async (props: any) => {
+  const renderDashboardAndWait = async (filter?: 'all' | 'planned' | 'open' | 'closed') => {
     await act(async () => {
-      render(React.createElement(Dashboard, props))
+      render(
+        React.createElement(ServiceProvider, {},
+          React.createElement(Dashboard, { filter })
+        )
+      )
     })
     await waitFor(() => {
       expect(screen.queryByText('Loading positions...')).not.toBeInTheDocument()
@@ -61,10 +66,10 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
   }
 
   beforeEach(async () => {
-    testDbName = `TradingJournalDB_StatusUI_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    positionService = new PositionService()
-    ;(positionService as any).dbName = testDbName
-    tradeService = new TradeService(positionService)
+    const container = ServiceContainer.getInstance()
+    positionService = container.getPositionService()
+    tradeService = container.getTradeService()
+    await positionService.clearAll()
   })
 
   afterEach(async () => {
@@ -211,10 +216,7 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
 
       unmount()
       const allPositions = await positionService.getAll()
-      await renderDashboardAndWait({
-        positionService: positionService,
-        tradeService: tradeService
-      })
+      await renderDashboardAndWait()
 
       const dashboardStatusBadges = screen.getAllByTestId('position-status-badge')
       const ourBadge = dashboardStatusBadges.find(badge =>
@@ -239,9 +241,8 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
       })
       await tradeService.addTrade(trade)
 
-      const newPositionService = new PositionService()
-      ;(newPositionService as any).dbName = testDbName
-      const refreshedPosition = await newPositionService.getById('persist-pos-123')
+      // Re-fetch from the same service to verify persistence
+      const refreshedPosition = await positionService.getById('persist-pos-123')
 
       expect(refreshedPosition).toBeTruthy()
       expect(refreshedPosition!.status).toBe('open')
@@ -319,11 +320,7 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
 
       const allPositions = await positionService.getAll()
 
-      await renderDashboardAndWait({
-        positionService: positionService,
-        tradeService: tradeService,
-        filter: "planned"
-      })
+      await renderDashboardAndWait("planned")
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(2)
@@ -360,11 +357,7 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
 
       const allPositions = await positionService.getAll()
 
-      await renderDashboardAndWait({
-        positionService: positionService,
-        tradeService: tradeService,
-        filter: "open"
-      })
+      await renderDashboardAndWait("open")
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(1)
@@ -398,11 +391,7 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
 
       const allPositions = await positionService.getAll()
 
-      await renderDashboardAndWait({
-        positionService: positionService,
-        tradeService: tradeService,
-        filter: "all"
-      })
+      await renderDashboardAndWait("all")
 
       const positionCards = screen.getAllByTestId(/position-card/)
       expect(positionCards).toHaveLength(3)
@@ -426,11 +415,9 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
       let rerender: any
       await act(async () => {
         const result = render(
-          React.createElement(Dashboard, {
-            positionService: positionService,
-            tradeService: tradeService,
-            filter: "planned"
-          })
+          React.createElement(ServiceProvider, {},
+            React.createElement(Dashboard, { filter: "planned" })
+          )
         )
         rerender = result.rerender
       })
@@ -455,11 +442,9 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
       allPositions = await positionService.getAll()
       await act(async () => {
         rerender(
-          React.createElement(Dashboard, {
-            positionService: positionService,
-            tradeService: tradeService,
-            filter: "planned"
-          })
+          React.createElement(ServiceProvider, {},
+            React.createElement(Dashboard, { filter: "planned" })
+          )
         )
       })
 
@@ -467,11 +452,9 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
 
       await act(async () => {
         rerender(
-          React.createElement(Dashboard, {
-            positionService: positionService,
-            tradeService: tradeService,
-            filter: "open"
-          })
+          React.createElement(ServiceProvider, {},
+            React.createElement(Dashboard, { filter: "open" })
+          )
         )
       })
 
@@ -538,11 +521,7 @@ describe.skip('Batch 1: Status UI Integration - Full Stack Tests - NEEDS UPDATE 
       const allPositions = await positionService.getAll()
 
       const startTime = performance.now()
-      await renderDashboardAndWait({
-        positionService: positionService,
-        tradeService: tradeService,
-        filter: "all"
-      })
+      await renderDashboardAndWait("all")
       const endTime = performance.now()
 
       const renderTime = endTime - startTime
