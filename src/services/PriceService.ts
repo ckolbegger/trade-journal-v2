@@ -22,49 +22,11 @@ export interface PriceChangeValidation {
  * - Batch operations for efficient dashboard rendering
  */
 export class PriceService {
-  private dbName = 'TradingJournalDB'
-  private version = 3 // Incremented to match PositionService
-  private priceHistoryStore = 'price_history'
-  private dbConnection: IDBDatabase | null = null
+  private readonly priceHistoryStore = 'price_history'
+  private db: IDBDatabase
 
-  /**
-   * Get or initialize IndexedDB connection
-   */
-  private async getDB(): Promise<IDBDatabase> {
-    if (this.dbConnection) {
-      return this.dbConnection
-    }
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.version)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        this.dbConnection = request.result
-        resolve(request.result)
-      }
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-
-        // Create price_history object store if it doesn't exist
-        if (!db.objectStoreNames.contains(this.priceHistoryStore)) {
-          const store = db.createObjectStore(this.priceHistoryStore, { keyPath: 'id' })
-
-          // Compound unique index: [underlying, date]
-          // Ensures only one price record per instrument per date
-          store.createIndex('underlying_date', ['underlying', 'date'], { unique: true })
-
-          // Index for efficient lookups by underlying
-          store.createIndex('underlying', 'underlying', { unique: false })
-
-          // Index for date-based queries
-          store.createIndex('date', 'date', { unique: false })
-
-          // Index for sorting by updated_at
-          store.createIndex('updated_at', 'updated_at', { unique: false })
-        }
-      }
-    })
+  constructor(db: IDBDatabase) {
+    this.db = db
   }
 
   /**
@@ -90,7 +52,7 @@ export class PriceService {
   async createOrUpdate(input: PriceHistoryInput): Promise<PriceHistory> {
     this.validatePriceRecord(input)
 
-    const db = await this.getDB()
+    const db = this.db
     const id = this.generateId(input.underlying, input.date)
 
     const priceRecord: PriceHistory = {
@@ -139,7 +101,7 @@ export class PriceService {
    * Returns the most recent price record by date.
    */
   async getLatestPrice(underlying: string): Promise<PriceHistory | null> {
-    const db = await this.getDB()
+    const db = this.db
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.priceHistoryStore], 'readonly')
@@ -166,7 +128,7 @@ export class PriceService {
    * Get price for a specific underlying on a specific date
    */
   async getPriceByDate(underlying: string, date: string): Promise<PriceHistory | null> {
-    const db = await this.getDB()
+    const db = this.db
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.priceHistoryStore], 'readonly')
@@ -190,7 +152,7 @@ export class PriceService {
     underlying: string,
     options: { limit?: number; offset?: number } = {}
   ): Promise<PriceHistory[]> {
-    const db = await this.getDB()
+    const db = this.db
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.priceHistoryStore], 'readonly')
@@ -267,7 +229,7 @@ export class PriceService {
    * Clear all price history (used in tests)
    */
   async clearAll(): Promise<void> {
-    const db = await this.getDB()
+    const db = this.db
 
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.priceHistoryStore], 'readwrite')

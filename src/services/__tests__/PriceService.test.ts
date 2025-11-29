@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PriceService } from '@/services/PriceService'
 import type { PriceHistory, SimplePriceInput, PriceHistoryInput } from '@/types/priceHistory'
+import { SchemaManager } from '@/services/SchemaManager'
 import 'fake-indexeddb/auto'
 
 // Test data factories
@@ -36,17 +37,37 @@ const createSimplePriceInput = (overrides?: Partial<SimplePriceInput>): SimplePr
 })
 
 describe('PriceService Core Functionality', () => {
+  let db: IDBDatabase
   let priceService: PriceService
 
   beforeEach(async () => {
-    priceService = new PriceService()
-    // Ensure database is initialized
-    await priceService['getDB']()
+    // Delete database to ensure clean state
+    const deleteRequest = indexedDB.deleteDatabase('TestDB')
+    await new Promise<void>((resolve) => {
+      deleteRequest.onsuccess = () => resolve()
+      deleteRequest.onerror = () => resolve()
+      deleteRequest.onblocked = () => resolve()
+    })
+
+    // Create test database with schema
+    db = await new Promise((resolve, reject) => {
+      const request = indexedDB.open('TestDB', 1)
+      request.onerror = () => reject(request.error)
+      request.onsuccess = () => resolve(request.result)
+      request.onupgradeneeded = (event) => {
+        const database = (event.target as IDBOpenDBRequest).result
+        SchemaManager.initializeSchema(database, 1)
+      }
+    })
+
+    // Create service with injected database
+    priceService = new PriceService(db)
   })
 
   afterEach(async () => {
     // Clean up database after each test
-    await priceService.clearAll()
+    db?.close()
+    indexedDB.deleteDatabase('TestDB')
   })
 
   describe('PriceService createOrUpdate() Method', () => {

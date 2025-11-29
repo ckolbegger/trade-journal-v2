@@ -105,8 +105,9 @@ export class ServiceContainer {
    * Get PriceService instance (lazy initialization)
    */
   getPriceService(): PriceService {
+    const db = this.getDatabase() // Throws if not initialized
     if (!this.priceService) {
-      this.priceService = new PriceService()
+      this.priceService = new PriceService(db)
     }
     return this.priceService
   }
