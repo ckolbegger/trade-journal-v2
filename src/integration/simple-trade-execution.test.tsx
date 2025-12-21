@@ -39,7 +39,7 @@ describe('Integration: Simple Trade Execution Test', () => {
     // Create fresh service instances with database injection
     positionService = services.getPositionService()
     tradeService = services.getTradeService()
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
 
     // Create a test position
     testPosition = await positionService.create({

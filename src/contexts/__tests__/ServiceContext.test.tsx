@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, waitFor, screen } from '@testing-library/react'
 import { ServiceProvider, useServices } from '../ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
@@ -7,11 +7,10 @@ import 'fake-indexeddb/auto'
 describe('ServiceContext', () => {
   beforeEach(() => {
     // Reset singleton
-    // @ts-expect-error - accessing private static for testing
-    ServiceContainer.instance = null
+    ServiceContainer.resetInstance()
   })
 
-  it('should provide ServiceContainer to children', () => {
+  it('should provide ServiceContainer to children', async () => {
     let capturedServices: ServiceContainer | null = null
 
     function TestComponent() {
@@ -25,6 +24,11 @@ describe('ServiceContext', () => {
       </ServiceProvider>
     )
 
+    // Wait for ServiceProvider to finish initializing
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+    })
+
     expect(capturedServices).toBeInstanceOf(ServiceContainer)
   })
 
@@ -37,7 +41,7 @@ describe('ServiceContext', () => {
     expect(() => render(<TestComponent />)).toThrow()
   })
 
-  it('should return same container instance across renders', () => {
+  it('should return same container instance across renders', async () => {
     const instances: ServiceContainer[] = []
 
     function TestComponent({ id }: { id: number }) {
@@ -51,6 +55,11 @@ describe('ServiceContext', () => {
         <TestComponent id={0} />
       </ServiceProvider>
     )
+
+    // Wait for first render to initialize
+    await waitFor(() => {
+      expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+    })
 
     rerender(
       <ServiceProvider>

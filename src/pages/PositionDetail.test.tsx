@@ -136,7 +136,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(null)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -149,7 +149,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -162,7 +162,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -176,7 +176,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -194,7 +194,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -212,7 +212,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -224,7 +224,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -241,7 +241,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockResolvedValue(mockPosition)
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -258,7 +258,7 @@ describe('PositionDetail', () => {
     mockPositionService.getById.mockRejectedValue(new Error('Database error'))
 
     await act(async () => {
-      renderWithRouter(<PositionDetail />)
+      await renderWithRouter(<PositionDetail />)
     })
 
     await waitFor(() => {
@@ -274,7 +274,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -303,7 +303,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(mockPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -321,7 +321,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(mockPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -347,7 +347,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(mockPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -369,7 +369,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(mockPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -393,7 +393,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue([])
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -414,7 +414,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -440,7 +440,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -467,7 +467,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue([mockJournalEntries[0]])
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -493,7 +493,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue([])
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -514,7 +514,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockRejectedValue(new Error('Journal service error'))
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -536,7 +536,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue(mockJournalEntries)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -556,7 +556,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue([mockJournalEntries[0]])
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       // Expand the Journal Entries accordion to see the content
@@ -581,7 +581,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(plannedPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -617,7 +617,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(openPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -662,7 +662,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(positionWithMultipleTrades)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -692,7 +692,7 @@ describe('PositionDetail', () => {
       mockPositionService.getById.mockResolvedValue(plannedPosition)
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {
@@ -724,7 +724,7 @@ describe('PositionDetail', () => {
       mockJournalService.getByPositionId.mockResolvedValue([])
 
       await act(async () => {
-        renderWithRouter(<PositionDetail />)
+        await renderWithRouter(<PositionDetail />)
       })
 
       await waitFor(() => {

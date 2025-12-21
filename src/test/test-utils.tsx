@@ -1,5 +1,5 @@
 import type { RenderOptions } from '@testing-library/react'
-import { render } from '@testing-library/react'
+import { render, waitFor, screen } from '@testing-library/react'
 import type { ReactElement } from 'react'
 import { BrowserRouter } from 'react-router-dom'
 import { ServiceProvider } from '@/contexts/ServiceContext'
@@ -13,10 +13,24 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   )
 }
 
-const customRender = (
+/**
+ * Wait for ServiceProvider initialization to complete
+ * ServiceProvider shows "Loading..." while initializing the database
+ */
+const waitForServiceInit = async () => {
+  await waitFor(() => {
+    expect(screen.queryByText('Loading...')).not.toBeInTheDocument()
+  }, { timeout: 3000 })
+}
+
+const customRender = async (
   ui: ReactElement,
   options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options })
+) => {
+  const result = render(ui, { wrapper: AllTheProviders, ...options })
+  await waitForServiceInit()
+  return result
+}
 
 // Re-export everything
 export * from '@testing-library/react'

@@ -92,10 +92,9 @@ export class ServiceContainer {
   /**
    * Get JournalService instance (lazy initialization)
    */
-  async getJournalService(): Promise<JournalService> {
+  getJournalService(): JournalService {
+    const db = this.getDatabase() // Throws if not initialized
     if (!this.journalService) {
-      // JournalService requires database connection
-      const db = await this.openDatabase()
       this.journalService = new JournalService(db)
     }
     return this.journalService
@@ -110,21 +109,6 @@ export class ServiceContainer {
       this.priceService = new PriceService(db)
     }
     return this.priceService
-  }
-
-  /**
-   * Open database connection for services that need it
-   * TODO: Use DatabaseConnection after services are refactored (Step 1.3)
-   */
-  private async openDatabase(): Promise<IDBDatabase> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = () => {
-        // Schema initialization handled elsewhere
-      }
-    })
   }
 
   /**

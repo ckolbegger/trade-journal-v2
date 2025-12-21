@@ -44,7 +44,7 @@ describe('Integration: Position Dashboard Display Flow', () => {
     positionService = services.getPositionService()
 
     // Initialize JournalService
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
   })
 
   afterEach(async () => {

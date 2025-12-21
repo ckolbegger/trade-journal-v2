@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useEffect, useState } from 'react'
 import { ServiceContainer } from '@/services/ServiceContainer'
 
 /**
@@ -11,9 +11,28 @@ const ServiceContext = React.createContext<ServiceContainer | null>(null)
 
 /**
  * ServiceProvider - Provides ServiceContainer to children
+ *
+ * Handles database initialization automatically on mount.
+ * Shows loading state until database is ready.
  */
 export function ServiceProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [initialized, setInitialized] = useState(false)
   const services = useMemo(() => ServiceContainer.getInstance(), [])
+
+  useEffect(() => {
+    services.initialize()
+      .then(() => setInitialized(true))
+      .catch((error) => {
+        console.error('Failed to initialize ServiceContainer:', error)
+        // Still set initialized to true to prevent infinite loading
+        // Components will handle database errors appropriately
+        setInitialized(true)
+      })
+  }, [services])
+
+  if (!initialized) {
+    return <div>Loading...</div>
+  }
 
   return (
     <ServiceContext.Provider value={services}>

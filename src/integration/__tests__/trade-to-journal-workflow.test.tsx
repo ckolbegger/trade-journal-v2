@@ -54,7 +54,7 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
     await services.initialize()
 
     positionService = services.getPositionService()
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
     tradeService = services.getTradeService()
   })
 

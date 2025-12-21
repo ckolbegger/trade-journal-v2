@@ -47,8 +47,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   })
 
   describe('Step 1: Position Plan', () => {
-    it('should display position plan form with all required fields', () => {
-      renderWithRouterAndProps(<PositionCreate />)
+    it('should display position plan form with all required fields', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
 
       assertStepVisible('Position Plan')
 
@@ -62,15 +62,14 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertFormFieldExists(/Position Thesis/i)
     })
 
-    it('should only show "Long Stock" as strategy type option in Phase 1A', () => {
-      renderWithRouterAndProps(<PositionCreate />)
+    it('should only show "Long Stock" as strategy type option in Phase 1A', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
 
       assertStrategyTypeLocked()
     })
 
     it('should validate required fields before proceeding to step 2', async () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
@@ -88,8 +87,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should validate positive numbers for prices and quantities', async () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       // Fill in negative values
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
@@ -107,8 +105,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should require non-empty position thesis', async () => {
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       // Fill required fields but leave thesis empty
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -129,8 +126,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 2: Trading Journal', () => {
     beforeEach(async () => {
       // Fill out step 1 completely first, then navigate to step 2 (Journal)
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
@@ -182,8 +178,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 3: Risk Assessment', () => {
     beforeEach(async () => {
       // Navigate to step 3 (Risk Assessment)
-      render
-    renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       // Fill step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -235,7 +230,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   describe('Step 4: Confirmation', () => {
     beforeEach(async () => {
       // Navigate to step 4
-      renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       // Fill step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
@@ -294,8 +289,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   })
 
   describe('Step Navigation', () => {
-    it('should display step progress indicator', () => {
-      renderWithRouterAndProps(<PositionCreate />)
+    it('should display step progress indicator', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
 
       const stepIndicator = screen.getByTestId('step-indicator')
       expect(stepIndicator).toBeInTheDocument()
@@ -305,7 +300,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
 
     it('should update step indicator as user progresses', async () => {
-      renderWithRouterAndProps(<PositionCreate />)
+      await renderWithRouterAndProps(<PositionCreate />)
 
       // Complete step 1
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })

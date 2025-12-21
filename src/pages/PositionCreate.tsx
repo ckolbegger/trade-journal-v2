@@ -41,7 +41,7 @@ export function PositionCreate() {
   // Initialize journal fields with current prompts when component mounts
   useEffect(() => {
     const initializeJournalFields = async () => {
-      const journalService = await services.getJournalService()
+      const journalService = services.getJournalService()
       const emptyEntry = await journalService.createEmptyJournalEntry('position_plan')
       setJournalFields(emptyEntry.fields)
     }
@@ -162,7 +162,7 @@ export function PositionCreate() {
     try {
       // Get services from container
       const positionService = services.getPositionService()
-      const journalService = await services.getJournalService()
+      const journalService = services.getJournalService()
 
       // Create transaction service
       const transactionService = new PositionJournalTransaction(positionService, journalService)

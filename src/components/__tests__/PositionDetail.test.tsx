@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position } from '@/lib/position'
@@ -32,7 +32,7 @@ describe('PositionDetail Component', () => {
     ServiceContainer.resetInstance()
   })
 
-  it('[Component] should display trade data when position has trades', () => {
+  it('[Component] should display trade data when position has trades', async () => {
     // Arrange - Create position with trade
     const positionWithTrade = createTestPosition({
       id: 'test-pos-123',
@@ -64,21 +64,25 @@ describe('PositionDetail Component', () => {
     services.setPositionService(mockPositionService as any)
 
     // Act - Render component with ServiceProvider
-    render(
-      React.createElement(ServiceProvider, {},
-        React.createElement(BrowserRouter, {},
-          React.createElement(PositionDetail)
+    await act(async () => {
+      render(
+        React.createElement(ServiceProvider, {},
+          React.createElement(BrowserRouter, {},
+            React.createElement(PositionDetail)
+          )
         )
       )
-    )
+    })
 
     // Assert - Should show the position
     // Note: In a real component test, we'd need to mock the useParams hook
     // This is just to verify the component renders without errors
-    expect(screen.getByText('Loading position...')).toBeVisible()
+    await waitFor(() => {
+      expect(screen.getByText('Loading position...')).toBeVisible()
+    })
   })
 
-  it('[Component] should show empty trade history for position without trades', () => {
+  it('[Component] should show empty trade history for position without trades', async () => {
     // Arrange - Create position without trades
     const positionWithoutTrades = createTestPosition({
       id: 'test-no-trades-123',
@@ -101,16 +105,20 @@ describe('PositionDetail Component', () => {
     services.setPositionService(mockPositionService as any)
 
     // Act
-    render(
-      React.createElement(ServiceProvider, {},
-        React.createElement(BrowserRouter, {},
-          React.createElement(PositionDetail)
+    await act(async () => {
+      render(
+        React.createElement(ServiceProvider, {},
+          React.createElement(BrowserRouter, {},
+            React.createElement(PositionDetail)
+          )
         )
       )
-    )
+    })
 
     // Assert
-    expect(screen.getByText('Loading position...')).toBeVisible()
+    await waitFor(() => {
+      expect(screen.getByText('Loading position...')).toBeVisible()
+    })
   })
 
   it('[Component] should calculate correct metrics from trade data', () => {

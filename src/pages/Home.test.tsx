@@ -71,7 +71,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockResolvedValue([])
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {
@@ -85,7 +85,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {
@@ -99,7 +99,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockResolvedValue([])
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {
@@ -118,7 +118,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {
@@ -135,7 +135,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockResolvedValue([])
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {
@@ -147,7 +147,7 @@ describe('Home', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Home />)
+      await renderWithRouter(<Home />)
     })
 
     await waitFor(() => {

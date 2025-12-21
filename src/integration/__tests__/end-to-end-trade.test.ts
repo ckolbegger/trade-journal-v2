@@ -51,7 +51,7 @@ describe('End-to-End: Add Trade Functionality', () => {
 
     positionService = services.getPositionService()
     tradeService = services.getTradeService()
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
   })
 
   afterEach(async () => {

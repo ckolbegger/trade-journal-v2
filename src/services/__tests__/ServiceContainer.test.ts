@@ -67,8 +67,8 @@ describe('ServiceContainer', () => {
 
   it('should create JournalService lazily', async () => {
     await container.initialize()
-    const service1 = await container.getJournalService()
-    const service2 = await container.getJournalService()
+    const service1 = container.getJournalService()
+    const service2 = container.getJournalService()
 
     expect(service1).toBeDefined()
     expect(service1).toBe(service2)

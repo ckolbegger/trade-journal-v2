@@ -81,7 +81,7 @@ export function PositionDetail() {
     try {
       setJournalLoading(true)
       setJournalError(null)
-      const journalService = await services.getJournalService()
+      const journalService = services.getJournalService()
       const entries = await journalService.getByPositionId(id)
 
       // Sort entries chronologically (oldest first)
@@ -156,7 +156,7 @@ export function PositionDetail() {
 
     try {
       setJournalModalError(null) // Clear previous errors
-      const journalService = await services.getJournalService()
+      const journalService = services.getJournalService()
       const entryType = selectedTradeId ? 'trade_execution' : 'position_plan'
 
       await journalService.create({

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import { Dashboard } from '@/components/Dashboard'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
@@ -73,11 +73,13 @@ describe('Dashboard Option A: PositionService Integration', () => {
       await positionService.create(testPosition2)
 
       // Act - Render Dashboard with ServiceProvider
-      render(
-        <ServiceProvider>
-          <Dashboard />
-        </ServiceProvider>
-      )
+      await act(async () => {
+        render(
+          <ServiceProvider>
+            <Dashboard />
+          </ServiceProvider>
+        )
+      })
 
       // Assert - Should show positions
       await waitFor(() => {
@@ -86,16 +88,26 @@ describe('Dashboard Option A: PositionService Integration', () => {
       })
     })
 
-    it('[Integration] should show loading state while fetching positions', () => {
-      // Act
-      render(
-        <ServiceProvider>
-          <Dashboard />
-        </ServiceProvider>
+    it('[Integration] should show loading state while fetching positions', async () => {
+      // Arrange - Mock the service to delay the response
+      const getAllSpy = vi.spyOn(positionService, 'getAll').mockImplementation(
+        () => new Promise(resolve => setTimeout(() => resolve([]), 100))
       )
+
+      // Act
+      await act(async () => {
+        render(
+          <ServiceProvider>
+            <Dashboard />
+          </ServiceProvider>
+        )
+      })
 
       // Assert - Should show loading state initially
       expect(screen.getByText(/Loading positions/i)).toBeVisible()
+
+      // Cleanup
+      getAllSpy.mockRestore()
     })
 
     it('[Integration] should show error state when PositionService fails', async () => {

@@ -69,7 +69,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue([])
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -85,7 +85,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -102,7 +102,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -115,7 +115,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -133,7 +133,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -151,7 +151,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -170,7 +170,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -184,7 +184,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -206,7 +206,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockResolvedValue(mockPositions)
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -219,7 +219,7 @@ describe('Dashboard', () => {
     mockPositionService.getAll.mockRejectedValue(new Error('Database error'))
 
     await act(async () => {
-      renderWithRouter(<Dashboard />)
+      await renderWithRouter(<Dashboard />)
     })
 
     await waitFor(() => {
@@ -236,7 +236,7 @@ describe('Dashboard', () => {
       mockPositionService.getAll.mockResolvedValue(mockPositions)
 
       await act(async () => {
-        renderWithRouter(<Dashboard />)
+        await renderWithRouter(<Dashboard />)
       })
 
       await waitFor(() => {
@@ -259,7 +259,7 @@ describe('Dashboard', () => {
       mockPositionService.getAll.mockResolvedValue(mockPositions)
 
       await act(async () => {
-        renderWithRouter(<Dashboard />)
+        await renderWithRouter(<Dashboard />)
       })
 
       await waitFor(() => {

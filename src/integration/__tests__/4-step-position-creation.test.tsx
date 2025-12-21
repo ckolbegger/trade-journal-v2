@@ -27,7 +27,7 @@ describe('Integration: 4-Step Position Creation Flow', () => {
     await services.initialize()
 
     positionService = services.getPositionService()
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
   })
 
   afterEach(async () => {

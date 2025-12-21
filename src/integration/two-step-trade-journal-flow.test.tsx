@@ -35,7 +35,7 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
     // Create fresh service instances with database injection
     positionService = services.getPositionService()
     tradeService = services.getTradeService()
-    journalService = await services.getJournalService()
+    journalService = services.getJournalService()
 
     // Create a test position
     testPosition = await positionService.create({
