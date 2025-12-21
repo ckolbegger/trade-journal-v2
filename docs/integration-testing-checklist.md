@@ -71,11 +71,14 @@ describe('Integration: [Feature Name]', () => {
   let journalService: JournalService
 
   beforeEach(async () => {
-    // Setup with REAL services
-    positionService = new PositionService()
+    // Setup with REAL services via ServiceContainer
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+
+    positionService = container.getPositionService()
     await positionService.clearAll()
-    tradeService = new TradeService(positionService)
-    journalService = new JournalService(await positionService.getDB())
+    tradeService = container.getTradeService()
+    journalService = container.getJournalService()
   })
 
   afterEach(async () => {

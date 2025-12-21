@@ -26,11 +26,14 @@ it('should render position details component', async () => {
 
 ### 2. **Use Real Data Services**
 ```typescript
-// ✅ GOOD: Use actual services with IndexedDB
+// ✅ GOOD: Use actual services with IndexedDB via ServiceContainer
 beforeEach(async () => {
-  positionService = new PositionService()
+  const container = ServiceContainer.getInstance()
+  await container.initialize()
+
+  positionService = container.getPositionService()
   await positionService.clearAll()
-  tradeService = new TradeService(positionService)
+  tradeService = container.getTradeService()
 })
 
 // ❌ BAD: Mock services
@@ -91,16 +94,19 @@ describe('Integration: Feature Name', () => {
   let tradeService: TradeService
 
   beforeEach(async () => {
-    // Real services with actual IndexedDB
-    positionService = new PositionService()
+    // Real services with actual IndexedDB via ServiceContainer
+    const container = ServiceContainer.getInstance()
+    await container.initialize()
+
+    positionService = container.getPositionService()
     await positionService.clearAll()
-    tradeService = new TradeService(positionService)
+    tradeService = container.getTradeService()
   })
 
   afterEach(async () => {
     // Proper cleanup
     await positionService.clearAll()
-    positionService.close()
+    ServiceContainer.resetInstance()
   })
 })
 ```
@@ -182,8 +188,10 @@ vi.mock('@/services/TradeService')
 vi.mock('@/lib/position')
 
 // ✅ GOOD: Use real services to catch integration issues
-positionService = new PositionService()
-tradeService = new TradeService(positionService)
+const container = ServiceContainer.getInstance()
+await container.initialize()
+positionService = container.getPositionService()
+tradeService = container.getTradeService()
 ```
 
 ### **2. Testing Implementation Details**

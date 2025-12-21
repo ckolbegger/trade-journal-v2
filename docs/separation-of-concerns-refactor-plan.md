@@ -1652,9 +1652,9 @@ IndexedDB
 - ✅ **Step 6.3**: Refactor PriceService to Accept IDBDatabase (Commit: `3fadc71`)
 - ✅ **Step 6.4**: Update ServiceContainer to Inject Database (Commits: `9cbd9c4`, `51d05fe`)
 - ✅ **Step 6.5**: Update Application Initialization (Completed as part of Step 6.4.1)
-- ⏳ **Step 6.6**: Refactor PositionJournalTransaction - **TODO**
-- ⏳ **Step 6.7**: Remove Unused DatabaseConnection Singleton - **TODO**
-- ⏳ **Step 6.8**: Update Documentation - **TODO**
+- ✅ **Step 6.6**: Refactor PositionJournalTransaction (Not needed - already using injected db)
+- ✅ **Step 6.7**: Remove Unused DatabaseConnection Singleton (Not created - skipped Step 1.1-1.3)
+- ✅ **Step 6.8**: Update Documentation - **COMPLETED**
 
 ---
 
