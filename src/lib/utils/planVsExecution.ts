@@ -8,6 +8,7 @@
 
 import type { Position } from '@/lib/position'
 import type { FIFOResult } from './fifo'
+import { PLAN_VS_EXECUTION_TOLERANCE } from '@/config/constants'
 
 /**
  * Plan vs execution comparison metrics
@@ -106,24 +107,22 @@ export function calculatePlanVsExecution(
   const profitDelta = fifoResult.realizedPnL - targetProfit
 
   // Assess execution quality
-  const TOLERANCE = 0.01 // $0.01 tolerance for "on target"
-
   const entryQuality: PlanVsExecution['entryExecutionQuality'] =
-    Math.abs(entryDelta) < TOLERANCE
+    Math.abs(entryDelta) < PLAN_VS_EXECUTION_TOLERANCE
       ? 'onTarget'
       : entryDelta < 0
         ? 'better' // Paid less than planned
         : 'worse'
 
   const exitQuality: PlanVsExecution['exitExecutionQuality'] =
-    Math.abs(exitDelta) < TOLERANCE
+    Math.abs(exitDelta) < PLAN_VS_EXECUTION_TOLERANCE
       ? 'onTarget'
       : exitDelta > 0
         ? 'better' // Sold for more than planned
         : 'worse'
 
   const overallQuality: PlanVsExecution['overallExecutionQuality'] =
-    Math.abs(profitDelta) < TOLERANCE * position.target_quantity
+    Math.abs(profitDelta) < PLAN_VS_EXECUTION_TOLERANCE * position.target_quantity
       ? 'onTarget'
       : profitDelta > 0
         ? 'better'

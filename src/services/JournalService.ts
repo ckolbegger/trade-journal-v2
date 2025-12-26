@@ -1,5 +1,6 @@
 import type { JournalEntry, JournalField } from '@/types/journal';
 import { JOURNAL_PROMPTS } from '@/types/journal';
+import { JournalValidator } from '@/domain/validators/JournalValidator';
 
 export interface CreateJournalEntryRequest {
   id?: string;
@@ -24,48 +25,12 @@ export class JournalService {
   }
 
   private validateJournalRequest(request: CreateJournalEntryRequest): void {
-    // Must have either position_id or trade_id
-    if (!request.position_id && !request.trade_id) {
-      throw new Error('Journal entry must have either position_id or trade_id');
-    }
+    // Use JournalValidator for core validation
+    JournalValidator.validateCreateRequest(request);
 
-    // Validate trade_id is not empty string
-    if (request.trade_id === '') {
-      throw new Error('trade_id cannot be empty string');
-    }
-
-    // Warn if trade_execution entry has no trade_id
+    // Warn if trade_execution entry has no trade_id (service-level logging concern)
     if (request.entry_type === 'trade_execution' && !request.trade_id) {
       console.warn(`trade_execution entry created without trade_id for journal ${request.id || 'new'}`);
-    }
-
-    // Must have at least one field
-    if (!request.fields || request.fields.length === 0) {
-      throw new Error('At least one journal field is required');
-    }
-
-    // Validate thesis field if present
-    const thesisField = request.fields.find(field => field.name === 'thesis');
-    if (thesisField) {
-      this.validateThesisContent(thesisField.response);
-    }
-  }
-
-  private validateUpdateRequest(updates: UpdateJournalEntryRequest): void {
-    if (updates.fields) {
-      const thesisField = updates.fields.find(field => field.name === 'thesis');
-      if (thesisField) {
-        this.validateThesisContent(thesisField.response);
-      }
-    }
-  }
-
-  private validateThesisContent(content: string): void {
-    if (content.trim().length > 0 && content.trim().length < 10) {
-      throw new Error('Thesis response must be at least 10 characters');
-    }
-    if (content.length > 2000) {
-      throw new Error('Thesis response cannot exceed 2000 characters');
     }
   }
 
@@ -168,7 +133,7 @@ export class JournalService {
   async update(id: string, updates: UpdateJournalEntryRequest): Promise<JournalEntry> {
     return new Promise(async (resolve, reject) => {
       try {
-        this.validateUpdateRequest(updates);
+        JournalValidator.validateUpdateRequest(updates);
       } catch (error) {
         reject(error);
         return;
