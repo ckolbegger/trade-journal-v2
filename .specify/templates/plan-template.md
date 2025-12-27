@@ -31,7 +31,14 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+- [ ] Habit formation gates included: journal entry required for plan creation and trade execution
+- [ ] Daily review workflow reinforces consistent habits and includes education moments
+- [ ] Plans/trades are immutable with explicit confirmation and warnings
+- [ ] Position plan and trade execution are separated; FIFO cost basis and status from trades
+- [ ] Local-only data: IndexedDB storage, manual pricing, no external APIs or auth
+- [ ] Mobile-first UX: 44x44 touch targets, progressive disclosure, mobile tested first
+- [ ] TDD enforced with integration-first tests; visibility checks and real persistence
+- [ ] Type safety rules: type-only imports for interfaces, no `any` without justification
 
 ## Project Structure
 

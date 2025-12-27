@@ -18,6 +18,13 @@
   - Tested independently
   - Deployed independently
   - Demonstrated to users independently
+
+  Constitution alignment (non-negotiable):
+  - Plan creation and trade execution must require journal entries
+  - Plans and trades are immutable with explicit confirmation
+  - Plan vs. execution separation must remain clear in the flow and terminology
+  - UI uses progressive disclosure and mobile-first patterns
+  - Educational moments appear at critical decision points
 -->
 
 ### User Story 1 - [Brief Title] (Priority: P1)
@@ -80,6 +87,11 @@
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right functional requirements.
+
+  Constitution alignment (non-negotiable):
+  - Manual pricing only; no external pricing APIs
+  - Local-only data storage (IndexedDB); no auth or tracking
+  - FIFO cost basis derived from actual trades
 -->
 
 ### Functional Requirements
