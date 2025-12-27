@@ -222,4 +222,4 @@ For day-to-day development decisions and code patterns, refer to `CLAUDE.md` whi
 
 **Constitution supersedes all other documentation.** In conflicts between constitution and other docs, constitution takes precedence. `CLAUDE.md` provides implementation guidance within constitutional constraints.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
+**Version**: 1.0.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-12-27
