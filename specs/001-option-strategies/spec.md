@@ -5,6 +5,17 @@
 **Status**: Draft
 **Input**: User description: "We need to update the application to support adding option strategies to our positions. The first strategy we implement will be the short put. We will need to support opening a position with targets and stops based on stock price and then adding a trade to sell a put to that position. We will record the price paid for the put. Once a position contains an option leg, we will report intrinsic vs extrinsic value for the position based on the latest close of the stock and the option. Obviously, our pricing system will need to support entering a price for the option as well as the stock. We will be able to close the short put position by buying to close the contract. The system will move the position to closed status and report realized rather than unrealized profit. Please ask me any questions you have until you are ready to write the specification. As you're thinking through the problem, recognize that we will next be supporting covered calls, and ultimately support scaling in and out of multileg option positions."
 
+## Clarifications
+
+### Session 2025-12-27
+
+- Q: Should the system support a single-user mode only, or multi-user accounts? → A: Single-user mode only - all features available to the one user of the device
+- Q: How should option trades be uniquely identified within a position? → A: Option trades store OCC symbol derived from (symbol + strike + expiration + type), with generated UUID for scaling in/out. FIFO P&L matching uses OCC symbol. UI collects option type, strike, expiration and derives OCC.
+- Q: How should the system handle loading, empty, and error states for options? → A: Use existing loading/empty/error patterns from stock positions for consistency
+- Q: If a short put is assigned on only part of the position, how should the system handle remaining contracts? → A: Support partial assignments. Assignment BTC assigned contracts in current position and creates new stock position for assigned shares with cost basis (strike price - premium received). Remaining contracts stay open with adjusted quantity.
+- Q: What are acceptable performance targets for option operations and data retention policies? → A: Use existing system performance patterns, retain all data indefinitely
+- Q: How should trades that deviate from the position plan be handled? → A: Deviation tracking is planned for a future phase. For now, all trades are allowed without deviation warnings.
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Open Stock Position Plan (Priority: P1)
@@ -91,23 +102,6 @@ A trader has an open short put position that goes in-the-money at expiration. Th
 
 ---
 
-### User Story 6 - Track Strategy Deviations (Priority: P2)
-
-A trader's position plan specifies a short put strategy, but the trader wants to add a trade that doesn't match this strategy (e.g., buying the underlying stock, selling a different option). When the trader attempts to add the non-conforming trade, the system detects the deviation, displays a clear warning explaining how it differs from the plan, and requires explicit confirmation. Once added, the trade is flagged as a deviation, tracked separately in reporting, and visible in the position detail view.
-
-**Why this priority**: Deviation tracking reinforces behavioral discipline by making traders consciously acknowledge when they're departing from their original plan. This creates learning opportunities and supports the app's mission of developing systematic decision-making.
-
-**Independent Test**: Can be fully tested by creating a short put position plan, then adding non-conforming trades (buying stock, selling different strike), verifying warnings appear, confirmation is required, and deviations are tracked separately in reporting.
-
-**Acceptance Scenarios**:
-
-1. **Given** a position plan for a short put on SPY $100 strike, **When** the trader attempts to buy 100 shares of SPY stock, **Then** the system warns "This trade deviates from your short put strategy. Add anyway?" and requires confirmation
-2. **Given** a trader adds a non-conforming trade after confirmation, **When** they view the position detail, **Then** the trade is flagged with a "Deviation from plan" indicator
-3. **Given** a position contains multiple trades including deviations, **When** the trader views performance reports, **Then** deviations are listed separately from conforming trades
-4. **Given** a trader has added deviation trades, **When** they review the position during daily review, **Then** the system highlights deviations for reflection on why the plan changed
-
----
-
 ### Edge Cases
 
 - What happens when a trader adds a short put trade with a different underlying symbol than the position plan?
@@ -130,36 +124,132 @@ A trader's position plan specifies a short put strategy, but the trader wants to
 - **FR-004**: System MUST allow adding trades to a position that can represent either stock or option legs
 - **FR-005**: System MUST support option trade types: SELL_TO_OPEN (STO), BUY_TO_CLOSE (BTC), BUY_TO_OPEN (BTO), SELL_TO_CLOSE (STC)
 - **FR-006**: System MUST capture option contract details: option_type (PUT/CALL), strike_price, expiration_date, quantity
-- **FR-007**: System MUST validate that closing trades match the contract details of the open position
-- **FR-008**: System MUST warn when a trade deviates from the position plan strategy
-- **FR-009**: System MUST require explicit confirmation before adding deviation trades
-- **FR-010**: System MUST track deviations from the original plan separately in reporting
-- **FR-011**: System MUST support manual price entry for both stock and option instruments
-- **FR-012**: System MUST update all trades in a position when prices are updated
-- **FR-013**: System MUST calculate intrinsic value as max(0, strike_price - stock_price) for put options
-- **FR-014**: System MUST calculate extrinsic value as option_price - intrinsic_value for options
-- **FR-015**: System MUST display intrinsic and extrinsic value breakdown for positions containing options
-- **FR-016**: System MUST close a position when net quantity reaches zero after adding a closing trade
-- **FR-017**: System MUST change P&L reporting from unrealized to realized when a position closes
-- **FR-018**: System MUST record option assignment as a BTC trade at $0.00 price
-- **FR-019**: System MUST automatically create a new stock position when an option is assigned
-- **FR-020**: System MUST calculate assigned stock cost basis as (strike_price - premium_received_per_share)
-- **FR-021**: System MUST multiply option contract quantities by 100 for stock position quantities upon assignment
-- **FR-022**: System MUST support positions containing only stock trades, only option trades, or both stock and option trades
-- **FR-023**: System MUST maintain FIFO cost basis tracking per instrument type within a position
-- **FR-024**: System MUST prevent adding closing trades that exceed the open contract quantity
+- **FR-007**: System MUST auto-derive OCC symbol from option details using format: `SYMBOL YYMMDDTPPPPPPPP` (6-char symbol padded with spaces + 6-char date YYMMDD + 1-char type P/C + 8-char strike with leading zeros, no decimal). Example: `AAPL  250117P00105000` for AAPL $105 Put expiring Jan 17, 2025
+- **FR-008**: System MUST validate that closing trades match the contract details of the open position
+- **FR-009**: System MUST support manual price entry for both stock and option instruments
+- **FR-010**: System MUST update all trades in a position when prices are updated
+- **FR-011**: System MUST calculate intrinsic value as max(0, strike_price - stock_price) for put options
+- **FR-012**: System MUST calculate extrinsic value as option_price - intrinsic_value for options
+- **FR-013**: System MUST display intrinsic and extrinsic value breakdown for positions containing options
+- **FR-014**: System MUST close a position when net quantity reaches zero after adding a closing trade
+- **FR-015**: System MUST change P&L reporting from unrealized to realized when a position closes
+- **FR-016**: System MUST record option assignment as a BTC trade at $0.00 price
+- **FR-017**: System MUST automatically create a new stock position when an option is assigned
+- **FR-018**: System MUST calculate assigned stock cost basis as (strike_price - premium_received_per_share)
+- **FR-019**: System MUST multiply option contract quantities by 100 for stock position quantities upon assignment
+- **FR-020**: System MUST support positions containing only stock trades, only option trades, or both stock and option trades
+- **FR-021**: System MUST maintain FIFO cost basis tracking per instrument type within a position
+- **FR-022**: System MUST prevent adding closing trades that exceed the open contract quantity
 
 ### Key Entities
 
-- **Position**: An immutable trading plan representing strategic intent. Contains planned price levels (targets, stops) based on underlying stock price, required journal entry documenting thesis, and a list of executed trades. Status is derived from net trade quantity (open/closed). Can contain stock trades, option trades, or both.
+#### Position
 
-- **Trade**: An individual execution record within a position. Can represent either a stock transaction (symbol, quantity, price, action) or an option contract transaction (option_type, strike_price, expiration_date, quantity, price, action). Each trade maintains its own cost basis for FIFO P&L calculation. Option actions include: SELL_TO_OPEN, BUY_TO_CLOSE, BUY_TO_OPEN, SELL_TO_CLOSE.
+An immutable trading plan representing strategic intent. Contains planned price levels (targets, stops) based on underlying stock price, required journal entry documenting thesis, and a list of executed trades. Status is derived from net trade quantity (open/closed). Can contain stock trades, option trades, or both.
 
-- **Price Quote**: Current market pricing data for instruments in a position. Contains separate prices for stock and option contracts. For options, records closing price which will be expanded to OHLC in future. Used to calculate unrealized P&L and intrinsic/extrinsic value breakdown.
+```typescript
+interface Position {
+  id: string
+  symbol: string                              // Underlying stock symbol
+  strategy_type: 'Long Stock' | 'Short Put'   // Extensible for future strategies
+  trade_kind: 'stock' | 'option'              // Discriminator for position type
 
-- **Strategy Deviation**: A record of a trade that does not conform to the position plan. Contains the trade details, deviation type, timestamp, and trader confirmation. Used for behavioral tracking and plan vs. execution analysis.
+  // Plan fields (immutable after creation)
+  target_entry_price: number                  // Stock price target
+  target_quantity: number                     // Planned quantity
+  profit_target: number                       // Stock price profit target
+  stop_loss: number                           // Stock price stop loss
+  position_thesis: string                     // Required journal entry
+  created_date: Date
 
-- **Assignment Event**: The exercise of an option contract at expiration or early exercise. Creates a BTC trade at $0.00 for the option position and triggers creation of a new stock position with cost basis derived from strike price minus net premium received.
+  // Option plan fields (when trade_kind === 'option')
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number               // Expected premium
+
+  // Derived state
+  status: 'planned' | 'open' | 'closed'       // Derived from trade activity
+  trades: Trade[]
+  journal_entry_ids: string[]
+}
+```
+
+#### Trade
+
+An individual execution record within a position. Can represent either a stock transaction or an option contract transaction. Each trade maintains its own cost basis for FIFO P&L calculation.
+
+```typescript
+interface Trade {
+  id: string
+  position_id: string
+  trade_kind: 'stock' | 'option'              // Discriminator field
+  trade_type: 'buy' | 'sell'                  // Direction
+  action?: 'STO' | 'BTC' | 'BTO' | 'STC'      // Option-specific action codes
+  quantity: number
+  price: number                               // Per share for stock, per contract for options
+  timestamp: Date
+  notes?: string
+  underlying: string                          // Ticker symbol (e.g., "AAPL")
+
+  // Option-specific fields (present when trade_kind === 'option')
+  occ_symbol?: string                         // Auto-derived: AAPL  250117P00105000
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  contract_quantity?: number                  // Defaults to 1 contract (100 shares)
+
+  // Type inference: presence of occ_symbol indicates option trade
+}
+```
+
+#### Price Quote
+
+Current market pricing data for instruments in a position. Contains separate prices for stock and option contracts. For options, records closing price which will be expanded to OHLC in future. Used to calculate unrealized P&L and intrinsic/extrinsic value breakdown.
+
+```typescript
+interface PriceQuote {
+  id: string
+  position_id: string
+  timestamp: Date
+  stock_price?: number                        // Underlying stock closing price
+  option_price?: number                       // Option contract closing price
+  occ_symbol?: string                         // Which option contract (if applicable)
+}
+```
+
+#### Strategy Deviation (Future Phase)
+
+A record of a trade that does not conform to the position plan. Contains the trade details, deviation type, timestamp, and trader confirmation. Used for behavioral tracking and plan vs. execution analysis. **Note: This entity will be implemented in a future phase.**
+
+```typescript
+interface StrategyDeviation {
+  id: string
+  trade_id: string
+  position_id: string
+  deviation_type: 'symbol_mismatch' | 'strategy_change' | 'unplanned_trade'
+  description: string
+  confirmed_at: Date
+  trader_notes?: string
+}
+```
+
+#### Assignment Event
+
+The exercise of an option contract at expiration or early exercise. Creates a BTC trade at $0.00 for the option position and triggers creation of a new stock position with cost basis derived from strike price minus net premium received.
+
+```typescript
+interface AssignmentEvent {
+  id: string
+  option_position_id: string                  // Original short put position
+  stock_position_id: string                   // Newly created stock position
+  assignment_date: Date
+  contracts_assigned: number
+  strike_price: number
+  premium_received_per_share: number
+  resulting_cost_basis: number                // strike - premium
+}
+```
 
 ## Success Criteria
 
@@ -168,13 +258,11 @@ A trader's position plan specifies a short put strategy, but the trader wants to
 - **SC-001**: Traders can create a stock-based position plan and add a short put trade in under 2 minutes
 - **SC-002**: Traders can update prices for both stock and option instruments in a single workflow
 - **SC-003**: Intrinsic and extrinsic value calculations are 100% accurate for all option positions
-- **SC-004**: All strategy deviations are detected and flagged before confirmation
-- **SC-005**: Assignment handling creates new stock positions with correct cost basis 100% of the time
-- **SC-006**: P&L transitions from unrealized to realized immediately upon position close
-- **SC-007**: Traders can close short put positions (BTC) and view realized profit in under 30 seconds
-- **SC-008**: Position status accurately reflects open/closed state based on net quantity
-- **SC-009**: Option contract validation prevents 100% of invalid closing trades
-- **SC-010**: Deviation tracking is visible in position detail and performance reports
+- **SC-004**: Assignment handling creates new stock positions with correct cost basis 100% of the time
+- **SC-005**: P&L transitions from unrealized to realized immediately upon position close
+- **SC-006**: Traders can close short put positions (BTC) and view realized profit in under 30 seconds
+- **SC-007**: Position status accurately reflects open/closed state based on net quantity
+- **SC-008**: Option contract validation prevents 100% of invalid closing trades
 
 ## Assumptions
 
@@ -194,7 +282,7 @@ A trader's position plan specifies a short put strategy, but the trader wants to
 
 8. **FIFO Per Instrument**: Cost basis tracking uses FIFO methodology separately for each instrument type (stock vs. each unique option contract) within a position.
 
-9. **Deviation Tracking**: Trades that deviate from the plan are allowed but require explicit confirmation and are tracked separately for learning purposes.
+9. **Deviation Tracking (Future Phase)**: Trades that deviate from the plan will be allowed without warnings in this phase. Future phases will add deviation detection, confirmation workflows, and separate tracking for learning purposes.
 
 10. **No Auto-Close**: Positions do not auto-close at expiration. Traders must manually record expiration outcomes (assignment or worthless expiration).
 
@@ -220,3 +308,28 @@ None - all clarifications have been resolved.
 - **Margin Requirements**: No margin calculation or buying power validation.
 - **Tax Reporting**: No tax form generation (1099-B, Schedule D). P&L tracking only.
 - **OHLC Prices for Options**: Only closing price is stored initially. OHLC expansion planned for future.
+- **Strategy Deviation Tracking**: Deviation detection, warnings, and reporting deferred to future phase.
+
+## Future Enhancements
+
+### Strategy Deviation Tracking
+
+A planned enhancement to reinforce behavioral discipline by detecting and tracking when trades deviate from the position plan.
+
+**Concept:**
+When a trader adds a trade that doesn't match the position plan strategy (e.g., buying stock when the plan was for a short put, or selling a different strike), the system will:
+1. Detect the deviation and display a clear warning
+2. Require explicit confirmation before proceeding
+3. Flag the trade as a deviation in the position detail view
+4. Track deviations separately in performance reports
+
+**Rationale:**
+This supports the app's core mission of developing systematic decision-making by making traders consciously acknowledge when they depart from their original plan. The pattern of confirmation-before-deviation creates learning opportunities and builds awareness of impulsive trading behavior.
+
+**Design Note:**
+The current entity model (Strategy Deviation as a separate entity) supports adding this without changes to the Trade or Position entities. When implemented, this will add:
+- FR: System MUST warn when a trade deviates from the position plan strategy
+- FR: System MUST require explicit confirmation before adding deviation trades
+- FR: System MUST track deviations from the original plan separately in reporting
+- User Story: Track Strategy Deviations workflow
+- Success Criteria: Deviation visibility in UI and reports
