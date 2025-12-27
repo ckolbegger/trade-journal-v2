@@ -1,0 +1,358 @@
+openapi: 3.0.3
+info:
+  title: Short Put Strategy Contracts
+  version: 1.0.0
+  description: API contracts for short put position planning, option trades, assignment, and price entry.
+servers:
+  - url: http://localhost
+paths:
+  /positions:
+    post:
+      summary: Create a position plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PositionPlanInput'
+      responses:
+        '201':
+          description: Position created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+  /positions/{positionId}:
+    get:
+      summary: Fetch position details
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Position
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+  /positions/{positionId}/trades:
+    post:
+      summary: Add a trade (stock or option)
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TradeInput'
+      responses:
+        '201':
+          description: Trade created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trade'
+  /positions/{positionId}/assignments:
+    post:
+      summary: Record an option assignment
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentInput'
+      responses:
+        '201':
+          description: Assignment recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentEvent'
+  /positions/{positionId}/expirations:
+    post:
+      summary: Record expiration worthless
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpirationInput'
+      responses:
+        '201':
+          description: Expiration recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trade'
+  /prices:
+    post:
+      summary: Create or update a price entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceEntryInput'
+      responses:
+        '201':
+          description: Price entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceEntry'
+    get:
+      summary: Fetch prices by instrument and date
+      parameters:
+        - name: instrument_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Price entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PriceEntry'
+components:
+  schemas:
+    PositionPlanInput:
+      type: object
+      required:
+        - symbol
+        - strategy_type
+        - trade_kind
+        - target_entry_price
+        - target_quantity
+        - profit_target
+        - stop_loss
+        - profit_target_basis
+        - stop_loss_basis
+        - position_thesis
+      properties:
+        symbol:
+          type: string
+        strategy_type:
+          type: string
+          enum: ['Long Stock', 'Short Put']
+        trade_kind:
+          type: string
+          enum: ['stock', 'option']
+        target_entry_price:
+          type: number
+        target_quantity:
+          type: number
+        profit_target:
+          type: number
+        stop_loss:
+          type: number
+        profit_target_basis:
+          type: string
+          enum: ['stock_price', 'option_price']
+        stop_loss_basis:
+          type: string
+          enum: ['stock_price', 'option_price']
+        position_thesis:
+          type: string
+        option_type:
+          type: string
+          enum: ['call', 'put']
+        strike_price:
+          type: number
+        expiration_date:
+          type: string
+          format: date
+        premium_per_contract:
+          type: number
+    TradeInput:
+      type: object
+      required:
+        - trade_kind
+        - trade_type
+        - quantity
+        - price
+        - timestamp
+        - underlying
+      properties:
+        trade_kind:
+          type: string
+          enum: ['stock', 'option']
+        trade_type:
+          type: string
+          enum: ['buy', 'sell']
+        action:
+          type: string
+          enum: ['STO', 'BTC', 'BTO', 'STC']
+        quantity:
+          type: number
+        price:
+          type: number
+        timestamp:
+          type: string
+          format: date-time
+        underlying:
+          type: string
+        occ_symbol:
+          type: string
+        option_type:
+          type: string
+          enum: ['call', 'put']
+        strike_price:
+          type: number
+        expiration_date:
+          type: string
+          format: date
+        contract_quantity:
+          type: number
+        underlying_price_at_trade:
+          type: number
+    AssignmentInput:
+      type: object
+      required:
+        - contracts_assigned
+        - assignment_date
+        - strike_price
+        - premium_received_per_share
+      properties:
+        contracts_assigned:
+          type: number
+        assignment_date:
+          type: string
+          format: date
+        strike_price:
+          type: number
+        premium_received_per_share:
+          type: number
+    ExpirationInput:
+      type: object
+      required:
+        - expiration_date
+      properties:
+        expiration_date:
+          type: string
+          format: date
+    PriceEntryInput:
+      type: object
+      required:
+        - instrument_id
+        - date
+        - close_price
+      properties:
+        instrument_id:
+          type: string
+        date:
+          type: string
+          format: date
+        close_price:
+          type: number
+    Position:
+      type: object
+      properties:
+        id:
+          type: string
+        symbol:
+          type: string
+        strategy_type:
+          type: string
+        trade_kind:
+          type: string
+        target_entry_price:
+          type: number
+        target_quantity:
+          type: number
+        profit_target:
+          type: number
+        stop_loss:
+          type: number
+        profit_target_basis:
+          type: string
+        stop_loss_basis:
+          type: string
+        position_thesis:
+          type: string
+        created_date:
+          type: string
+          format: date-time
+        option_type:
+          type: string
+        strike_price:
+          type: number
+        expiration_date:
+          type: string
+          format: date
+        premium_per_contract:
+          type: number
+        status:
+          type: string
+        trades:
+          type: array
+          items:
+            $ref: '#/components/schemas/Trade'
+    Trade:
+      allOf:
+        - $ref: '#/components/schemas/TradeInput'
+        - type: object
+          properties:
+            id:
+              type: string
+            position_id:
+              type: string
+    PriceEntry:
+      allOf:
+        - $ref: '#/components/schemas/PriceEntryInput'
+        - type: object
+          properties:
+            id:
+              type: string
+            updated_at:
+              type: string
+              format: date-time
+    AssignmentEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        option_position_id:
+          type: string
+        stock_position_id:
+          type: string
+        assignment_date:
+          type: string
+          format: date
+        contracts_assigned:
+          type: number
+        strike_price:
+          type: number
+        premium_received_per_share:
+          type: number
+        resulting_cost_basis:
+          type: number
