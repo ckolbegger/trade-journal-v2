@@ -18,19 +18,21 @@
 
 ## User Scenarios & Testing
 
-### User Story 1 - Open Stock Position Plan (Priority: P1)
+### User Story 1 - Open Position Plan (Priority: P1)
 
-A trader wants to plan a potential short put position by first creating a stock-based position plan. The trader defines the underlying stock, target entry/exit prices based on stock price, stop loss levels, and documents their thesis in a mandatory journal entry. The position is created with zero quantity (planning state) and contains no actual trades yet.
+A trader wants to plan a potential short put position by first creating a position plan. The trader defines the underlying stock, target entry/exit prices, stop loss levels (based on either stock price or option premium), and documents their thesis in a mandatory journal entry. The position is created with zero quantity (planning state) and contains no actual trades yet.
 
 **Why this priority**: This is the foundation for all option strategies. The position plan represents the trader's strategic intent and provides the context for any option trades that follow. Without the immutable plan, the educational value of plan vs. execution analysis is lost.
 
-**Independent Test**: Can be fully tested by creating a position plan with stock-based targets and stops, verifying the plan is immutable and contains no trades, and confirming a journal entry was required.
+**Independent Test**: Can be fully tested by creating a position plan with targets and stops, verifying the plan is immutable and contains no trades, and confirming a journal entry was required.
 
 **Acceptance Scenarios**:
 
 1. **Given** a trader is on the position dashboard, **When** they initiate position creation, **Then** they must complete a journal entry before the position plan can be saved
-2. **Given** a trader is creating a position plan, **When** they enter stock-based price targets and stops, **Then** these values are saved as the immutable plan
-3. **Given** a position plan has been created, **When** the trader views the position, **Then** the plan shows zero quantity and zero trades (planning state only)
+2. **Given** a trader is creating a position plan, **When** they enter price targets and stops, **Then** they can choose whether each is based on stock price or option premium
+3. **Given** a trader sets a stop loss based on option premium (e.g., "close if premium doubles to $6.00"), **When** the plan is saved, **Then** the stop is stored with `stop_loss_basis: 'option_price'`
+4. **Given** a trader sets a profit target based on stock price (e.g., "close if stock drops to support at $95"), **When** the plan is saved, **Then** the target is stored with `profit_target_basis: 'stock_price'`
+5. **Given** a position plan has been created, **When** the trader views the position, **Then** the plan shows zero quantity and zero trades (planning state only)
 
 ---
 
@@ -53,18 +55,21 @@ A trader has a stock position plan and wants to execute a short put strategy. Th
 
 ### User Story 3 - Update Prices for Stock and Option (Priority: P2)
 
-A trader has an open short put position and wants to update current market prices. The trader enters the latest closing price for both the underlying stock and the option contract. The system calculates and displays the current intrinsic value (how much the option is in-the-money) and extrinsic value (time value remaining) of the position. The unrealized P&L is updated to reflect the change in option value since opening.
+A trader has an open short put position and wants to update current market prices. The trader enters the latest closing price for both the underlying stock and the option contract. Prices are stored by instrument and date, shared across all positions using that instrument. The system calculates and displays the current intrinsic value (how much the option is in-the-money) and extrinsic value (time value remaining) of the position. The unrealized P&L is updated to reflect the change in option value since opening.
 
-**Why this priority**: Price updates are essential for tracking position performance and making informed decisions. The intrinsic/extrinsic breakdown provides educational value by showing how time decay and underlying price movement affect option value.
+**Why this priority**: Price updates are essential for tracking position performance and making informed decisions. The intrinsic/extrinsic breakdown provides educational value by showing how time decay and underlying price movement affect option value. Shared pricing eliminates redundant data entry when the same instrument appears in multiple positions.
 
-**Independent Test**: Can be fully tested by updating stock and option prices for a position with a short put, verifying intrinsic/extrinsic values are calculated correctly, and confirming P&L reflects the change in option value.
+**Independent Test**: Can be fully tested by updating stock and option prices for a position with a short put, verifying intrinsic/extrinsic values are calculated correctly, confirming P&L reflects the change in option value, and verifying price sharing works across positions.
 
 **Acceptance Scenarios**:
 
 1. **Given** a position contains a short put, **When** the trader updates the stock price to $95 and option price to $2.50 for a $100 strike put, **Then** the system displays intrinsic value of $0 (out-of-the-money) and extrinsic value of $2.50 (time value)
 2. **Given** a position contains a short put with $100 strike, **When** the trader updates the stock price to $95 and option price to $7.00, **Then** the system displays intrinsic value of $5.00 ($100 - $95) and extrinsic value of $2.00 ($7 - $5)
 3. **Given** a trader has multiple trades in a position (stock and option), **When** they update prices, **Then** the price update flow updates all trades in the position with their respective instrument prices
-4. **Given** a position contains only option trades, **When** the trader updates prices, **Then** only option prices are required (stock price optional)
+4. **Given** a position contains only option trades, **When** the trader updates prices, **Then** only option prices are required (stock price optional but needed for intrinsic/extrinsic calculation)
+5. **Given** two positions share the same underlying (e.g., AAPL), **When** the trader updates the AAPL price in one position, **Then** the other position automatically reflects the updated price without requiring duplicate entry
+6. **Given** a price already exists for an instrument and date, **When** the trader initiates a price update, **Then** the system pre-fills the existing price and only prompts for missing instruments
+7. **Given** a position requires both stock and option prices for valuation, **When** only one price is available, **Then** the system displays a staleness warning indicating incomplete valuation data
 
 ---
 
@@ -113,12 +118,14 @@ A trader has an open short put position that goes in-the-money at expiration. Th
 - What happens when a trader adds multiple short puts at different strikes or expirations to the same position?
 - What happens when the cost basis calculation results in a negative value for the assigned stock position?
 - What happens when a trader attempts to add a trade that would create an invalid position state (e.g., more BTC contracts than were sold)?
+- What happens when stock price is updated but option price is not (or vice versa)? How does the system indicate staleness?
+- What happens when two positions share the same underlying and one position's price update should apply to both?
 
 ## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: System MUST allow creating a position plan with stock-based price targets and stops
+- **FR-001**: System MUST allow creating a position plan with price targets and stops based on **either** underlying stock price **or** option premium price
 - **FR-002**: System MUST require a journal entry before saving a position plan
 - **FR-003**: System MUST make position plans immutable once saved
 - **FR-004**: System MUST allow adding trades to a position that can represent either stock or option legs
@@ -140,12 +147,16 @@ A trader has an open short put position that goes in-the-money at expiration. Th
 - **FR-020**: System MUST support positions containing only stock trades, only option trades, or both stock and option trades
 - **FR-021**: System MUST maintain FIFO cost basis tracking per instrument type within a position
 - **FR-022**: System MUST prevent adding closing trades that exceed the open contract quantity
+- **FR-023**: System MUST store price entries by instrument identifier (stock symbol or OCC symbol) and date, enabling sharing across all positions using that instrument
+- **FR-024**: System MUST reuse an existing price entry when one already exists for the same instrument and date, rather than requesting duplicate entry
+- **FR-025**: System MUST indicate when valuation data is incomplete due to missing stock or option prices (staleness warning)
+- **FR-026**: System MUST capture the underlying stock price at the time of each option trade execution for historical reference
 
 ### Key Entities
 
 #### Position
 
-An immutable trading plan representing strategic intent. Contains planned price levels (targets, stops) based on underlying stock price, required journal entry documenting thesis, and a list of executed trades. Status is derived from net trade quantity (open/closed). Can contain stock trades, option trades, or both.
+An immutable trading plan representing strategic intent. Contains planned price levels (targets, stops) based on either underlying stock price or option premium, required journal entry documenting thesis, and a list of executed trades. Status is derived from net trade quantity (open/closed). Can contain stock trades, option trades, or both.
 
 ```typescript
 interface Position {
@@ -155,10 +166,12 @@ interface Position {
   trade_kind: 'stock' | 'option'              // Discriminator for position type
 
   // Plan fields (immutable after creation)
-  target_entry_price: number                  // Stock price target
+  target_entry_price: number                  // Target price (stock or option based on basis)
   target_quantity: number                     // Planned quantity
-  profit_target: number                       // Stock price profit target
-  stop_loss: number                           // Stock price stop loss
+  profit_target: number                       // Profit target price
+  stop_loss: number                           // Stop loss price
+  profit_target_basis: 'stock_price' | 'option_price'  // What price type determines profit target
+  stop_loss_basis: 'stock_price' | 'option_price'      // What price type determines stop loss
   position_thesis: string                     // Required journal entry
   created_date: Date
 
@@ -198,25 +211,37 @@ interface Trade {
   strike_price?: number
   expiration_date?: Date
   contract_quantity?: number                  // Defaults to 1 contract (100 shares)
+  underlying_price_at_trade?: number          // Stock price at time of option trade (FR-026)
 
   // Type inference: presence of occ_symbol indicates option trade
 }
 ```
 
-#### Price Quote
+#### Price Entry
 
-Current market pricing data for instruments in a position. Contains separate prices for stock and option contracts. For options, records closing price which will be expanded to OHLC in future. Used to calculate unrealized P&L and intrinsic/extrinsic value breakdown.
+Market pricing data stored by instrument and date, shared across all positions using that instrument. Eliminates duplicate price entry when the same underlying or option contract appears in multiple positions. For options, records closing price which will be expanded to OHLC in future. Used to calculate unrealized P&L and intrinsic/extrinsic value breakdown.
 
 ```typescript
-interface PriceQuote {
+interface PriceEntry {
   id: string
-  position_id: string
-  timestamp: Date
-  stock_price?: number                        // Underlying stock closing price
-  option_price?: number                       // Option contract closing price
-  occ_symbol?: string                         // Which option contract (if applicable)
+  instrument_id: string                       // Stock symbol (e.g., "AAPL") or OCC symbol
+  date: Date                                  // Price date (not timestamp - one entry per day)
+  close_price: number                         // Closing price for the day
+  // Future OHLC expansion:
+  // open_price?: number
+  // high_price?: number
+  // low_price?: number
 }
 ```
+
+**Instrument Identification:**
+- For stocks: `instrument_id` = ticker symbol (e.g., `"AAPL"`)
+- For options: `instrument_id` = OCC symbol (e.g., `"AAPL  250117P00105000"`)
+
+**Sharing Behavior:**
+- When a trader enters a price for AAPL on 2025-01-15, that price is available to ALL positions with AAPL exposure
+- The system checks for existing prices before prompting for entry (FR-024)
+- Positions display staleness warnings when required prices are missing (FR-025)
 
 #### Strategy Deviation (Future Phase)
 
@@ -263,6 +288,8 @@ interface AssignmentEvent {
 - **SC-006**: Traders can close short put positions (BTC) and view realized profit in under 30 seconds
 - **SC-007**: Position status accurately reflects open/closed state based on net quantity
 - **SC-008**: Option contract validation prevents 100% of invalid closing trades
+- **SC-009**: Price entries are shared across positions - entering AAPL price once updates all AAPL positions
+- **SC-010**: Staleness warnings appear when required price data is missing for valuation
 
 ## Assumptions
 
@@ -282,9 +309,11 @@ interface AssignmentEvent {
 
 8. **FIFO Per Instrument**: Cost basis tracking uses FIFO methodology separately for each instrument type (stock vs. each unique option contract) within a position.
 
-9. **Deviation Tracking (Future Phase)**: Trades that deviate from the plan will be allowed without warnings in this phase. Future phases will add deviation detection, confirmation workflows, and separate tracking for learning purposes.
+9. **Shared Price Storage**: Price entries are stored by instrument identifier (stock symbol or OCC symbol) and date, shared across all positions. This eliminates duplicate data entry when the same underlying appears in multiple positions.
 
-10. **No Auto-Close**: Positions do not auto-close at expiration. Traders must manually record expiration outcomes (assignment or worthless expiration).
+10. **Deviation Tracking (Future Phase)**: Trades that deviate from the plan will be allowed without warnings in this phase. Future phases will add deviation detection, confirmation workflows, and separate tracking for learning purposes.
+
+11. **No Auto-Close**: Positions do not auto-close at expiration. Traders must manually record expiration outcomes (assignment or worthless expiration).
 
 ## Open Questions
 
@@ -333,3 +362,75 @@ The current entity model (Strategy Deviation as a separate entity) supports addi
 - FR: System MUST track deviations from the original plan separately in reporting
 - User Story: Track Strategy Deviations workflow
 - Success Criteria: Deviation visibility in UI and reports
+
+---
+
+## Multi-Leg Strategy Support Analysis
+
+This section confirms that the Trade entity design provides sufficient flexibility to support complex option strategies without requiring a separate Leg abstraction.
+
+### Design Rationale
+
+The Trade entity uses `occ_symbol` as the unique instrument identifier for options. This provides the same grouping semantics as an explicit Leg entity would, but with a flatter, simpler data model. Each unique OCC symbol effectively represents a "leg" of the strategy.
+
+### Supported Strategies
+
+#### Covered Call (Stock + Short Call)
+A position containing:
+1. **Stock Trade**: `trade_kind: 'stock'`, `trade_type: 'buy'`, `underlying: 'AAPL'`
+2. **Option Trade**: `trade_kind: 'option'`, `action: 'STO'`, `option_type: 'call'`, `occ_symbol: 'AAPL  250321C00150000'`
+
+FIFO tracking works because stock trades group by `underlying` and option trades group by `occ_symbol`.
+
+#### Iron Condor (4 Option Legs)
+A position containing 4 option trades with different OCC symbols:
+1. **Sell Put (lower strike)**: `occ_symbol: 'AAPL  250321P00140000'`, `action: 'STO'`
+2. **Buy Put (lowest strike)**: `occ_symbol: 'AAPL  250321P00135000'`, `action: 'BTO'`
+3. **Sell Call (upper strike)**: `occ_symbol: 'AAPL  250321C00160000'`, `action: 'STO'`
+4. **Buy Call (highest strike)**: `occ_symbol: 'AAPL  250321C00165000'`, `action: 'BTO'`
+
+Each leg is uniquely identified by its OCC symbol. FIFO matching happens per-symbol, so closing the short put at $140 matches against trades with `occ_symbol: 'AAPL  250321P00140000'`.
+
+#### Butterfly Spread (3 Strikes, 4 Contracts)
+A position containing trades at 3 different strikes:
+1. **Buy 1 Call at lower strike**: `occ_symbol: 'AAPL  250321C00145000'`, `action: 'BTO'`, `quantity: 1`
+2. **Sell 2 Calls at middle strike**: `occ_symbol: 'AAPL  250321C00150000'`, `action: 'STO'`, `quantity: 2`
+3. **Buy 1 Call at upper strike**: `occ_symbol: 'AAPL  250321C00155000'`, `action: 'BTO'`, `quantity: 1`
+
+Each strike has its own OCC symbol, enabling independent tracking and closing.
+
+#### Calendar Spread (Same Strike, Different Expirations)
+A position containing trades at the same strike but different expirations:
+1. **Sell near-term**: `occ_symbol: 'AAPL  250221C00150000'`, `action: 'STO'` (Feb expiry)
+2. **Buy far-term**: `occ_symbol: 'AAPL  250321C00150000'`, `action: 'BTO'` (Mar expiry)
+
+Different expiration dates produce different OCC symbols, enabling independent tracking.
+
+### FIFO Matching by OCC Symbol
+
+The key insight is that **OCC symbol uniquely identifies an option contract**, including:
+- Underlying symbol
+- Expiration date
+- Option type (put/call)
+- Strike price
+
+Therefore, FIFO cost basis tracking by `occ_symbol` (FR-021) automatically provides per-leg tracking without needing an explicit Leg entity. When a trader closes part of an iron condor (e.g., buys back the short put at $140), the system matches against all trades with that specific OCC symbol.
+
+### Scaling In/Out Support
+
+Multiple trades can have the same `occ_symbol` with different timestamps, enabling:
+- **Scaling in**: Multiple STO trades at the same strike/expiration
+- **Scaling out**: Multiple BTC trades closing partial positions
+- **Rolling**: Close one expiration, open another (different OCC symbols)
+
+### Conclusion
+
+The Trade entity with `occ_symbol` as the instrument identifier provides full flexibility for:
+- ✅ Single-leg strategies (short put, long call)
+- ✅ Stock + option combinations (covered call, cash-secured put)
+- ✅ Multi-leg spreads (verticals, iron condors, butterflies)
+- ✅ Calendar/diagonal spreads (different expirations)
+- ✅ Scaling in/out of any leg independently
+- ✅ FIFO cost basis per instrument
+
+No separate Leg abstraction is required. The OCC symbol serves as the natural grouping key for option contract identification and FIFO matching.
