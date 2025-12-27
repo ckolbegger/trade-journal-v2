@@ -16,3 +16,10 @@ Use `@/openspec/AGENTS.md` to learn:
 Keep this managed block so 'openspec update' can refresh the instructions.
 
 <!-- OPENSPEC:END -->
+
+## Active Technologies
+- TypeScript 5.x, React 18.x, Vite 5.x + React, TypeScript, Vite, idb (IndexedDB wrapper), Vitest, React Testing Library, date-fns (002-short-put-strategy)
+- IndexedDB (browser local storage, privacy-first architecture) (002-short-put-strategy)
+
+## Recent Changes
+- 002-short-put-strategy: Added TypeScript 5.x, React 18.x, Vite 5.x + React, TypeScript, Vite, idb (IndexedDB wrapper), Vitest, React Testing Library, date-fns

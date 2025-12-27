@@ -1,0 +1,504 @@
+# API Contracts: Short Put Strategy Support
+
+**Feature**: 002-short-put-strategy | **Date**: 2025-12-27
+**Format**: OpenAPI 3.0 Specification (Internal Application API)
+
+## Overview
+
+This document describes the internal data operations for option trading functionality. All operations are client-side against IndexedDB storage.
+
+## Schemas
+
+### Position
+
+```yaml
+components:
+  schemas:
+    Position:
+      type: object
+      required:
+        - id
+        - symbol
+        - strategy_type
+        - trade_kind
+        - target_entry_price
+        - target_quantity
+        - profit_target
+        - stop_loss
+        - profit_target_basis
+        - stop_loss_basis
+        - position_thesis
+        - created_date
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        symbol:
+          type: string
+          pattern: '^[A-Z]{1,5}$'
+          description: Underlying stock symbol
+        strategy_type:
+          type: string
+          enum: ['Long Stock', 'Short Put', 'Covered Call', 'Custom']
+          description: Strategy classification
+        trade_kind:
+          type: string
+          enum: ['stock', 'option', 'hybrid']
+          description: Type of trades in position
+        target_entry_price:
+          type: number
+          minimum: 0
+          description: Target entry price
+        target_quantity:
+          type: number
+          minimum: 1
+          description: Planned quantity
+        profit_target:
+          type: number
+          minimum: 0
+          description: Profit target price
+        stop_loss:
+          type: number
+          minimum: 0
+          description: Stop loss price
+        profit_target_basis:
+          type: string
+          enum: ['stock_price', 'option_price']
+          description: What price type determines profit target
+        stop_loss_basis:
+          type: string
+          enum: ['stock_price', 'option_price']
+          description: What price type determines stop loss
+        position_thesis:
+          type: string
+          minLength: 10
+          description: Journal entry content
+        created_date:
+          type: string
+          format: date-time
+          description: Position creation timestamp
+        option_type:
+          type: string
+          enum: ['call', 'put']
+          description: Option type (for option positions)
+        strike_price:
+          type: number
+          minimum: 0
+          description: Strike price (for option positions)
+        expiration_date:
+          type: string
+          format: date
+          description: Option expiration date (for option positions)
+        premium_per_contract:
+          type: number
+          minimum: 0
+          description: Expected premium per contract
+        status:
+          type: string
+          enum: ['planned', 'open', 'closed']
+          description: Derived from trade activity
+        journal_entry_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: References to journal entries
+```
+
+### Trade
+
+```yaml
+components:
+  schemas:
+    Trade:
+      type: object
+      required:
+        - id
+        - position_id
+        - trade_kind
+        - trade_type
+        - quantity
+        - price
+        - timestamp
+        - underlying
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        position_id:
+          type: string
+          format: uuid
+          description: Reference to Position
+        trade_kind:
+          type: string
+          enum: ['stock', 'option']
+          description: Trade type discriminator
+        trade_type:
+          type: string
+          enum: ['buy', 'sell']
+          description: Trade direction
+        action:
+          type: string
+          enum: ['STO', 'BTC', 'BTO', 'STC']
+          description: Option-specific action code
+        quantity:
+          type: number
+          minimum: 1
+          description: Number of shares/contracts
+        price:
+          type: number
+          minimum: 0
+          description: Per share (stock) or per contract (options)
+        timestamp:
+          type: string
+          format: date-time
+          description: Trade execution time
+        notes:
+          type: string
+          description: Optional trade notes
+        underlying:
+          type: string
+          description: Ticker symbol
+        occ_symbol:
+          type: string
+          pattern: '^[A-Z ]{6}[0-9]{6}[PC][0-9]{8}$'
+          description: OCC symbol (auto-derived)
+        option_type:
+          type: string
+          enum: ['call', 'put']
+          description: Option type
+        strike_price:
+          type: number
+          minimum: 0
+          description: Strike price
+        expiration_date:
+          type: string
+          format: date
+          description: Option expiration date
+        contract_quantity:
+          type: number
+          minimum: 1
+          description: Number of option contracts
+        underlying_price_at_trade:
+          type: number
+          minimum: 0
+          description: Stock price at option trade time
+        created_stock_position_id:
+          type: string
+          format: uuid
+          description: Stock position created by assignment
+        cost_basis_adjustment:
+          type: number
+          description: Premium received for audit trail
+```
+
+### PriceEntry
+
+```yaml
+components:
+  schemas:
+    PriceEntry:
+      type: object
+      required:
+        - id
+        - instrument_id
+        - date
+        - close_price
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier
+        instrument_id:
+          type: string
+          description: Stock symbol or OCC symbol
+        date:
+          type: string
+          format: date
+          description: Price date (one entry per day)
+        close_price:
+          type: number
+          minimum: 0
+          description: Closing price
+```
+
+## Operations
+
+### Create Position Plan
+
+```yaml
+paths:
+  /positions:
+    post:
+      summary: Create a new position plan
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Position'
+        required: true
+      responses:
+        '201':
+          description: Position created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Position'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                        message:
+                          type: string
+```
+
+### Add Trade to Position
+
+```yaml
+paths:
+  /positions/{positionId}/trades:
+    post:
+      summary: Add a trade to an existing position
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Trade'
+        required: true
+      responses:
+        '201':
+          description: Trade added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Trade'
+        '400':
+          description: Validation error
+        '409':
+          description: Trade validation failed (e.g., mismatched contract details)
+```
+
+### Record Price Entry
+
+```yaml
+paths:
+  /prices:
+    post:
+      summary: Store a price entry for an instrument
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceEntry'
+        required: true
+      responses:
+        '201':
+          description: Price entry created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceEntry'
+        '200':
+          description: Price already exists, returned existing entry
+        '400':
+          description: Validation error
+    get:
+      summary: Get price for instrument on date
+      parameters:
+        - name: instrument_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Price entry found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceEntry'
+        '404':
+          description: Price entry not found
+```
+
+### Calculate P&L
+
+```yaml
+paths:
+  /positions/{positionId}/pnl:
+    get:
+      summary: Calculate position P&L with intrinsic/extrinsic breakdown
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: P&L calculation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  unrealized:
+                    type: number
+                  realized:
+                    type: number
+                  intrinsic:
+                    type: number
+                  extrinsic:
+                    type: number
+                  total:
+                    type: number
+        '404':
+          description: Position not found
+```
+
+### Record Assignment
+
+```yaml
+paths:
+  /positions/{positionId}/assign:
+    post:
+      summary: Record option assignment and create stock position
+      parameters:
+        - name: positionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contracts_assigned
+              properties:
+                contracts_assigned:
+                  type: number
+                  minimum: 1
+                  description: Number of contracts being assigned
+                journal_entry:
+                  type: object
+                  properties:
+                    what_happened:
+                      type: string
+                    feelings:
+                      type: string
+                    stock_plan:
+                      type: string
+      responses:
+        '201':
+          description: Assignment recorded, stock position created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  assignment_trade:
+                    $ref: '#/components/schemas/Trade'
+                  stock_position:
+                    $ref: '#/components/schemas/Position'
+        '400':
+          description: Validation error
+        '409':
+          description: Position not eligible for assignment
+```
+
+## Validation Rules
+
+### Position Creation
+
+| Field | Rule | Error Code |
+|-------|------|------------|
+| symbol | Required, 1-5 uppercase letters | POS-001 |
+| strategy_type | Required, valid enum | POS-002 |
+| trade_kind | Required, valid enum | POS-003 |
+| position_thesis | Required, min 10 chars | POS-004 |
+| expiration_date | Must be future date (for options) | POS-005 |
+
+### Trade Addition
+
+| Field | Rule | Error Code |
+|-------|------|------------|
+| position_id | Must reference existing position | TRD-001 |
+| trade_kind | Must match position trade_kind | TRD-002 |
+| strike_price | Must match position strike_price | TRD-003 |
+| expiration_date | Must match position expiration_date | TRD-004 |
+| contract_quantity | Must be > 0 | TRD-005 |
+| action | Must be valid for position status | TRD-006 |
+| quantity | Cannot exceed remaining open contracts (for BTC) | TRD-007 |
+
+### Price Entry
+
+| Field | Rule | Error Code |
+|-------|------|------------|
+| instrument_id | Required, valid format | PRC-001 |
+| close_price | > 0 for stocks, >= 0 for options | PRC-002 |
+| date | Required, valid date | PRC-003 |
+
+## Error Response Format
+
+```yaml
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code (e.g., POS-001)
+        message:
+          type: string
+          description: Human-readable error message
+        field:
+          type: string
+          description: Field that caused the error
+        details:
+          type: object
+          description: Additional error details
+```
+
+Example:
+```json
+{
+  "code": "TRD-003",
+  "message": "Trade strike_price does not match position strike_price",
+  "field": "strike_price",
+  "details": {
+    "trade_strike": 110.00,
+    "position_strike": 105.00
+  }
+}
+```
