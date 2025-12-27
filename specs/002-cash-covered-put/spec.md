@@ -1,6 +1,6 @@
-# Feature Specification: Option Strategies Support - Short Put
+# Feature Specification: Cash-Secured Puts
 
-**Feature Branch**: `001-option-strategies`
+**Feature Branch**: `002-cash-covered-put`
 **Created**: 2025-12-27
 **Status**: Draft
 **Input**: User description: "We need to update the application to support adding option strategies to our positions. The first strategy we implement will be the short put. We will need to support opening a position with targets and stops based on stock price and then adding a trade to sell a put to that position. We will record the price paid for the put. Once a position contains an option leg, we will report intrinsic vs extrinsic value for the position based on the latest close of the stock and the option. Obviously, our pricing system will need to support entering a price for the option as well as the stock. We will be able to close the short put position by buying to close the contract. The system will move the position to closed status and report realized rather than unrealized profit. Please ask me any questions you have until you are ready to write the specification. As you're thinking through the problem, recognize that we will next be supporting covered calls, and ultimately support scaling in and out of multileg option positions."
