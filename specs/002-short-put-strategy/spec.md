@@ -90,6 +90,12 @@ The user decides to exit the position. For a short put, this typically means "Bu
 - **FR-009**: System MUST calculate Realized P&L when a position is closed, distinct from Unrealized P&L.
 - **FR-010**: System MUST transition the Position status to "Closed" when the open quantity of all legs reaches zero.
 - **FR-011**: System MUST apply a standard multiplier of 100 to all option contract calculations (P&L = Price * Quantity * 100).
+- **FR-012**: System MUST prevent adding new option legs or trades to positions that are closed.
+- **FR-013**: System MUST indicate when valuation data is incomplete due to missing stock or option prices.
+- **FR-014**: System MUST record a zero-price buy-to-close event when a short put expires worthless or is assigned at expiration.
+- **FR-015**: System MUST prompt for user confirmation before opening a new stock position when a short put is assigned.
+- **FR-016**: System MUST open a new stock position for assigned shares when a short put is assigned, with cost basis equal to strike price minus premium collected.
+- **FR-017**: System MUST reuse an existing price for the same instrument and date instead of requesting duplicate price entry.
 
 ### Key Entities *(include if feature involves data)*
 
