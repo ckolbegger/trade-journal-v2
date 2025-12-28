@@ -3,9 +3,14 @@
 **Input**: Design documents from `/specs/002-short-put-strategy/`
 **Prerequisites**: plan.md, spec.md, research.md, data-model.md, contracts/
 
-**Tests**: Included per Constitution Principle IV (Test-First Discipline)
+**Tests**: Included per Constitution Principle IV (Test-First Discipline). Component tasks include comprehensive unit tests with test cases listed inline.
 
-**Organization**: Tasks grouped by user story for independent implementation and testing.
+**TDD Pattern**: For each task:
+1. Write failing unit tests with stubbed implementation
+2. Implement until all tests pass
+3. After all story tasks complete, write integration tests to verify the full flow
+
+**Organization**: Tasks grouped by user story for independent implementation and testing. Each user story introduces only the infrastructure it needs (JIT principle).
 
 **P&L Strategy**: Realized P&L (from trade prices) implemented in MVP. Unrealized P&L (from current market prices) deferred to pricing story.
 
@@ -17,60 +22,53 @@
 
 ---
 
-## Phase 1: Setup (Shared Infrastructure)
+## Phase 1: Setup (Minimal Types)
 
-**Purpose**: Extend existing project with option strategy foundation
+**Purpose**: Extend existing project with essential type definitions needed for US1
 
 - [ ] T001 Extend Position interface with option fields in src/lib/position.ts (strategy_type, trade_kind, option_type, strike_price, expiration_date, premium_per_contract, profit_target_basis, stop_loss_basis)
 - [ ] T002 Extend Trade interface with option fields in src/lib/position.ts (action, occ_symbol, option_type, strike_price, expiration_date, contract_quantity, underlying_price_at_trade, created_stock_position_id, cost_basis_adjustment)
-- [ ] T003 [P] Create OCC symbol utility functions in src/lib/utils/occSymbol.ts (generateOccSymbol, parseOccSymbol)
-- [ ] T004 [P] Add StrategyType, TradeKind, OptionAction, PriceBasis type definitions to src/lib/position.ts
-- [ ] T005 [P] Extend JournalEntryType with 'option_assignment' in src/types/journal.ts
-- [ ] T006 Increment IndexedDB schema to v4 in src/services/db.ts (add assignments store, strategy_type index)
+- [ ] T003 [P] Add StrategyType, TradeKind, OptionAction, PriceBasis type definitions to src/lib/position.ts
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (US1 Prerequisites)
 
-**Purpose**: Core calculators and validators that ALL user stories depend on
+**Purpose**: Validators needed for position plan creation
 
-**⚠️ CRITICAL**: No user story work can begin until this phase is complete
-
-- [ ] T007 [P] Create OptionContractValidator in src/domain/validators/OptionContractValidator.ts (validateOccSymbol, validateExpiration, validateStrikeMatch)
-- [ ] T008 Extend PositionValidator with option plan validation in src/domain/validators/PositionValidator.ts (strike_price > 0, expiration future date, premium > 0 when provided)
-- [ ] T009 Extend TradeValidator with option trade validation in src/domain/validators/TradeValidator.ts (STO before expiration, BTC quantity <= open, action matches position type)
-- [ ] T010 Extend CostBasisCalculator with per-OCC-symbol FIFO in src/domain/calculators/CostBasisCalculator.ts (calculateOpenQuantityByInstrument)
-- [ ] T011 Extend PositionStatusCalculator for option net quantity in src/domain/calculators/PositionStatusCalculator.ts (handle STO/BTC actions)
-- [ ] T012 Add lazy migration logic for existing positions in src/services/PositionService.ts (default strategy_type to 'Long Stock', trade_kind to 'stock')
-
-**Checkpoint**: Foundation ready - user story implementation can now begin
+- [ ] T004 Extend PositionValidator with option plan validation in src/domain/validators/PositionValidator.ts (strike_price > 0, expiration future date, premium > 0 when provided)
+- [ ] T005 Add lazy migration logic for existing positions in src/services/PositionService.ts (default strategy_type to 'Long Stock', trade_kind to 'stock')
 
 ---
 
-## Phase 3: User Story 1 - Create Short Put Position Plan (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Create Short Put Position Plan (Priority: P1)
 
 **Goal**: Trader can create an immutable Short Put position plan with strike, expiration, targets based on stock or option price, and mandatory thesis
 
 **Independent Test**: Create a Short Put position plan, verify it appears in position list with "planned" status and zero trades
 
-### Tests for User Story 1
-
-> **Write these tests FIRST, ensure they FAIL before implementation**
-
-- [ ] T013 [P] [US1] Unit test for Short Put position creation in tests/unit/position-creation.test.ts
-- [ ] T014 [P] [US1] Unit test for option plan validation in tests/unit/option-validators.test.ts
-- [ ] T015 [P] [US1] Integration test for Short Put plan flow in tests/integration/short-put-plan.test.ts
-
 ### Implementation for User Story 1
 
-- [ ] T016 [P] [US1] Create StrategySelector component in src/components/position/StrategySelector.tsx
-- [ ] T017 [P] [US1] Create StrikePriceInput component in src/components/option/StrikePriceInput.tsx
-- [ ] T018 [P] [US1] Create ExpirationDatePicker component in src/components/option/ExpirationDatePicker.tsx
-- [ ] T019 [P] [US1] Create PriceBasisSelector component in src/components/option/PriceBasisSelector.tsx (for profit_target_basis, stop_loss_basis)
-- [ ] T020 [US1] Extend PositionForm with conditional option fields in src/components/position/PositionForm.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
-- [ ] T021 [US1] Extend PositionService.create() to handle option plans in src/services/PositionService.ts
-- [ ] T022 [US1] Add inline validation error display to PositionForm in src/components/position/PositionForm.tsx (FR-049, FR-050)
-- [ ] T023 [US1] Wire CreatePosition page to support Short Put strategy in src/pages/CreatePosition.tsx
+- [ ] T006 [P] [US1] Create StrategySelector component with comprehensive unit tests in src/components/position/StrategySelector.tsx
+  - Tests: renders options, selection changes value, default to Long Stock, keyboard accessible
+- [ ] T007 [P] [US1] Create StrikePriceInput component with comprehensive unit tests in src/components/option/StrikePriceInput.tsx
+  - Tests: happy path, rejects negative, rejects non-numeric, accepts decimals, min value 0.01
+- [ ] T008 [P] [US1] Create ExpirationDatePicker component with comprehensive unit tests in src/components/option/ExpirationDatePicker.tsx
+  - Tests: happy path, rejects past dates, valid date format, handles timezone
+- [ ] T009 [P] [US1] Create PriceBasisSelector component with comprehensive unit tests in src/components/option/PriceBasisSelector.tsx
+  - Tests: renders stock/option options, selection changes value, displays current selection
+- [ ] T010 [US1] Extend PositionForm with conditional option fields in src/components/position/PositionForm.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
+- [ ] T011 [US1] Extend PositionService.create() to handle option plans with comprehensive unit tests in src/services/PositionService.ts
+  - Tests: creates Short Put position, validates option fields, rejects invalid strike/expiration
+- [ ] T012 [US1] Add inline validation error display to PositionForm in src/components/position/PositionForm.tsx (FR-049, FR-050)
+- [ ] T013 [US1] Wire CreatePosition page to support Short Put strategy in src/pages/CreatePosition.tsx
+
+### Integration Tests for User Story 1
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T014 [US1] Integration test for Short Put plan flow in tests/integration/short-put-plan.test.ts
+  - Tests: complete plan creation flow, validation errors displayed, plan persisted and retrievable
 
 **Checkpoint**: User Story 1 complete - Short Put position plans can be created with immutable option details
 
@@ -84,19 +82,35 @@
 
 **Note**: No P&L display in this story - position shows as "open" with trade details only. Unrealized P&L requires current prices (Story 6).
 
-### Tests for User Story 2
-
-- [ ] T024 [P] [US2] Unit test for OCC symbol generation in tests/unit/occSymbol.test.ts
-- [ ] T025 [P] [US2] Unit test for STO trade validation in tests/unit/trade-validators.test.ts
-- [ ] T026 [P] [US2] Integration test for STO trade flow in tests/integration/sto-trade.test.ts
-
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Create ActionSelector component in src/components/trade/ActionSelector.tsx (STO, BTC options)
-- [ ] T028 [US2] Extend TradeForm with option trade fields in src/components/trade/TradeForm.tsx (auto-populate strike/expiration from position, action selector, "Premium per contract" label)
-- [ ] T029 [US2] Extend TradeService.addOptionTrade() in src/services/TradeService.ts (generate OCC symbol, validate STO before expiration)
-- [ ] T030 [US2] Extend TradeList to show option trade details in src/components/trade/TradeList.tsx (action, strike, expiration, premium)
-- [ ] T031 [US2] Show position status and trade summary in PositionDetail (no P&L yet) in src/components/position/PositionDetail.tsx
+#### Infrastructure
+
+- [ ] T015 [P] [US2] Create OCC symbol utility functions with comprehensive unit tests in src/lib/utils/occSymbol.ts (generateOccSymbol, parseOccSymbol)
+  - Tests: generates valid OCC format, parses OCC correctly, handles edge cases (single-char symbols, high strikes)
+- [ ] T016 [P] [US2] Create OptionContractValidator with comprehensive unit tests in src/domain/validators/OptionContractValidator.ts (validateOccSymbol, validateExpiration, validateStrikeMatch)
+  - Tests: valid OCC accepted, invalid OCC rejected, expiration must be future, strike must match position
+- [ ] T017 [P] [US2] Extend TradeValidator with STO validation with comprehensive unit tests in src/domain/validators/TradeValidator.ts (STO before expiration, action matches position type)
+  - Tests: STO before expiration valid, STO after expiration rejected, action matches position type
+- [ ] T018 [US2] Extend PositionStatusCalculator for option net quantity with comprehensive unit tests in src/domain/calculators/PositionStatusCalculator.ts (handle STO/BTC actions)
+  - Tests: STO increases open contracts, BTC decreases open contracts, net zero = closed
+
+#### Components and Services
+
+- [ ] T019 [P] [US2] Create ActionSelector component with comprehensive unit tests in src/components/trade/ActionSelector.tsx
+  - Tests: renders STO/BTC options, selection changes value, disabled states, shows current action
+- [ ] T020 [US2] Extend TradeForm with option trade fields in src/components/trade/TradeForm.tsx (auto-populate strike/expiration from position, action selector, "Premium per contract" label)
+- [ ] T021 [US2] Extend TradeService.addOptionTrade() with comprehensive unit tests in src/services/TradeService.ts (generate OCC symbol, validate STO before expiration)
+  - Tests: generates OCC symbol, validates timing, persists trade, updates position status
+- [ ] T022 [US2] Extend TradeList to show option trade details in src/components/trade/TradeList.tsx (action, strike, expiration, premium)
+- [ ] T023 [US2] Show position status and trade summary in PositionDetail (no P&L yet) in src/components/position/PositionDetail.tsx
+
+### Integration Tests for User Story 2
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T024 [US2] Integration test for STO trade flow in tests/integration/sto-trade.test.ts
+  - Tests: complete STO flow from position detail, OCC symbol generated, position status changes to open
 
 **Checkpoint**: User Story 2 complete - STO trades can be executed against Short Put plans
 
@@ -110,19 +124,30 @@
 
 **Note**: Realized P&L uses trade prices only: `(STO premium - BTC premium) × contracts × 100`. No current market prices needed.
 
-### Tests for User Story 3
-
-- [ ] T032 [P] [US3] Unit test for BTC validation in tests/unit/btc-validation.test.ts
-- [ ] T033 [P] [US3] Unit test for realized P&L calculation in tests/unit/realized-pnl.test.ts
-- [ ] T034 [P] [US3] Integration test for BTC close flow in tests/integration/btc-close.test.ts
-
 ### Implementation for User Story 3
 
-- [ ] T035 [US3] Create RealizedPnLCalculator in src/domain/calculators/RealizedPnLCalculator.ts (calculateShortPutRealizedPnL using FIFO-matched trade prices)
-- [ ] T036 [US3] Add BTC action handling to TradeService in src/services/TradeService.ts (validate quantity <= open, match contract details)
-- [ ] T037 [US3] Add realized P&L display for closed positions in src/components/position/PositionDetail.tsx
-- [ ] T038 [US3] Add partial close support (BTC < total contracts) in src/services/TradeService.ts
-- [ ] T039 [US3] Update position status calculation for partial closes in src/domain/calculators/PositionStatusCalculator.ts
+#### Infrastructure
+
+- [ ] T025 [US3] Extend CostBasisCalculator with per-OCC-symbol FIFO with comprehensive unit tests in src/domain/calculators/CostBasisCalculator.ts (calculateOpenQuantityByInstrument)
+  - Tests: single contract FIFO, multiple contracts FIFO order, partial close matching, mixed OCC symbols separate
+- [ ] T026 [US3] Extend TradeValidator with BTC validation with comprehensive unit tests in src/domain/validators/TradeValidator.ts (BTC quantity <= open)
+  - Tests: BTC <= open valid, BTC > open rejected, exact close valid, partial close valid
+
+#### Calculators and Services
+
+- [ ] T027 [US3] Create RealizedPnLCalculator with comprehensive unit tests in src/domain/calculators/RealizedPnLCalculator.ts (calculateShortPutRealizedPnL using FIFO-matched trade prices)
+  - Tests: full close P&L correct, partial close P&L correct, FIFO matching order, handles multiple STO trades
+- [ ] T028 [US3] Add BTC action handling to TradeService with comprehensive unit tests in src/services/TradeService.ts (validate quantity <= open, match contract details)
+  - Tests: validates quantity, matches contract details, persists trade, updates position status
+- [ ] T029 [US3] Add realized P&L display for closed positions in src/components/position/PositionDetail.tsx
+- [ ] T030 [US3] Add partial close support (BTC < total contracts) in src/services/TradeService.ts
+
+### Integration Tests for User Story 3
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T031 [US3] Integration test for BTC close flow in tests/integration/btc-close.test.ts
+  - Tests: complete BTC flow, position status changes to closed, realized P&L displayed correctly
 
 **Checkpoint**: User Stories 1-3 complete - Full short put lifecycle (plan → STO → BTC) with realized P&L
 
@@ -136,16 +161,20 @@
 
 **Note**: Expiration produces realized P&L (premium received - $0 = full premium). No current prices needed.
 
-### Tests for User Story 4
-
-- [ ] T040 [P] [US4] Unit test for expiration validation in tests/unit/expiration-validation.test.ts
-- [ ] T041 [P] [US4] Integration test for expiration flow in tests/integration/expiration-flow.test.ts
-
 ### Implementation for User Story 4
 
-- [ ] T042 [US4] Add "Record Expired" action to position actions in src/components/position/PositionActions.tsx
-- [ ] T043 [US4] Implement TradeService.recordExpiration() in src/services/TradeService.ts (create BTC at $0.00, validate on/after expiration)
-- [ ] T044 [US4] Add expiration confirmation modal in src/components/option/ExpirationModal.tsx
+- [ ] T032 [US4] Add "Record Expired" action to position actions in src/components/position/PositionActions.tsx
+- [ ] T033 [US4] Implement TradeService.recordExpiration() with comprehensive unit tests in src/services/TradeService.ts (create BTC at $0.00, validate on/after expiration)
+  - Tests: creates BTC at $0, validates on/after expiration date, rejects before expiration, calculates full premium as profit
+- [ ] T034 [US4] Create ExpirationModal component with comprehensive unit tests in src/components/option/ExpirationModal.tsx
+  - Tests: displays position details, confirm creates BTC at $0, cancel closes modal, shows premium profit
+
+### Integration Tests for User Story 4
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T035 [US4] Integration test for expiration flow in tests/integration/expiration-flow.test.ts
+  - Tests: complete expiration flow, BTC at $0 created, position closed, full premium shown as realized P&L
 
 **Checkpoint**: User Story 4 complete - MVP with all closing methods (BTC, expiration) and realized P&L
 
@@ -159,21 +188,38 @@
 
 **Note**: Assignment creates stock position showing realized P&L for the option. Stock position's unrealized P&L displays after prices entered (Story 6).
 
-### Tests for User Story 5
-
-- [ ] T045 [P] [US5] Unit test for assignment cost basis calculation in tests/unit/assignment-cost-basis.test.ts
-- [ ] T046 [P] [US5] Integration test for assignment flow in tests/integration/assignment-flow.test.ts
-
 ### Implementation for User Story 5
 
-- [ ] T047 [P] [US5] Create AssignmentEvent interface in src/lib/position.ts
-- [ ] T048 [US5] Create AssignmentService in src/services/AssignmentService.ts (initiateAssignment, completeAssignment, atomic transaction)
-- [ ] T049 [US5] Create AssignmentModal component in src/components/option/AssignmentModal.tsx (multi-step: preview → thesis → journal)
-- [ ] T050 [US5] Create AssignmentPreviewStep component in src/components/option/AssignmentPreviewStep.tsx (display premium, cost basis, contracts)
-- [ ] T051 [US5] Create StockThesisStep component in src/components/option/StockThesisStep.tsx (auto-populate symbol, quantity)
-- [ ] T052 [US5] Create AssignmentJournalStep component in src/components/option/AssignmentJournalStep.tsx (FR-035 prompts)
-- [ ] T053 [US5] Add "Record Assignment" action to position actions in src/components/position/PositionActions.tsx
-- [ ] T054 [US5] Support partial assignment (n of m contracts) in src/services/AssignmentService.ts
+#### Infrastructure
+
+- [ ] T036 [P] [US5] Extend JournalEntryType with 'option_assignment' in src/types/journal.ts
+- [ ] T037 [US5] Increment IndexedDB schema to v4 in src/services/db.ts (add assignments store, strategy_type index)
+- [ ] T038 [P] [US5] Create AssignmentEvent interface in src/lib/position.ts
+
+#### Services
+
+- [ ] T039 [US5] Create AssignmentService with comprehensive unit tests in src/services/AssignmentService.ts (initiateAssignment, completeAssignment, atomic transaction)
+  - Tests: calculates cost basis (strike - premium), creates linked stock position, atomic transaction rollback on error
+
+#### Components
+
+- [ ] T040 [US5] Create AssignmentModal component with comprehensive unit tests in src/components/option/AssignmentModal.tsx
+  - Tests: multi-step navigation, back button, state persists between steps, close resets state
+- [ ] T041 [US5] Create AssignmentPreviewStep component with comprehensive unit tests in src/components/option/AssignmentPreviewStep.tsx
+  - Tests: displays premium received, calculates cost basis (strike - premium), shows contract count
+- [ ] T042 [US5] Create StockThesisStep component with comprehensive unit tests in src/components/option/StockThesisStep.tsx
+  - Tests: auto-populates symbol, auto-calculates quantity (contracts × 100), thesis required
+- [ ] T043 [US5] Create AssignmentJournalStep component with comprehensive unit tests in src/components/option/AssignmentJournalStep.tsx
+  - Tests: displays FR-035 prompts, journal entry required, submit enabled when valid
+- [ ] T044 [US5] Add "Record Assignment" action to position actions in src/components/position/PositionActions.tsx
+- [ ] T045 [US5] Support partial assignment (n of m contracts) in src/services/AssignmentService.ts
+
+### Integration Tests for User Story 5
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T046 [US5] Integration test for assignment flow in tests/integration/assignment-flow.test.ts
+  - Tests: complete assignment flow, stock position created with correct cost basis, option position closed, positions linked
 
 **Checkpoint**: User Story 5 complete - Assignment workflow creates linked stock position
 
@@ -187,25 +233,30 @@
 
 **Note**: This story provides the price entry infrastructure that US7 and US8 depend on.
 
-### Tests for User Story 6
-
-- [ ] T055 [P] [US6] Unit test for unrealized P&L calculation in tests/unit/unrealized-pnl.test.ts
-- [ ] T056 [P] [US6] Unit test for price staleness detection in tests/unit/price-staleness.test.ts
-- [ ] T057 [P] [US6] Integration test for price update flow in tests/integration/option-pricing.test.ts
-
 ### Implementation for User Story 6
 
 #### Price Entry Infrastructure
-- [ ] T058 [US6] Extend PriceService to support OCC symbols in src/services/PriceService.ts (getRequiredInstruments, checkStaleness)
-- [ ] T059 [US6] Extend price update form for multiple instruments in src/components/price/PriceUpdateForm.tsx (stock + each OCC symbol)
-- [ ] T060 [US6] Add 20% price change confirmation in src/components/price/PriceUpdateForm.tsx (FR-032)
-- [ ] T061 [US6] Pre-fill existing prices in update form in src/components/price/PriceUpdateForm.tsx (FR-030)
-- [ ] T062 [US6] Add staleness warning display in src/components/position/PositionDetail.tsx (FR-031)
+
+- [ ] T047 [US6] Extend PriceService to support OCC symbols with comprehensive unit tests in src/services/PriceService.ts (getRequiredInstruments, checkStaleness)
+  - Tests: identifies required instruments, detects stale prices, handles multiple OCC symbols
+- [ ] T048 [US6] Extend price update form for multiple instruments in src/components/price/PriceUpdateForm.tsx (stock + each OCC symbol)
+- [ ] T049 [US6] Add 20% price change confirmation in src/components/price/PriceUpdateForm.tsx (FR-032)
+- [ ] T050 [US6] Pre-fill existing prices in update form in src/components/price/PriceUpdateForm.tsx (FR-030)
+- [ ] T051 [US6] Add staleness warning display in src/components/position/PositionDetail.tsx (FR-031)
 
 #### Unrealized P&L
-- [ ] T063 [US6] Create UnrealizedPnLCalculator in src/domain/calculators/UnrealizedPnLCalculator.ts (calculateShortPutUnrealizedPnL)
-- [ ] T064 [US6] Add unrealized P&L display for open positions in src/components/position/PositionDetail.tsx
-- [ ] T065 [US6] Show "Enter prices to see P&L" message when prices missing in src/components/position/PositionDetail.tsx
+
+- [ ] T052 [US6] Create UnrealizedPnLCalculator with comprehensive unit tests in src/domain/calculators/UnrealizedPnLCalculator.ts (calculateShortPutUnrealizedPnL)
+  - Tests: calculates unrealized P&L correctly, handles missing prices, handles partial positions
+- [ ] T053 [US6] Add unrealized P&L display for open positions in src/components/position/PositionDetail.tsx
+- [ ] T054 [US6] Show "Enter prices to see P&L" message when prices missing in src/components/position/PositionDetail.tsx
+
+### Integration Tests for User Story 6
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T055 [US6] Integration test for price update flow in tests/integration/option-pricing.test.ts
+  - Tests: complete price entry flow, unrealized P&L updates, staleness warning displayed when prices old
 
 **Checkpoint**: User Story 6 complete - Price entry and unrealized P&L working
 
@@ -219,15 +270,15 @@
 
 **Depends On**: US6 (requires price entry infrastructure)
 
-### Tests for User Story 7
-
-- [ ] T066 [P] [US7] Unit test for intrinsic/extrinsic calculation in tests/unit/intrinsic-extrinsic.test.ts
-
 ### Implementation for User Story 7
 
-- [ ] T067 [US7] Create IntrinsicExtrinsicCalculator in src/domain/calculators/IntrinsicExtrinsicCalculator.ts (calculatePutIntrinsicExtrinsic, isInTheMoney, getMoneyness)
-- [ ] T068 [US7] Create IntrinsicExtrinsicDisplay component in src/components/option/IntrinsicExtrinsicDisplay.tsx (per-contract and total values)
-- [ ] T069 [US7] Add intrinsic/extrinsic section to PositionDetail in src/components/position/PositionDetail.tsx (FR-036, FR-037, FR-038)
+- [ ] T056 [US7] Create IntrinsicExtrinsicCalculator with comprehensive unit tests in src/domain/calculators/IntrinsicExtrinsicCalculator.ts (calculatePutIntrinsicExtrinsic, isInTheMoney, getMoneyness)
+  - Tests: ITM put intrinsic correct, OTM put zero intrinsic, extrinsic = premium - intrinsic, moneyness indicator
+- [ ] T057 [US7] Create IntrinsicExtrinsicDisplay component with comprehensive unit tests in src/components/option/IntrinsicExtrinsicDisplay.tsx
+  - Tests: displays per-contract values, displays total values, handles zero intrinsic (OTM), shows ITM/OTM indicator
+- [ ] T058 [US7] Add intrinsic/extrinsic section to PositionDetail in src/components/position/PositionDetail.tsx (FR-036, FR-037, FR-038)
+
+**Integration Test**: Not required - this is a pure display feature. Calculator and component unit tests provide sufficient coverage. Price entry flow (US6) already has integration test.
 
 **Checkpoint**: User Story 7 complete - Educational value breakdown displayed
 
@@ -241,15 +292,15 @@
 
 **Depends On**: US6 (requires price entry infrastructure)
 
-### Tests for User Story 8
-
-- [ ] T070 [P] [US8] Unit test for risk-reward calculation in tests/unit/risk-reward.test.ts
-
 ### Implementation for User Story 8
 
-- [ ] T071 [US8] Create RiskRewardCalculator in src/domain/calculators/RiskRewardCalculator.ts (compare current price to profit_target and stop_loss based on their respective basis)
-- [ ] T072 [US8] Create RiskRewardDisplay component in src/components/option/RiskRewardDisplay.tsx (distance to target/stop, visual indicator)
-- [ ] T073 [US8] Add risk-reward section to PositionDetail in src/components/position/PositionDetail.tsx
+- [ ] T059 [US8] Create RiskRewardCalculator with comprehensive unit tests in src/domain/calculators/RiskRewardCalculator.ts (compare current price to profit_target and stop_loss based on their respective basis)
+  - Tests: distance to target correct, distance to stop correct, handles stock vs option basis, handles missing targets
+- [ ] T060 [US8] Create RiskRewardDisplay component with comprehensive unit tests in src/components/option/RiskRewardDisplay.tsx
+  - Tests: shows distance to target, shows distance to stop, visual indicator colors, handles missing targets
+- [ ] T061 [US8] Add risk-reward section to PositionDetail in src/components/position/PositionDetail.tsx
+
+**Integration Test**: Not required - this is a pure display feature. Calculator and component unit tests provide sufficient coverage. Price entry flow (US6) already has integration test.
 
 **Checkpoint**: User Story 8 complete - Risk-reward indicators working
 
@@ -263,18 +314,23 @@
 
 **Depends On**: US1 (plan creation), US6-US8 (for full display with P&L and intrinsic/extrinsic)
 
-### Tests for User Story 9
-
-- [ ] T074 [P] [US9] Integration test for dashboard display in tests/integration/dashboard-display.test.ts
-
 ### Implementation for User Story 9
 
-- [ ] T075 [P] [US9] Create StrategyBadge component in src/components/option/StrategyBadge.tsx
-- [ ] T076 [P] [US9] Create OptionSummary component in src/components/option/OptionSummary.tsx (strike, expiration, premium received)
-- [ ] T077 [US9] Extend PositionCard with strategy badge in src/components/position/PositionCard.tsx (FR-041)
-- [ ] T078 [US9] Extend PositionCard with option fields for Short Put in src/components/position/PositionCard.tsx (FR-042)
-- [ ] T079 [US9] Add P&L summary to PositionCard (realized or unrealized based on status/prices) in src/components/position/PositionCard.tsx
-- [ ] T080 [US9] Add intrinsic/extrinsic summary to PositionCard when prices available in src/components/position/PositionCard.tsx (FR-043)
+- [ ] T062 [P] [US9] Create StrategyBadge component with comprehensive unit tests in src/components/option/StrategyBadge.tsx
+  - Tests: displays strategy name, correct styling per strategy type, handles Long Stock default
+- [ ] T063 [P] [US9] Create OptionSummary component with comprehensive unit tests in src/components/option/OptionSummary.tsx
+  - Tests: displays strike price, displays expiration date, displays premium received, formats currency
+- [ ] T064 [US9] Extend PositionCard with strategy badge in src/components/position/PositionCard.tsx (FR-041)
+- [ ] T065 [US9] Extend PositionCard with option fields for Short Put in src/components/position/PositionCard.tsx (FR-042)
+- [ ] T066 [US9] Add P&L summary to PositionCard (realized or unrealized based on status/prices) in src/components/position/PositionCard.tsx
+- [ ] T067 [US9] Add intrinsic/extrinsic summary to PositionCard when prices available in src/components/position/PositionCard.tsx (FR-043)
+
+### Integration Tests for User Story 9
+
+> **Write after implementation is complete** to verify the full user flow
+
+- [ ] T068 [US9] Integration test for dashboard display in tests/integration/dashboard-display.test.ts
+  - Tests: Short Put positions appear on dashboard, strategy badge displayed, option summary correct, P&L shown
 
 **Checkpoint**: User Story 9 complete - Dashboard displays Short Put positions correctly
 
@@ -284,13 +340,13 @@
 
 **Purpose**: Final cleanup, validation, and documentation
 
-- [ ] T081 Run full test suite and fix any failures
-- [ ] T082 [P] Verify backward compatibility with existing Long Stock positions
-- [ ] T083 [P] Mobile responsiveness review for all new components (44x44px touch targets)
-- [ ] T084 [P] Type-only import audit (ensure all interfaces use `import type`)
-- [ ] T085 Run quickstart.md validation scenarios
-- [ ] T086 [P] Code cleanup: remove any `console.log` statements, unused imports
-- [ ] T087 Verify all success criteria from spec.md (SC-001 through SC-017)
+- [ ] T069 Run full test suite and fix any failures
+- [ ] T070 [P] Verify backward compatibility with existing Long Stock positions
+- [ ] T071 [P] Mobile responsiveness review for all new components (44x44px touch targets)
+- [ ] T072 [P] Type-only import audit (ensure all interfaces use `import type`)
+- [ ] T073 Run quickstart.md validation scenarios
+- [ ] T074 [P] Code cleanup: remove any `console.log` statements, unused imports
+- [ ] T075 Verify all success criteria from spec.md (SC-001 through SC-017)
 
 ---
 
@@ -299,9 +355,9 @@
 ### Phase Dependencies
 
 ```
-Phase 1: Setup
+Phase 1: Setup (minimal types)
     ↓
-Phase 2: Foundational (BLOCKS all user stories)
+Phase 2: Foundational (US1 prerequisites only)
     ↓
 ┌───────────────────────────────────────────────────────────────┐
 │  P1 Stories (MVP) - Sequential, realized P&L only             │
@@ -309,6 +365,7 @@ Phase 2: Foundational (BLOCKS all user stories)
 │  Phase 3: US1 (Plan) ──→ Phase 4: US2 (STO) ──→               │
 │  Phase 5: US3 (BTC) ──→ Phase 6: US4 (Expiration)             │
 │                                                               │
+│  Each story introduces its own infrastructure (JIT)           │
 │  ✓ Complete lifecycle with realized P&L                       │
 └───────────────────────────────────────────────────────────────┘
     ↓
@@ -333,17 +390,17 @@ Phase 10: Polish
 
 ### User Story Dependencies
 
-| Story | Depends On | P&L Type |
-|-------|------------|----------|
-| US1 (Plan) | Foundational | None (no trades yet) |
-| US2 (STO) | US1 | None (open position, no current prices) |
-| US3 (BTC) | US2 | **Realized** (from trade prices) |
-| US4 (Expiration) | US2 | **Realized** (premium - $0) |
-| US5 (Assignment) | US2 | **Realized** for option; stock awaits prices |
-| US6 (Pricing) | US2 | **Unrealized** P&L |
-| US7 (Intrinsic/Extrinsic) | US6 | Educational value breakdown |
-| US8 (Risk-Reward) | US6 | Distance to targets/stops |
-| US9 (Dashboard) | US1, US6-US8 (for full display) | Shows whatever is available |
+| Story | Depends On | Introduces | P&L Type |
+|-------|------------|------------|----------|
+| US1 (Plan) | Phase 1-2 | Position validation | None (no trades yet) |
+| US2 (STO) | US1 | OCC utils, OptionContractValidator, PositionStatusCalculator | None (open position) |
+| US3 (BTC) | US2 | CostBasisCalculator FIFO, BTC validation, RealizedPnLCalculator | **Realized** |
+| US4 (Expiration) | US2 | Expiration validation | **Realized** (premium - $0) |
+| US5 (Assignment) | US2 | AssignmentEvent, IndexedDB v4, AssignmentService | **Realized** for option |
+| US6 (Pricing) | US2 | UnrealizedPnLCalculator, price staleness | **Unrealized** P&L |
+| US7 (Intrinsic/Extrinsic) | US6 | IntrinsicExtrinsicCalculator | Educational breakdown |
+| US8 (Risk-Reward) | US6 | RiskRewardCalculator | Distance to targets |
+| US9 (Dashboard) | US1, US6-US8 | StrategyBadge, OptionSummary | Shows whatever available |
 
 ### P&L Implementation Summary
 
@@ -356,15 +413,15 @@ Phase 10: Polish
 
 ### Parallel Opportunities
 
-**Phase 2 (Foundational):**
-```
-T007 can run in parallel with others (different file)
-```
-
 **Phase 3 (US1):**
 ```
-T013, T014, T015 in parallel (tests)
-T016, T017, T018, T019 in parallel (components)
+T006, T007, T008, T009 in parallel (components)
+```
+
+**Phase 4 (US2):**
+```
+T015, T016, T017 in parallel (infrastructure)
+T019 in parallel with above
 ```
 
 **Phase 7-8a (P2 Stories):**
@@ -381,18 +438,23 @@ US7 (Intrinsic/Extrinsic) and US8 (Risk-Reward) can run in parallel
 - Different calculators, different display components
 ```
 
+**Phase 9 (US9):**
+```
+T062, T063 in parallel (components)
+```
+
 ---
 
 ## Implementation Strategy
 
 ### MVP First (User Stories 1-4) - Realized P&L Only
 
-1. Complete Phase 1: Setup
-2. Complete Phase 2: Foundational (**CRITICAL**)
-3. Complete Phase 3: US1 (Plan Creation)
-4. Complete Phase 4: US2 (STO Trade)
-5. Complete Phase 5: US3 (BTC Close) - **Realized P&L works**
-6. Complete Phase 6: US4 (Expiration) - **Realized P&L works**
+1. Complete Phase 1: Setup (3 tasks)
+2. Complete Phase 2: Foundational (2 tasks)
+3. Complete Phase 3: US1 - Plan Creation (9 tasks)
+4. Complete Phase 4: US2 - STO Trade (10 tasks, includes infrastructure)
+5. Complete Phase 5: US3 - BTC Close (7 tasks, includes infrastructure) - **Realized P&L works**
+6. Complete Phase 6: US4 - Expiration (4 tasks) - **Realized P&L works**
 7. **STOP and VALIDATE**: Full short put lifecycle with realized P&L
 8. Deploy/demo MVP
 
@@ -409,7 +471,7 @@ US7 (Intrinsic/Extrinsic) and US8 (Risk-Reward) can run in parallel
 
 ### Suggested MVP Scope
 
-**US1 + US2 + US3 + US4** (Phases 1-6, ~44 tasks)
+**US1 + US2 + US3 + US4** (Phases 1-6, ~35 tasks)
 - Complete short put lifecycle: plan → STO → BTC or expire
 - Realized P&L calculated from trade prices
 - No dependency on price entry system
@@ -420,20 +482,20 @@ US7 (Intrinsic/Extrinsic) and US8 (Risk-Reward) can run in parallel
 
 | Metric | Count |
 |--------|-------|
-| **Total Tasks** | 87 |
-| Setup Tasks | 6 |
-| Foundational Tasks | 6 |
-| US1 Tasks (P1) | 11 |
-| US2 Tasks (P1) | 8 |
-| US3 Tasks (P1) | 8 |
-| US4 Tasks (P1) | 5 |
-| US5 Tasks (P2) | 10 |
-| US6 Tasks (P2) | 11 |
-| US7 Tasks (P2) | 4 |
-| US8 Tasks (P2) | 4 |
+| **Total Tasks** | 75 |
+| Setup Tasks | 3 |
+| Foundational Tasks | 2 |
+| US1 Tasks (P1) | 9 |
+| US2 Tasks (P1) | 10 |
+| US3 Tasks (P1) | 7 |
+| US4 Tasks (P1) | 4 |
+| US5 Tasks (P2) | 11 |
+| US6 Tasks (P2) | 9 |
+| US7 Tasks (P2) | 3 |
+| US8 Tasks (P2) | 3 |
 | US9 Tasks (P3) | 7 |
 | Polish Tasks | 7 |
-| **Parallelizable [P]** | 35 (40%) |
+| **Parallelizable [P]** | 17 (23%) |
 
 ### P&L Strategy Summary
 
@@ -448,11 +510,16 @@ US7 (Intrinsic/Extrinsic) and US8 (Risk-Reward) can run in parallel
 
 ## Notes
 
+- **TDD Pattern**: Write failing unit tests first → implement → integration tests after story complete
+- **JIT Principle**: Each user story introduces only the infrastructure it needs
+- **No blocking "foundation" phase**: Validators and calculators built when first used
+- **Component Testing**: Each new component includes comprehensive unit tests (test cases listed inline)
+- **Integration Tests**: Written after implementation, at end of each story (not all stories need them)
 - **Realized P&L** works without any price entry - uses trade execution prices
 - **Unrealized P&L** requires current prices - delivered in US6
 - **Intrinsic/Extrinsic** builds on US6 price infrastructure - delivered in US7
 - **Risk-Reward** builds on US6 price infrastructure - delivered in US8
 - US7 and US8 can be implemented in parallel after US6 completes
-- All tasks include TDD tests per Constitution Principle IV
+- US7 and US8 are pure display features - unit tests sufficient, no integration tests needed
 - Each user story checkpoint enables independent validation and feedback
 - MVP delivers complete trading lifecycle before adding price-dependent features
