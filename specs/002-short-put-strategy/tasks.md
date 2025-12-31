@@ -12,10 +12,10 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Tasks | 54 |
-| Unit Test Tasks (Step 1) | 18 (33%) |
-| Implementation Tasks (Step 2) | 18 (33%) |
-| Integration Test Tasks (Step 3) | 18 (33%) |
+| Total Tasks | 66 |
+| Unit Test Tasks (Step 1) | 20 (30%) |
+| Implementation Tasks (Step 2) | 26 (39%) |
+| Integration Test Tasks (Step 3) | 20 (30%) |
 
 ---
 
@@ -319,7 +319,24 @@
 
 ### Step 1: Unit Tests (RED)
 
-- [ ] T027 Create unit tests for expiration recording in src/__tests__/services/expiration-service.test.ts
+- [ ] T027b Create unit tests for Record Expiration button in src/__tests__/components/record-expiration-button.test.tsx
+  - Mock: usePositionStore
+  - Test: Button visible for Short Put positions at/after expiration
+  - Test: Button hidden for planned positions
+  - Test: Button hidden for Long Stock positions
+  - Test: Click opens expiration confirmation dialog
+  - Test: Disabled if position is closed
+- [ ] T027c Create unit tests for expiration dialog in src/__tests__/components/expiration-dialog.test.tsx
+  - Mock: ExpirationService
+  - Test: Dialog displays position summary (symbol, contracts, premium)
+  - Test: Dialog shows "Confirm Expiration at $0.00"
+  - Test: Confirm button enabled only when position is at/after expiration
+  - Test: Cancel button dismisses dialog
+  - Test: Journal entry prompt appears after confirmation
+
+### Step 1: Unit Tests (RED) - ExpirationService
+
+- [ ] T027d Create unit tests for expiration recording in src/__tests__/services/expiration-service.test.ts
   - Mock: IndexedDB with jest mocks
   - Test: Create $0.00 BTC trade for expiration
   - Test: Validate expiration date (must be on/after expiration)
@@ -336,6 +353,17 @@
   - createExpirationTrade(positionId): Trade ($0.00 price)
   - calculateFullPremiumRealized(position): number
   - closePositionOnExpiration(positionId): void
+- [ ] T028b Create ExpirationDialog component in src/components/ExpirationDialog.tsx
+  - Props: position, onConfirm, onCancel
+  - Display position summary (symbol, contracts, premium)
+  - Show "Confirm Expiration at $0.00" message
+  - Validate expiration date before enabling confirm
+  - Journal entry prompt after confirmation
+- [ ] T028c Add "Record Expiration" button to PositionDetail in src/pages/PositionDetail.tsx
+  - Button visible only for Short Put positions at/after expiration
+  - Button hidden for planned, closed, or Long Stock positions
+  - Click opens ExpirationDialog
+  - Wire to ExpirationService.createExpirationTrade
 
 ### Step 3: Integration Tests (GREEN)
 
@@ -366,6 +394,22 @@
 
 ### Step 1: Unit Tests (RED)
 
+- [ ] T030b Create unit tests for Record Assignment button in src/__tests__/components/record-assignment-button.test.tsx
+  - Mock: usePositionStore
+  - Test: Button visible for Short Put positions at expiration
+  - Test: Button hidden for planned positions
+  - Test: Button hidden for Long Stock positions
+  - Test: Click opens AssignmentModal
+  - Test: Disabled if position is closed
+- [ ] T030c Create unit tests for AssignmentModal in src/__tests__/components/assignment-modal.test.tsx
+  - Mock: AssignmentService
+  - Test: Displays premium received (read-only)
+  - Test: Displays effective cost basis (read-only)
+  - Test: Contract quantity input
+  - Test: Validates quantity <= open contracts
+  - Test: Confirm button enabled with valid quantity
+  - Test: Cancel button dismisses modal
+  - Test: Journal entry form with assignment prompts
 - [ ] T030 Create unit tests for AssignmentService in src/__tests__/services/assignment-service.test.ts
   - Mock: IndexedDB with jest mocks
   - Test: Create BTC trade at $0.00 for assigned contracts
@@ -390,6 +434,11 @@
   - Contract quantity input
   - Journal entry form with custom prompts
   - Confirm/cancel buttons
+- [ ] T032b Add "Record Assignment" button to PositionDetail in src/pages/PositionDetail.tsx
+  - Button visible only for Short Put positions at expiration
+  - Button hidden for planned, closed, or Long Stock positions
+  - Click opens AssignmentModal
+  - Wire to AssignmentService.createAssignmentTrade
 
 ### Step 3: Integration Tests (GREEN)
 
@@ -433,6 +482,15 @@
   - Test: Show staleness warning if missing
   - Test: Stock/option price inputs
   - Test: 20% change dialog display
+- [ ] T034b Create unit tests for PriceUpdateCard option price support in src/__tests__/components/price-update-card-option.test.tsx
+  - Mock: PriceService
+  - Test: Accepts optional OCC symbol for option price
+  - Test: Shows stock price input with underlying
+  - Test: Shows option price input with OCC symbol
+  - Test: Both prices validated independently
+  - Test: Both prices saved to separate instrument IDs
+  - Test: 20% confirmation for either price independently
+  - Test: Staleness warning when either price missing
 - [ ] T035 Create unit tests for PriceService in src/__tests__/services/price-service.test.ts
   - Mock: IndexedDB with jest mocks
   - Test: Save price entry for instrument
@@ -466,6 +524,14 @@
   - Option price input
   - 20% change confirmation dialog
   - Staleness warning
+- [ ] T039b Extend PriceUpdateCard for option price support in src/components/PriceUpdateCard.tsx
+  - Add optional occSymbol prop for option price entry
+  - Add option price input field (hidden when occSymbol not provided)
+  - Validate stock price > 0, option price >= 0
+  - Save both prices to separate instrument IDs
+  - Independent 20% confirmation for each price
+  - Combined staleness warning when either price missing
+  - Update PositionDetail to pass occSymbol for Short Put positions
 - [ ] T040 Implement unrealized P&L and intrinsic/extrinsic in src/lib/option-pnl.ts
   - calculateIntrinsicValue(stockPrice, strikePrice): number
   - calculateExtrinsicValue(optionPrice, intrinsicValue): number
@@ -578,8 +644,11 @@ This delivers a complete trading workflow in 1-2 weeks.
 | `src/components/TradeForm.tsx` | Phase 2 | Trade entry |
 | `src/components/PnLDisplay.tsx` | Phase 3+ | P&L display |
 | `src/components/AssignmentModal.tsx` | Phase 5 | Assignment modal |
+| `src/components/ExpirationDialog.tsx` | Phase 4 | Expiration confirmation dialog |
+| `src/components/PriceUpdateCard.tsx` | Phase 6 (extended) | Stock and option price entry |
 | `src/components/PriceEntryForm.tsx` | Phase 6 | Price entry |
 | `src/pages/PositionCreate.tsx` | Phase 1 | Position creation |
+| `src/pages/PositionDetail.tsx` | All Phases | Position detail with action buttons |
 | `src/__tests__/components/*.test.tsx` | Each Phase | Component unit tests |
 | `src/__tests__/services/*.test.ts` | Each Phase | Service unit tests |
 | `src/__tests__/integration/*.test.tsx` | Each Phase | End-to-end tests |
@@ -589,7 +658,13 @@ This delivers a complete trading workflow in 1-2 weeks.
 ## Test Case Enhancement Results
 
 ### Unit Tests Analysis
-- **18 unit tests specified** in tasks.md (T001-T004, T013-T015, T021-T022, T027, T030, T034-T036)
+- **20 unit tests specified** in tasks.md (T001-T004, T013-T015, T021-T022, T027b-T027d, T030b-T030, T034, T034b, T035-T036, T043)
+- **Added 5 new unit tests** for UI components:
+  - T027b: Record Expiration button
+  - T027c: Expiration dialog
+  - T030b: Record Assignment button
+  - T030c: AssignmentModal
+  - T034b: PriceUpdateCard option price support
 - **Enhanced with additional edge cases and boundary tests** for each component
 - **Coverage gaps identified and documented** in each task description
 
@@ -614,5 +689,8 @@ This delivers a complete trading workflow in 1-2 weeks.
 ### Priority for Test Creation
 1. **P0 - Foundation**: T015 (OCC utils), T036 (option-pnl) - used by multiple phases
 2. **P1 - Core Workflow**: T001-T004, T012 (US1), T013-T015, T020 (US2), T021-T022, T026 (US3)
-3. **P2 - Advanced Features**: T027-T029 (US4), T030-T033 (US5), T034-T042 (US6)
+3. **P2 - Advanced Features**: 
+   - US4: T027b-T027d (expiration button, dialog, service)
+   - US5: T030b-T030 (assignment button, modal, service)
+   - US6: T034, T034b, T035-T042 (price entry and intrinsic/extrinsic)
 4. **P3 - Regression**: T043-T044 (US7)
