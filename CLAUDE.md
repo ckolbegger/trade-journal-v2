@@ -210,6 +210,8 @@ The app targets retail traders progressing from simple stock trades to complex o
 ## Active Technologies
 - TypeScript 5.8.3 + React 19.1.1, Vite 7.1.2, IndexedDB (via native browser API) (001-close-position)
 - IndexedDB (TradingJournalDB v3) - local browser storage only (001-close-position)
+- TypeScript 5.8.3 + React 19.1.1, Vite 7.1.2, React Router DOM 7.8.2, Tailwind CSS 4.1.13, Radix UI (002-short-put-strategy)
+- IndexedDB (TradingJournalDB) - browser-only, no server (002-short-put-strategy)
 
 ## Recent Changes
 - 001-close-position: Added TypeScript 5.8.3 + React 19.1.1, Vite 7.1.2, IndexedDB (via native browser API)
