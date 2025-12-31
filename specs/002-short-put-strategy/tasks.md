@@ -3,7 +3,7 @@
 **Feature**: 002-short-put-strategy
 **Branch**: `002-short-put-strategy`
 **Generated**: 2025-12-27
-**Revised**: 2025-12-27 (Just-in-Time Delivery Reorganization)
+**Revised**: 2025-12-31 (Value Delivery Audit Reorganization + Critical Fixes)
 **Methodology**: Test-Driven Development (TDD) - Test Suite First Approach
 
 ## Overview
@@ -54,6 +54,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/services/__tests__/SchemaManager-option-migration.test.ts`
 - [ ] T002 (IMPL) Increment database version to 4 and add v3→v4 migration handler in `src/services/SchemaManager.ts`
     Run tests to verify all migration scenarios pass
+    **CRITICAL DEPENDENCY**: Must complete before T004 type extensions - IndexedDB won't store new option fields until migration runs
 
 ### Type Extensions - With Tests
 
@@ -87,7 +88,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 2: User Story 1 - Create Short Put Position Plan (P1) - 16 tasks
+## Phase 2: User Story 1 - Create Short Put Position Plan (P1) - 18 tasks
 
 **Goal**: Trader can create a planned Short Put position with option-specific fields
 
@@ -189,9 +190,39 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/__tests__/PositionPlanForm-option-fields.test.tsx`
 - [ ] T022 [US1] (IMPL) Add option fields section to PositionPlanForm with conditional rendering
 
+### Option Price Basis Conversion (NEW - Value Delivery Audit Fix)
+
+- [ ] T022b [US1] (TEST) Write comprehensive test suite for option price basis conversion covering:
+    • profit_target_basis='option_price' converts to dollar value using strike_price - premium
+    • stop_loss_basis='option_price' converts to dollar value using strike_price - premium
+    • stock_price basis uses raw dollar values (no conversion needed)
+    • Example: Strike $100, Premium $3, Basis='option_price', Target=20% → profit_target = ($100 - $3) × 0.20 = $19.40
+    • Example: Strike $95, Premium $2.50, Basis='stock_price', Target=$105 → profit_target = $105 (no conversion)
+    • Conversion helper function calculates effective dollar value for display
+    File: `src/domain/calculators/__tests__/OptionPriceBasisCalculator.test.ts`
+- [ ] T022c [US1] (IMPL) Implement option price basis conversion helper
+    • Create calculateOptionBasisDollarValue() in domain calculator
+    • Used by PositionCard to display profit_target and stop_loss for option positions
+    File: `src/domain/calculators/OptionPriceBasisCalculator.ts`
+
+### Option Position Display (MOVED FROM US7 - Value Delivery Audit Fix)
+
+- [ ] T023 [US1] (TEST) Write comprehensive test suite for OptionPositionCard covering:
+    • Card displays underlying symbol
+    • Card displays strategy type badge "Short Put"
+    • Card displays strike price with $ formatting
+    • Card displays expiration date in readable format (e.g., "Jan 17, 2025")
+    • Card displays premium received per contract
+    • Card displays number of contracts
+    • Card shows current status (planned/open/closed)
+    File: `src/components/positions/__tests__/OptionPositionCard.test.tsx`
+- [ ] T024 [US1] (IMPL) Create or extend PositionCard component with Short Put option display
+    • Shows strike price, expiration, premium when strategy_type='Short Put'
+    • Can be conditional rendering in existing PositionCard or separate OptionPositionCard
+
 ### Field Validation
 
-- [ ] T023 [US1] (TEST) Write comprehensive test suite for inline validation covering:
+- [ ] T025 [US1] (TEST) Write comprehensive test suite for inline validation covering:
     • Strike price validation error displays inline when value <= 0
     • Strike price validation error clears when value corrected to > 0
     • Expiration date validation error displays inline when date is in past
@@ -202,23 +233,23 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Form submit blocked while validation errors exist
     • All validation errors display simultaneously for multiple invalid fields
     File: `src/components/forms/__tests__/PositionPlanForm-validation.test.tsx`
-- [ ] T024 [US1] (IMPL) Add option field validation and inline error display to PositionPlanForm
+- [ ] T026 [US1] (IMPL) Add option field validation and inline error display to PositionPlanForm
 
 ### Integration Tests (Complete User Journeys)
 
-- [ ] T025 [US1] (TEST) Write comprehensive integration test suite for creating Short Put position covering:
+- [ ] T027 [US1] (TEST) Write comprehensive integration test suite for creating Short Put position covering:
     • Navigate to position creation, select Short Put strategy
     • Fill in all required option fields (strike, expiration, premium, targets)
     • Select price basis options (stock_price or option_price)
     • Submit form and verify position created with correct strategy_type
     • Verify position has status='planned'
     • Verify position has zero trades
-    • Verify position shows in position list
+    • Verify position shows in position list with option details (T024 verified)
     • Verify option fields saved correctly (strike, expiration, etc.)
     File: `src/integration/__tests__/us1-create-short-put-plan.test.tsx`
-- [ ] T026 [US1] (IMPL) Implement position creation flow to make all integration tests pass
+- [ ] T028 [US1] (IMPL) Implement position creation flow to make all integration tests pass
 
-- [ ] T027 [US1] (TEST) Write comprehensive integration test suite for journal requirement covering:
+- [ ] T029 [US1] (TEST) Write comprehensive integration test suite for journal requirement covering:
     • Attempt to submit position plan without journal entry
     • Verify submission is blocked
     • Verify prompt for journal entry appears
@@ -227,11 +258,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify position created with journal_entry_ids populated
     • Verify journal entry linked via position_id
     File: `src/integration/__tests__/us1-journal-required.test.tsx`
-- [ ] T028 [US1] (IMPL) Enforce journal entry requirement in position creation flow
+- [ ] T030 [US1] (IMPL) Enforce journal entry requirement in position creation flow
 
 ---
 
-## Phase 3: User Story 2 - Execute Sell-to-Open Trade (P1) - 20 tasks
+## Phase 3: User Story 2 - Execute Sell-to-Open Trade (P1) - 27 tasks
 
 **Goal**: Trader can execute a sell-to-open trade against a Short Put position plan
 
@@ -241,7 +272,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Option Utilities Module (needed for OCC symbol derivation)
 
-- [ ] T029 [P][US2] (TEST) Write comprehensive test suite for deriveOCCSymbol() covering:
+- [ ] T031 [P][US2] (TEST) Write comprehensive test suite for deriveOCCSymbol() covering:
     • Correct OCC format for standard case: AAPL $105 Put expiring 2025-01-17 → "AAPL  250117P00105000"
     • Symbol padding: <6 chars padded with spaces (T → "T     ")
     • Symbol padding: =6 chars unchanged (AAPL → "AAPL  ")
@@ -254,9 +285,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Edge case: Large strike prices (e.g., 5000 → "5000000000" truncated/handled)
     • Edge case: Far future dates (year 2100+)
     File: `src/domain/lib/__tests__/optionUtils.test.ts`
-- [ ] T030 [P][US2] (IMPL) Implement deriveOCCSymbol() in `src/domain/lib/optionUtils.ts`
+- [ ] T032 [P][US2] (IMPL) Implement deriveOCCSymbol() in `src/domain/lib/optionUtils.ts`
 
-- [ ] T031 [P][US2] (TEST) Write comprehensive test suite for parseOCCSymbol() covering:
+- [ ] T033 [P][US2] (TEST) Write comprehensive test suite for parseOCCSymbol() covering:
     • Correct parsing of standard OCC symbol back to components
     • Handles padded symbols correctly (strips trailing spaces)
     • Parses YYMMDD to valid Date object
@@ -267,11 +298,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Error handling: Invalid date throws error
     • Error handling: Invalid type code throws error
     File: `src/domain/lib/__tests__/optionUtils.test.ts`
-- [ ] T032 [P][US2] (IMPL) Implement parseOCCSymbol() in `src/domain/lib/optionUtils.ts`
+- [ ] T034 [P][US2] (IMPL) Implement parseOCCSymbol() in `src/domain/lib/optionUtils.ts`
 
 ### FIFO Cost Basis Extensions (needed for realized P&L)
 
-- [ ] T033 [US2] (TEST) Write comprehensive test suite for groupTradesByInstrument() covering:
+- [ ] T035 [US2] (TEST) Write comprehensive test suite for groupTradesByInstrument() covering:
     • Stock trades group by underlying symbol (AAPL)
     • Option trades group by occ_symbol (AAPL  250117P00105000)
     • Mixed position correctly separates stock and option trades
@@ -280,9 +311,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Empty trades array returns empty Map
     • Trade order is preserved within groups
     File: `src/domain/calculators/__tests__/CostBasisCalculator-option.test.ts`
-- [ ] T034 [US2] (IMPL) Implement groupTradesByInstrument() in `src/domain/calculators/CostBasisCalculator.ts`
+- [ ] T036 [US2] (IMPL) Implement groupTradesByInstrument() in `src/domain/calculators/CostBasisCalculator.ts`
 
-- [ ] T035 [US2] (TEST) Write comprehensive test suite for calculateInstrumentFIFO() covering:
+- [ ] T037 [US2] (TEST) Write comprehensive test suite for calculateInstrumentFIFO() covering:
     • Simple case: Buy 100 @50, Sell 100 @60 → realized P&L = 1000
     • Multiple buys: Buy 50 @50, Buy 50 @55, Sell 75 @60 → matches oldest first
     • Partial sell: Buy 100 @50, Sell 30 @60 → remaining 70, P&L = 300
@@ -291,33 +322,33 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Zero quantity trades handled correctly
     • Timestamp ordering: trades sorted oldest first
     File: `src/domain/calculators/__tests__/CostBasisCalculator-option.test.ts`
-- [ ] T036 [US2] (IMPL) Implement calculateInstrumentFIFO() in `src/domain/calculators/CostBasisCalculator.ts`
+- [ ] T038 [US2] (IMPL) Implement calculateInstrumentFIFO() in `src/domain/calculators/CostBasisCalculator.ts`
 
 ### Trade Validator
 
-- [ ] T037 [US2] (TEST) Write comprehensive test suite for validateOptionTrade() covering:
+- [ ] T039 [US2] (TEST) Write comprehensive test suite for validateOptionTrade() covering:
     • Valid STO trade: All option fields match position → passes
     • Strike mismatch: Trade strike 105 ≠ Position strike 100 → throws ValidationError
     • Expiration mismatch: Trade date ≠ Position date → throws ValidationError
     • Type mismatch: Trade 'call' ≠ Position 'put' → throws ValidationError
     • Stock trade (no option fields) → passes validation
     File: `src/domain/validators/__tests__/OptionValidators.test.ts`
-- [ ] T038 [US2] (IMPL) Implement validateOptionTrade() in `src/domain/validators/TradeValidator.ts`
+- [ ] T040 [US2] (IMPL) Implement validateOptionTrade() in `src/domain/validators/TradeValidator.ts`
 
 ### Trade Service Extension
 
-- [ ] T039 [US2] (TEST) Write comprehensive test suite for addOptionTrade() covering:
+- [ ] T041 [US2] (TEST) Write comprehensive test suite for addOptionTrade() covering:
     • Creates trade with action='STO', occ_symbol, other option fields
     • Stores underlying_price_at_trade if provided
     • Returns updated position with new trade
     • Calls validateOptionTrade() before adding
     • Trade saves to IndexedDB within position
     File: `src/services/__tests__/TradeService-options.test.ts`
-- [ ] T040 [US2] (IMPL) Implement addOptionTrade() in `src/services/TradeService.ts`
+- [ ] T042 [US2] (IMPL) Implement addOptionTrade() in `src/services/TradeService.ts`
 
 ### Option Action Selector
 
-- [ ] T041 [US2] (TEST) Write comprehensive test suite for action selector covering:
+- [ ] T043 [US2] (TEST) Write comprehensive test suite for action selector covering:
     • Action selector renders for option positions
     • Options include: 'STO', 'BTC', 'BTO', 'STC'
     • Default selection exists or is empty
@@ -326,21 +357,21 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Displays readable labels for each action code
     • Action selector hidden or disabled for stock-only positions
     File: `src/components/forms/__tests__/AddTradeForm-actions.test.tsx`
-- [ ] T042 [US2] (IMPL) Add action selector to AddTradeForm
+- [ ] T044 [US2] (IMPL) Add action selector to AddTradeForm
 
 ### Premium Label
 
-- [ ] T043 [US2] (TEST) Write comprehensive test suite for premium label covering:
+- [ ] T045 [US2] (TEST) Write comprehensive test suite for premium label covering:
     • Price field labeled "Price per share" for stock trades
     • Price field labeled "Premium per contract" for option trades
     • Label updates dynamically when action changes
     • Label shows $ formatting prefix
     File: `src/components/forms/__tests__/AddTradeForm-premium-label.test.tsx`
-- [ ] T044 [US2] (IMPL) Add conditional label to AddTradeForm
+- [ ] T046 [US2] (IMPL) Add conditional label to AddTradeForm
 
 ### Field Auto-Population
 
-- [ ] T045 [US2] (TEST) Write comprehensive test suite for field auto-population covering:
+- [ ] T047 [US2] (TEST) Write comprehensive test suite for field auto-population covering:
     • Strike price field auto-fills from position plan
     • Expiration date field auto-fills from position plan
     • Option type field auto-fills from position plan
@@ -348,33 +379,33 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Auto-population happens when position is selected
     • Stock positions don't show option fields
     File: `src/components/forms/__tests__/AddTradeForm-autopopulate.test.tsx`
-- [ ] T046 [US2] (IMPL) Add auto-population logic to AddTradeForm
+- [ ] T048 [US2] (IMPL) Add auto-population logic to AddTradeForm
 
 ### OCC Symbol Derivation
 
-- [ ] T047 [US2] (TEST) Write comprehensive test suite for OCC symbol derivation covering:
+- [ ] T049 [US2] (TEST) Write comprehensive test suite for OCC symbol derivation covering:
     • OCC symbol auto-generated from position strike, expiration, type
     • OCC symbol displayed for user verification (read-only)
     • OCC symbol format is correct (21 characters)
     • OCC symbol includes correct padding and formatting
     • OCC symbol stored with trade when submitted
     File: `src/components/forms/__tests__/AddTradeForm-occ-symbol.test.tsx`
-- [ ] T048 [US2] (IMPL) Add OCC symbol derivation to AddTradeForm
+- [ ] T050 [US2] (IMPL) Add OCC symbol derivation to AddTradeForm
 
 ### Trade Validation
 
-- [ ] T049 [US2] (TEST) Write comprehensive test suite for trade validation covering:
+- [ ] T051 [US2] (TEST) Write comprehensive test suite for trade validation covering:
     • Strike price validation: User-modified strike rejected if differs from position
     • Expiration date validation: User-modified date rejected if differs from position
     • Validation error displays inline when contract details don't match
     • Form submission blocked while validation errors exist
     • User can reset to position values if they made mistake
     File: `src/components/forms/__tests__/AddTradeForm-validation.test.tsx`
-- [ ] T050 [US2] (IMPL) Add option trade validation to AddTradeForm
+- [ ] T052 [US2] (IMPL) Add option trade validation to AddTradeForm
 
 ### Integration Tests
 
-- [ ] T051 [US2] (TEST) Write comprehensive integration test suite for STO execution covering:
+- [ ] T053 [US2] (TEST) Write comprehensive integration test suite for STO execution covering:
     • Start with planned Short Put position
     • Open add trade flow, select STO action
     • Enter quantity and premium
@@ -385,15 +416,25 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify trade has correct occ_symbol
     • Verify position appears in open positions list
     File: `src/integration/__tests__/us2-position-opens.test.tsx`
-- [ ] T052 [US2] (IMPL) Implement STO flow to make all integration tests pass
+- [ ] T054 [US2] (IMPL) Implement STO flow to make all integration tests pass
 
-- [ ] T053 [US2] (TEST) Write comprehensive integration test suite for realized P&L after STO covering:
+- [ ] T055 [US2] (TEST) Write comprehensive integration test suite for realized P&L after STO covering:
     • Create Short Put position with STO trade (sold at 3.00)
     • Verify realized P&L = 0 (no closing trade yet)
     • Verify position status is 'open'
     • Verify trade recorded correctly
     File: `src/integration/__tests__/us2-realized-pnl-after-sto.test.tsx`
-- [ ] T054 [US2] (IMPL) Ensure realized P&L calculation displays correctly for open positions
+- [ ] T056 [US2] (IMPL) Ensure realized P&L calculation displays correctly for open positions
+
+### PositionDetail Trade Display (NEW - Value Delivery Audit Fix)
+
+- [ ] T057 [US2] (IMPL) Update PositionDetail trade history to display option fields
+    • Show action code badge (STO/BTC/BTO/STC) for option trades
+    • Display OCC symbol for option trades
+    • Display strike price and expiration for option trades
+    • Format contracts quantity with ×100 multiplier note
+    • Stock trades continue to display with buy/sell badges
+    File: `src/pages/PositionDetail.tsx`
 
 **NOTE**: Unrealized P&L with pricing is deferred to US6. MVP (US1-US3) works with realized P&L only.
 
@@ -409,7 +450,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Realized P&L Calculator (FIFO-based, no pricing needed)
 
-- [ ] T055 [P][US3] (TEST) Write comprehensive test suite for calculateShortPutRealizedPnL() covering:
+- [ ] T058 [P][US3] (TEST) Write comprehensive test suite for calculateShortPutRealizedPnL() covering:
     • Full close profit: Sold 3@3.00, closed 3@1.00 → (3-1)×3×100 = 600
     • Full close loss: Sold 2@2.00, closed 2@5.00 → (2-5)×2×100 = -600
     • Partial close: Sold 5@3.00, closed 2@1.00, 3 still open → (3-1)×2×100 = 400
@@ -417,22 +458,22 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Partial positions: Realized P&L only for closed contracts
     • Assignment closed at 0: Sold at 2.00, assigned → 2×100×contracts profit
     File: `src/domain/calculators/__tests__/ShortPutPnLCalculator.test.ts`
-- [ ] T056 [P][US3] (IMPL) Implement calculateShortPutRealizedPnL() in `src/domain/calculators/ShortPutPnLCalculator.ts`
+- [ ] T059 [P][US3] (IMPL) Implement calculateShortPutRealizedPnL() in `src/domain/calculators/ShortPutPnLCalculator.ts`
 
 ### Closing Trade Validator
 
-- [ ] T057 [US3] (TEST) Write comprehensive test suite for validateClosingTrade() covering:
+- [ ] T060 [US3] (TEST) Write comprehensive test suite for validateClosingTrade() covering:
     • Valid close: Closing quantity 5 ≤ open quantity 10 → passes
     • Oversell: Closing quantity 15 > open quantity 10 → throws ValidationError
     • Exact close: Closing quantity 10 = open quantity 10 → passes
     • Zero close: Closing quantity 0 → passes (no-op allowed)
     • Per-instrument validation: Checks OCC-specific quantity
     File: `src/domain/validators/__tests__/OptionValidators.test.ts`
-- [ ] T058 [US3] (IMPL) Implement validateClosingTrade() in `src/domain/validators/TradeValidator.ts`
+- [ ] T061 [US3] (IMPL) Implement validateClosingTrade() in `src/domain/validators/TradeValidator.ts`
 
 ### Closing Trade Validation (UI)
 
-- [ ] T059 [US3] (TEST) Write comprehensive test suite for closing quantity validation covering:
+- [ ] T062 [US3] (TEST) Write comprehensive test suite for closing quantity validation covering:
     • Closing quantity validated against open quantity per instrument
     • Shows error if closing quantity exceeds open quantity
     • Shows current open quantity in error message
@@ -440,11 +481,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Allows closing exact open quantity (full close)
     • Allows closing partial quantity (partial close)
     File: `src/components/forms/__tests__/AddTradeForm-closing-validation.test.tsx`
-- [ ] T060 [US3] (IMPL) Add closing trade validation to AddTradeForm
+- [ ] T063 [US3] (IMPL) Add closing trade validation to AddTradeForm
 
 ### Integration Tests
 
-- [ ] T061 [US3] (TEST) Write comprehensive integration test suite for full BTC close covering:
+- [ ] T064 [US3] (TEST) Write comprehensive integration test suite for full BTC close covering:
     • Start with open Short Put position (5 contracts sold at 3.00)
     • Add BTC trade for all 5 contracts at 1.50
     • Verify position status changes to 'closed'
@@ -453,9 +494,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify position appears in closed positions list
     • Verify no open contracts remain
     File: `src/integration/__tests__/us3-close-via-btc.test.tsx`
-- [ ] T062 [US3] (IMPL) Implement full close flow to make all integration tests pass
+- [ ] T065 [US3] (IMPL) Implement full close flow to make all integration tests pass
 
-- [ ] T063 [US3] (TEST) Write comprehensive integration test suite for partial BTC close covering:
+- [ ] T066 [US3] (TEST) Write comprehensive integration test suite for partial BTC close covering:
     • Start with open Short Put position (5 contracts sold at 3.00)
     • Add BTC trade for 2 contracts at 1.50
     • Verify position status remains 'open'
@@ -466,9 +507,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify position now fully closed
     • Verify total realized P&L includes both BTC trades
     File: `src/integration/__tests__/us3-partial-close.test.tsx`
-- [ ] T064 [US3] (IMPL) Implement partial close logic to make all integration tests pass
+- [ ] T067 [US3] (IMPL) Implement partial close logic to make all integration tests pass
 
-- [ ] T065 [US3] (TEST) Write comprehensive integration test suite for realized P&L covering:
+- [ ] T068 [US3] (TEST) Write comprehensive integration test suite for realized P&L covering:
     • Profit scenario: Sold at 3.00, closed at 1.00 → verify profit calculated correctly
     • Loss scenario: Sold at 2.00, closed at 5.00 → verify loss calculated correctly
     • Break-even: Sold at 2.50, closed at 2.50 → verify zero P&L
@@ -476,7 +517,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • P&L matches manual calculation: (sell_price - buy_price) × quantity × 100
     • P&L persists after close (doesn't change with price updates)
     File: `src/integration/__tests__/us3-realized-pnl.test.tsx`
-- [ ] T066 [US3] (IMPL) Implement realized P&L calculation to make all integration tests pass
+- [ ] T069 [US3] (IMPL) Implement realized P&L calculation to make all integration tests pass
 
 ---
 
@@ -490,28 +531,28 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Trade Service Extension
 
-- [ ] T067 [US4] (TEST) Write comprehensive test suite for recordExpirationWorthless() covering:
+- [ ] T070 [US4] (TEST) Write comprehensive test suite for recordExpirationWorthless() covering:
     • Creates BTC trade at price=0 for all open contracts
     • Position status changes to 'closed'
     • Full premium captured as realized profit
     • Validates date is on/after expiration
     • Rejects if before expiration date
     File: `src/services/__tests__/TradeService-options.test.ts`
-- [ ] T068 [US4] (IMPL) Implement recordExpirationWorthless() in `src/services/TradeService.ts`
+- [ ] T071 [US4] (IMPL) Implement recordExpirationWorthless() in `src/services/TradeService.ts`
 
 ### Expiration Outcome
 
-- [ ] T069 [US4] (TEST) Write comprehensive test suite for expiration outcome covering:
+- [ ] T072 [US4] (TEST) Write comprehensive test suite for expiration outcome covering:
     • "Expired" outcome available in position close flow
     • Option appears only for option positions (not stock)
     • Option appears only on/after expiration date
     • Selecting "Expired" shows confirmation explaining outcome
     File: `src/components/forms/__tests__/PositionCloseFlow-expiration.test.tsx`
-- [ ] T070 [US4] (IMPL) Add "Expired" option to close flow
+- [ ] T073 [US4] (IMPL) Add "Expired" option to close flow
 
 ### Expiration Validation
 
-- [ ] T071 [US4] (TEST) Write comprehensive test suite for date validation covering:
+- [ ] T074 [US4] (TEST) Write comprehensive test suite for date validation covering:
     • Expiration blocked if today < position expiration_date
     • Error message explains must wait until expiration
     • User directed to use BTC for early closes
@@ -519,11 +560,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Expiration allowed on exact expiration date
     • Expiration allowed after expiration date
     File: `src/integration/__tests__/us4-expiration-validation.test.tsx`
-- [ ] T072 [US4] (IMPL) Add date validation to make all tests pass
+- [ ] T075 [US4] (IMPL) Add date validation to make all tests pass
 
 ### Integration Test
 
-- [ ] T073 [US4] (TEST) Write comprehensive integration test suite for expiration covering:
+- [ ] T076 [US4] (TEST) Write comprehensive integration test suite for expiration covering:
     • Start with open Short Put position (5 contracts sold at 2.00)
     • Wait until on/after expiration date
     • Select "Expired" outcome
@@ -534,7 +575,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify realized P&L = premium_received × contracts × 100 (full profit)
     • Verify P&L displays as "Realized"
     File: `src/integration/__tests__/us4-expire-worthless.test.tsx`
-- [ ] T074 [US4] (IMPL) Implement expiration flow to make all tests pass
+- [ ] T077 [US4] (IMPL) Implement expiration flow to make all tests pass
 
 ---
 
@@ -548,7 +589,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Assignment Handlers Module
 
-- [ ] T075 [P][US5] (TEST) Write comprehensive test suite for createAssignmentStockPosition() covering:
+- [ ] T078 [P][US5] (TEST) Write comprehensive test suite for createAssignmentStockPosition() covering:
     • Creates Long Stock position with correct symbol
     • Quantity = contracts_assigned × 100 (5 contracts → 500 shares)
     • target_entry_price = strike_price from option
@@ -559,9 +600,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • status = 'open' (has buy trade)
     • Position thesis includes assignment reference
     File: `src/domain/lib/__tests__/assignmentHandler.test.ts`
-- [ ] T076 [P][US5] (IMPL) Implement createAssignmentStockPosition() in `src/domain/lib/assignmentHandler.ts`
+- [ ] T079 [P][US5] (IMPL) Implement createAssignmentStockPosition() in `src/domain/lib/assignmentHandler.ts`
 
-- [ ] T077 [P][US5] (TEST) Write comprehensive test suite for calculateAssignmentCostBasis() covering:
+- [ ] T080 [P][US5] (TEST) Write comprehensive test suite for calculateAssignmentCostBasis() covering:
     • Standard case: strike 100, premium 3.00 → cost basis 97.00
     • High premium: strike 100, premium 10.00 → cost basis 90.00
     • Low premium: strike 100, premium 0.50 → cost basis 99.50
@@ -569,22 +610,22 @@ This document provides a dependency-ordered task list for implementing Short Put
     • ATM assignment: strike 95, premium 2.00 → cost basis 93.00
     • Decimal precision: strike 105.50, premium 3.25 → 102.25
     File: `src/domain/lib/__tests__/assignmentHandler.test.ts`
-- [ ] T078 [P][US5] (IMPL) Implement calculateAssignmentCostBasis() in `src/domain/lib/assignmentHandler.ts`
+- [ ] T081 [P][US5] (IMPL) Implement calculateAssignmentCostBasis() in `src/domain/lib/assignmentHandler.ts`
 
 ### Journal Service Extension
 
-- [ ] T079 [US5] (TEST) Write comprehensive test suite for createAssignmentJournalEntry() covering:
+- [ ] T082 [US5] (TEST) Write comprehensive test suite for createAssignmentJournalEntry() covering:
     • Creates journal entry with entry_type='option_assignment'
     • Includes all assignment prompts in fields array
     • Links to position via position_id
     • Required prompt (assignment_cause) is present
     • Optional prompts (feelings_about_stock, stock_plan) are present
     File: `src/services/__tests__/JournalService-options.test.ts`
-- [ ] T080 [US5] (IMPL) Implement createAssignmentJournalEntry() in `src/services/JournalService.ts`
+- [ ] T083 [US5] (IMPL) Implement createAssignmentJournalEntry() in `src/services/JournalService.ts`
 
 ### Trade Service Extension
 
-- [ ] T081 [US5] (TEST) Write comprehensive test suite for recordAssignment() covering:
+- [ ] T084 [US5] (TEST) Write comprehensive test suite for recordAssignment() covering:
     • Creates BTC trade at price=0 for assigned contracts
     • Creates new Long Stock position with correct cost basis
     • Links trades via created_stock_position_id
@@ -593,21 +634,21 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Returns both updated option position and new stock position
     • Uses IndexedDB transaction for atomicity
     File: `src/services/__tests__/TradeService-options.test.ts`
-- [ ] T082 [US5] (IMPL) Implement recordAssignment() in `src/services/TradeService.ts`
+- [ ] T085 [US5] (IMPL) Implement recordAssignment() in `src/services/TradeService.ts`
 
 ### Assignment Outcome
 
-- [ ] T083 [US5] (TEST) Write comprehensive test suite for assignment outcome covering:
+- [ ] T086 [US5] (TEST) Write comprehensive test suite for assignment outcome covering:
     • "Assigned" outcome available in position close flow
     • Option appears only for option positions
     • Option appears only on/after expiration date
     • Selecting "Assigned" opens assignment modal
     File: `src/components/forms/__tests__/PositionCloseFlow-assignment.test.tsx`
-- [ ] T084 [US5] (IMPL) Add "Assigned" option to close flow
+- [ ] T087 [US5] (IMPL) Add "Assigned" option to close flow
 
 ### Assignment Modal
 
-- [ ] T085 [US5] (TEST) Write comprehensive test suite for assignment modal covering:
+- [ ] T088 [US5] (TEST) Write comprehensive test suite for assignment modal covering:
     • Modal displays premium received per contract (for reference, not editable)
     • Modal displays effective cost basis per share (strike - premium)
     • Modal explains 100 shares per contract multiplier
@@ -615,11 +656,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Modal confirms assignment before proceeding
     • User can cancel assignment from modal
     File: `src/components/modals/__tests__/AssignmentModal.test.tsx`
-- [ ] T086 [US5] (IMPL) Create assignment modal with display
+- [ ] T089 [US5] (IMPL) Create assignment modal with display
 
 ### Integration Tests
 
-- [ ] T087 [US5] (TEST) Write comprehensive integration test suite for stock position creation covering:
+- [ ] T090 [US5] (TEST) Write comprehensive integration test suite for stock position creation covering:
     • Start with Short Put position (strike 100, sold at 3.00)
     • Record assignment of 5 contracts
     • Verify new Long Stock position created
@@ -631,9 +672,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify stock position status = 'open'
     • Verify stock position linked via created_stock_position_id
     File: `src/integration/__tests__/us5-cost-basis.test.tsx`
-- [ ] T088 [US5] (IMPL) Implement stock position creation to make all tests pass
+- [ ] T091 [US5] (IMPL) Implement stock position creation to make all tests pass
 
-- [ ] T089 [US5] (TEST) Write comprehensive integration test suite for partial assignment covering:
+- [ ] T092 [US5] (TEST) Write comprehensive integration test suite for partial assignment covering:
     • Start with Short Put position (10 contracts sold at 2.00)
     • Record assignment of 3 contracts only
     • Verify new Long Stock position created for 300 shares
@@ -644,9 +685,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify second stock position created for remaining shares
     • Verify option position now closed (0 contracts)
     File: `src/integration/__tests__/us5-partial-assignment.test.tsx`
-- [ ] T090 [US5] (IMPL) Implement partial assignment logic to make all tests pass
+- [ ] T093 [US5] (IMPL) Implement partial assignment logic to make all tests pass
 
-- [ ] T091 [US5] (TEST) Write comprehensive integration test suite for assignment journal covering:
+- [ ] T094 [US5] (TEST) Write comprehensive integration test suite for assignment journal covering:
     • After assignment, user prompted for journal entry
     • Journal entry type is 'option_assignment'
     • Assignment-specific prompts displayed:
@@ -656,7 +697,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Journal entry linked to both option position and new stock position
     • Position creation completes after journal entry
     File: `src/integration/__tests__/us5-assignment-journal.test.tsx`
-- [ ] T092 [US5] (IMPL) Add assignment journal prompts to make all tests pass
+- [ ] T095 [US5] (IMPL) Add assignment journal prompts to make all tests pass
 
 ---
 
@@ -670,7 +711,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Option Value Calculators Module (needed for intrinsic/extrinsic display)
 
-- [ ] T093 [P][US6] (TEST) Write comprehensive test suite for calculatePutIntrinsicValue() covering:
+- [ ] T096 [P][US6] (TEST) Write comprehensive test suite for calculatePutIntrinsicValue() covering:
     • ITM put returns positive value: strike 100, stock 95 → 5
     • OTM put returns 0: strike 100, stock 105 → 0
     • ATM put returns 0: strike 100, stock 100 → 0
@@ -678,20 +719,20 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Returns exactly 0 (not negative) for extreme OTM
     • Handles decimal strikes and prices: strike 100.50, stock 95.25 → 5.25
     File: `src/domain/calculators/__tests__/OptionValueCalculator.test.ts`
-- [ ] T094 [P][US6] (IMPL) Implement calculatePutIntrinsicValue() in `src/domain/calculators/OptionValueCalculator.ts`
+- [ ] T097 [P][US6] (IMPL) Implement calculatePutIntrinsicValue() in `src/domain/calculators/OptionValueCalculator.ts`
 
-- [ ] T095 [P][US6] (TEST) Write comprehensive test suite for calculateExtrinsicValue() covering:
+- [ ] T098 [P][US6] (TEST) Write comprehensive test suite for calculateExtrinsicValue() covering:
     • Normal case: option 6.00, intrinsic 5.00 → extrinsic 1.00
     • All extrinsic: option 3.00, intrinsic 0 → extrinsic 3.00
     • All intrinsic: option 10.00, intrinsic 10.00 → extrinsic 0.00
     • Negative extrinsic allowed (deep ITM early expiry): option 8.00, intrinsic 10.00 → -2.00
     • Zero option price: option 0, intrinsic 5 → -5 (worthless but ITM)
     File: `src/domain/calculators/__tests__/OptionValueCalculator.test.ts`
-- [ ] T096 [P][US6] (IMPL) Implement calculateExtrinsicValue() in `src/domain/calculators/OptionValueCalculator.ts`
+- [ ] T099 [P][US6] (IMPL) Implement calculateExtrinsicValue() in `src/domain/calculators/OptionValueCalculator.ts`
 
 ### Unrealized P&L Calculator (requires current pricing)
 
-- [ ] T097 [P][US6] (TEST) Write comprehensive test suite for calculateShortPutUnrealizedPnL() covering:
+- [ ] T100 [P][US6] (TEST) Write comprehensive test suite for calculateShortPutUnrealizedPnL() covering:
     • Profit case: Sold at 3.00, current 1.50, 5 contracts → (3-1.5)×5×100 = 750 profit
     • Loss case: Sold at 2.00, current 4.00, 3 contracts → (2-4)×3×100 = -600 loss
     • Break-even: Sold at 2.00, current 2.00 → 0 P&L
@@ -699,40 +740,40 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Large contract quantities: 10 contracts calculated correctly
     • Decimal premiums: 2.50, 1.75 calculated correctly
     File: `src/domain/calculators/__tests__/ShortPutPnLCalculator.test.ts`
-- [ ] T098 [P][US6] (IMPL) Implement calculateShortPutUnrealizedPnL() in `src/domain/calculators/ShortPutPnLCalculator.ts`
+- [ ] T101 [P][US6] (IMPL) Implement calculateShortPutUnrealizedPnL() in `src/domain/calculators/ShortPutPnLCalculator.ts`
 
 ### Price Service Extensions
 
-- [ ] T099 [US6] (TEST) Write comprehensive test suite for upsertMultiplePrices() covering:
+- [ ] T102 [US6] (TEST) Write comprehensive test suite for upsertMultiplePrices() covering:
     • Creates multiple price entries in single transaction
     • Reuses existing price if same instrument and date and price
     • Updates existing price if same instrument and date but different price
     • Returns array of created/updated PriceHistory objects
     • Handles both stock symbols and OCC symbols
     File: `src/services/__tests__/PriceService-options.test.ts`
-- [ ] T100 [US6] (IMPL) Implement upsertMultiplePrices() in `src/services/PriceService.ts`
+- [ ] T103 [US6] (IMPL) Implement upsertMultiplePrices() in `src/services/PriceService.ts`
 
-- [ ] T101 [US6] (TEST) Write comprehensive test suite for getPricesForPosition() covering:
+- [ ] T104 [US6] (TEST) Write comprehensive test suite for getPricesForPosition() covering:
     • Short Put position returns both stockPrice and optionPrice when available
     • Returns isStale=true when either price is missing
     • Returns missingPrices array indicating which prices are unavailable
     • Long Stock position returns only stockPrice (optionPrice undefined)
     • Handles planned positions (no prices yet) gracefully
     File: `src/services/__tests__/PriceService-options.test.ts`
-- [ ] T102 [US6] (IMPL) Implement getPricesForPosition() in `src/services/PriceService.ts`
+- [ ] T105 [US6] (IMPL) Implement getPricesForPosition() in `src/services/PriceService.ts`
 
-- [ ] T103 [US6] (TEST) Write comprehensive test suite for getPositionsRequiringPrices() covering:
+- [ ] T106 [US6] (TEST) Write comprehensive test suite for getPositionsRequiringPrices() covering:
     • Open Short Put position returns needsStockPrice=true, needsOptionPrice=true
     • Open Long Stock position returns needsStockPrice=true, needsOptionPrice=false
     • Closed positions not included in results
     • Includes occSymbol for option positions
     • Returns array of position requirement objects
     File: `src/services/__tests__/PositionService-options.test.ts`
-- [ ] T104 [US6] (IMPL) Implement getPositionsRequiringPrices() in `src/services/PositionService.ts`
+- [ ] T107 [US6] (IMPL) Implement getPositionsRequiringPrices() in `src/services/PositionService.ts`
 
 ### Multi-Instrument Price Entry
 
-- [ ] T105 [US6] (TEST) Write comprehensive test suite for multi-instrument price entry covering:
+- [ ] T108 [US6] (TEST) Write comprehensive test suite for multi-instrument price entry covering:
     • Price update flow detects option positions need dual prices
     • Prompts for both stock price and option price
     • Shows which prices are for stock vs option
@@ -740,11 +781,11 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Allows updating just one price (stock or option) if other exists
     • Long Stock positions only prompt for stock price
     File: `src/components/forms/__tests__/PriceUpdateFlow-multiple.test.tsx`
-- [ ] T106 [US6] (IMPL) Extend price update flow for multiple instruments
+- [ ] T109 [US6] (IMPL) Extend price update flow for multiple instruments
 
 ### Value Display
 
-- [ ] T107 [US6] (TEST) Write comprehensive test suite for intrinsic/extrinsic display covering:
+- [ ] T110 [US6] (TEST) Write comprehensive test suite for intrinsic/extrinsic display covering:
     • Position detail shows intrinsic value when both prices available
     • Intrinsic value calculated as max(0, strike - stock) for puts
     • Position detail shows extrinsic value when both prices available
@@ -753,22 +794,22 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Values update when prices change
     • Negative extrinsic displays correctly (deep ITM)
     File: `src/pages/__tests__/PositionDetail-values.test.tsx`
-- [ ] T108 [US6] (IMPL) Add intrinsic/extrinsic display to position detail
+- [ ] T111 [US6] (IMPL) Add intrinsic/extrinsic display to position detail
 
 ### Staleness Warning
 
-- [ ] T109 [US6] (TEST) Write comprehensive test suite for staleness warning covering:
+- [ ] T112 [US6] (TEST) Write comprehensive test suite for staleness warning covering:
     • Position shows staleness warning when option price missing
     • Position shows staleness warning when stock price missing
     • No staleness warning when both prices present
     • Warning message indicates which prices are needed
     • Long Stock positions don't show option staleness
     File: `src/components/__tests__/PositionCard-staleness.test.tsx`
-- [ ] T110 [US6] (IMPL) Add staleness indicator to make all tests pass
+- [ ] T113 [US6] (IMPL) Add staleness indicator to make all tests pass
 
 ### Integration Tests
 
-- [ ] T111 [US6] (TEST) Write comprehensive integration test suite for price update covering:
+- [ ] T114 [US6] (TEST) Write comprehensive integration test suite for price update covering:
     • Create open Short Put position
     • Enter stock price 150, option price 2.50
     • Verify prices saved to PriceHistory with correct instrument IDs
@@ -777,9 +818,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify intrinsic value calculated correctly
     • Verify extrinsic value calculated correctly
     File: `src/integration/__tests__/us6-price-update.test.tsx`
-- [ ] T112 [US6] (IMPL) Implement price update flow to make all tests pass
+- [ ] T115 [US6] (IMPL) Implement price update flow to make all tests pass
 
-- [ ] T113 [US6] (TEST) Write comprehensive integration test suite for unrealized P&L covering:
+- [ ] T116 [US6] (TEST) Write comprehensive integration test suite for unrealized P&L covering:
     • Create Short Put position with STO trade (sold at 3.00)
     • Update option price to 1.50
     • Verify unrealized P&L calculated as (3.00 - 1.50) × contracts × 100
@@ -789,9 +830,9 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify P&L displays as loss (negative)
     • Verify P&L updates in real-time as prices change
     File: `src/integration/__tests__/us6-unrealized-pnl.test.tsx`
-- [ ] T114 [US6] (IMPL) Implement P&L calculation to make all integration tests pass
+- [ ] T117 [US6] (IMPL) Implement P&L calculation to make all integration tests pass
 
-- [ ] T115 [US6] (TEST) Write comprehensive integration test suite for price change confirmation covering:
+- [ ] T118 [US6] (TEST) Write comprehensive integration test suite for price change confirmation covering:
     • Enter price 20% higher than previous close
     • Verify confirmation dialog appears
     • Confirmation shows old vs new price
@@ -800,28 +841,17 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Reject keeps old price
     • No confirmation if price change < 20%
     File: `src/integration/__tests__/us6-price-change-confirmation.test.tsx`
-- [ ] T116 [US6] (IMPL) Add price change confirmation to make all tests pass
+- [ ] T119 [US6] (IMPL) Add price change confirmation to make all tests pass
 
 ---
 
-## Phase 8: User Story 7 - View Positions on Dashboard (P3) - 8 tasks
+## Phase 8: User Story 7 - View Positions on Dashboard (P3) - 6 tasks
 
 **Goal**: Dashboard displays Short Put positions with option details
 
 **Independent Test**: Create Short Put position and verify it displays correctly on dashboard
 
-### Option Position Card Component
-
-- [ ] T117 [US7] (TEST) Write comprehensive test suite for OptionPositionCard covering:
-    • Card displays underlying symbol
-    • Card displays strategy type badge "Short Put"
-    • Card displays strike price with $ formatting
-    • Card displays expiration date in readable format (e.g., "Jan 17, 2025")
-    • Card displays premium received per contract
-    • Card displays number of contracts
-    • Card shows current status (planned/open/closed)
-    File: `src/components/positions/__tests__/OptionPositionCard.test.tsx`
-- [ ] T118 [US7] (IMPL) Create OptionPositionCard component
+**NOTE**: T117-T118 remain in US6 for unrealized P&L calculation. OptionPositionCard covered by T023-T024 in US1.
 
 ### Strategy Badge
 
@@ -852,12 +882,17 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Create Short Put position
     • Verify position appears on dashboard
     • Verify OptionPositionCard used (not default PositionCard)
-    • Verify all option details visible on dashboard card
+    • Verify all option details visible on dashboard card (strike, expiration, premium)
+    • Verify PositionCard receives strike_price, expiration_date, premium_per_contract props
+    • Verify profit_target and stop_loss display correctly for option_price basis
     • Verify Long Stock positions still use regular PositionCard
     • Verify multiple Short Put positions all display correctly
     • Verify positions sort correctly (status, attention, etc.)
     File: `src/pages/__tests__/Dashboard-options.test.tsx`
 - [ ] T124 [US7] (IMPL) Update Dashboard to conditionally use OptionPositionCard
+    • Route to OptionPositionCard (from T024) when strategy_type='Short Put'
+    • Route to PositionCard for Long Stock positions
+    • Pass option-specific props (strike, expiration, premium) to OptionPositionCard
 
 ---
 
@@ -956,30 +991,37 @@ Phase 1 (Setup) MUST COMPLETE FIRST (T001-T008)
 │   US1 (P1)  │   US2 (P1)  │   US3 (P1)  │  ← Core lifecycle
 │  Create     │  Execute    │   Close     │
 │  Plan       │  STO        │   (BTC)     │
-│  T009-T028  │  T029-T054  │  T055-T066  │
+│  T009-T030  │  T031-T057  │  T060-T071  │
 └─────────────┴─────────────┴─────────────┘
     ↓              ↓              ↓
 ┌─────────────┬─────────────┬─────────────┐
 │   US4 (P2)  │   US5 (P2)  │   US6 (P2)  │  ← Exit handling + Pricing
 │  Expire     │  Assign     │  Pricing    │
-│  T067-T074  │  T075-T092  │  T093-T116  │
+│  T072-T079  │  T080-T097  │  T098-T121  │
 └─────────────┴─────────────┴─────────────┘
     ↓
 ┌─────────────────────────────────────────┐
 │          US7 (P3) - Dashboard          │  ← UI polish
-│          T117-T124                      │
+│          T122-T124                      │
 └─────────────────────────────────────────┘
 ```
 
 **Critical Path** (for MVP - US1/US2/US3 only):
-Phase 1 → US1 (T009-T028) → US2 (T029-T054) → US3 (T055-T066) → Polish (T125-T140)
+Phase 1 → US1 (T009-T030) → US2 (T031-T057) → US3 (T060-T071) → Polish (T127-T142)
+
+**Value Delivery Audit Changes**:
+- T022b-T022c (Option price basis conversion) added to US1 - fixes profit_target/stop_loss display for options
+- T023-T024 (OptionPositionCard) moved from US7 to US1 for immediate position verification
+- T059 (PositionDetail trade display) added to US2 for option trade visibility
+- T117-T118 remain in US6 (unrealized P&L) - removed duplicate from US7
+- T002 must complete before T004 (database migration before type extensions)
 
 **Parallel Opportunities** (by TEST/IMPL pairs):
-- US2: T029-T032 (Option utils): 2 parallel pairs
-- US2: T033-T036 (FIFO): 2 parallel pairs
-- US3: T055-T056 (Realized P&L): 1 parallel pair
-- US5: T075-T078 (Assignment handlers): 2 parallel pairs
-- US6: T093-T098 (Value calculators): 3 parallel pairs
+- US2: T031-T034 (Option utils): 2 parallel pairs
+- US2: T035-T038 (FIFO): 2 parallel pairs
+- US3: T058-T059 (Realized P&L): 1 parallel pair
+- US5: T078-T081 (Assignment handlers): 2 parallel pairs
+- US6: T096-T101 (Value calculators): 3 parallel pairs
 
 ---
 
@@ -987,15 +1029,15 @@ Phase 1 → US1 (T009-T028) → US2 (T029-T054) → US3 (T055-T066) → Polish (
 
 **Recommended MVP** (Minimum Viable Product): User Stories 1-3 (P1 only)
 
-**MVP Tasks**: T001-T066 (66 tasks total)
+**MVP Tasks**: T001-T073 (73 tasks total)
 - Phase 1: Setup (8 tasks)
-- US1: Create Short Put Plan (20 tasks)
-- US2: Execute STO Trade (26 tasks)
+- US1: Create Short Put Plan (24 tasks) - includes option price basis conversion (T022b-T022c)
+- US2: Execute STO Trade (27 tasks)
 - US3: Close via BTC (12 tasks)
 
 This provides complete core trading workflow:
-1. **Create** Short Put position plan with option fields
-2. **Execute** sell-to-open trade (OCC symbol derivation, trade validation)
+1. **Create** Short Put position plan with option fields (including position card display and price basis conversion)
+2. **Execute** sell-to-open trade (OCC symbol derivation, trade validation, PositionDetail trade display)
 3. **Close** via buy-to-close with realized P&L calculation (FIFO-based)
 
 **MVP excludes** (deferred to US4-US6):
@@ -1004,7 +1046,13 @@ This provides complete core trading workflow:
 - Market pricing and unrealized P&L
 - Intrinsic/extrinsic value display
 
-**MVP Test Count**: 33 comprehensive test suites + 33 implementations = 66 TDD cycles
+**MVP Test Count**: 37 comprehensive test suites + 36 implementations = 73 TDD cycles
+
+**Value Delivery Audit Improvements** (Dec 2025):
+- Option price basis conversion (T022b-T022c) added to US1 for correct profit_target/stop_loss display
+- OptionPositionCard (T023-T024) in US1 allows immediate position verification after creation
+- PositionDetail option trade display (T059) in US2 shows option trade details after STO
+- Database migration (T002) must complete before type extensions (T004)
 
 ---
 
@@ -1015,25 +1063,25 @@ This provides complete core trading workflow:
 | Phase | Test Suites | Impl Tasks | Total |
 |-------|-------------|------------|-------|
 | Phase 1: Setup | 4 | 4 | 8 |
-| Phase 2: US1 (Create Plan) | 10 | 10 | 20 |
-| Phase 3: US2 (Execute STO) | 10 | 10 | 20 |
+| Phase 2: US1 (Create Plan) | 12 | 12 | 24 |
+| Phase 3: US2 (Execute STO) | 14 | 13 | 27 |
 | Phase 4: US3 (Close BTC) | 6 | 6 | 12 |
-| Phase 5: US4 (Expire) | 3 | 3 | 6 |
+| Phase 5: US4 (Expire) | 4 | 4 | 8 |
 | Phase 6: US5 (Assign) | 10 | 10 | 20 |
-| Phase 7: US6 (Pricing) | 10 | 10 | 20 |
-| Phase 8: US7 (Dashboard) | 4 | 4 | 8 |
+| Phase 7: US6 (Pricing) | 12 | 12 | 24 |
+| Phase 8: US7 (Dashboard) | 3 | 3 | 6 |
 | Phase 9: Polish | 7 | 7 | 14 |
-| **TOTAL** | **64** | **64** | **128** |
+| **TOTAL** | **72** | **71** | **143** |
 
 ### Coverage by Category
 
 | Category | Test Suites | Coverage |
 |----------|-------------|----------|
 | Type Definitions | 3 | Position, Trade, Journal types compile and work correctly |
-| Domain Logic | 11 | OCC utils, values, FIFO, assignment, P&L calculations (split by when needed) |
+| Domain Logic | 13 | OCC utils, values, FIFO, assignment, P&L calculations, price basis conversion (split by when needed) |
 | Validation | 3 | Position, trade, closing trade validation |
 | Services | 10 | Position, Trade, Price, Journal service operations |
-| UI Components | 28 | Form inputs, validation, display components |
+| UI Components | 31 | Form inputs, validation, display components (including option-specific) |
 | Integration/E2E | 9 | Complete user journeys, edge cases, performance |
 
 ---
@@ -1080,17 +1128,23 @@ When implementing a (IMPL) task:
 ✅ Implementation tasks reference the test suite they satisfy
 ✅ **Realized P&L (FIFO-based) implemented in US3 - before pricing**
 ✅ **Unrealized P&L (market-based) deferred to US6 - with pricing**
+✅ **Option price basis conversion (T022b-T022c) added to US1** (value delivery audit fix)
+✅ **Task ID collision resolved: T117-T118 remain in US6, removed from US7** (value delivery audit fix)
 
 ### Just-in-Time Delivery Compliance
 
 ✅ Foundational work deferred to user story where actually needed
-✅ MVP (US1-US3) delivers value with 66 tasks (vs 88 in original plan)
-✅ Option utilities (T029-T032) moved to US2 (needed for STO execution)
-✅ FIFO extensions (T033-T036) moved to US2 (needed for realized P&L)
-✅ Realized P&L calculator (T055-T056) in US3 (needed for closing)
-✅ Unrealized P&L calculator (T097-T098) deferred to US6 (needs pricing)
-✅ Assignment handlers (T075-T078) moved to US5 (needed for assignment)
-✅ Option value calculators (T093-T096) deferred to US6 (needed for pricing display)
+✅ MVP (US1-US3) delivers value with 73 tasks (vs 88 in original plan)
+✅ Option utilities (T033-T036) moved to US2 (needed for STO execution)
+✅ FIFO extensions (T037-T040) moved to US2 (needed for realized P&L)
+✅ Realized P&L calculator (T062-T063) in US3 (needed for closing)
+✅ Unrealized P&L calculator (T108-T109) deferred to US6 (needs pricing)
+✅ Assignment handlers (T082-T085) moved to US5 (needed for assignment)
+✅ Option value calculators (T100-T105) deferred to US6 (needed for pricing display)
+✅ Option price basis conversion (T022b-T022c) in US1 (needed for profit_target/stop_loss display)
+✅ OptionPositionCard (T025-T026) in US1 for immediate visibility (value delivery audit)
+✅ PositionDetail trade display (T059) added to US2 for verification (value delivery audit)
+✅ Database migration (T002) must complete before type extensions (T004) (value delivery audit)
 ✅ Validators moved to user story where first needed
 ✅ Service extensions moved to user story where first needed
 
@@ -1119,31 +1173,51 @@ When implementing a (IMPL) task:
 
 | Original Task | Moved To | Rationale |
 |---------------|----------|-----------|
-| T009-T012 (OCC utils) | US2 (T029-T032) | Needed when recording STO trades |
-| T013-T016 (Option value calc) | US6 (T093-T096) | Needed for intrinsic/extrinsic display |
-| T017-T020 (FIFO extensions) | US2 (T033-T036) | Needed for realized P&L in US3 |
-| T021-T024 (Assignment handlers) | US5 (T075-T078) | Needed for assignment flow |
-| T025-T026 (Unrealized P&L) | US6 (T097-T098) | Requires market pricing |
-| T027-T028 (Realized P&L) | US3 (T055-T056) | Needed for closing positions |
+| T009-T012 (OCC utils) | US2 (T031-T034) | Needed when recording STO trades |
+| T013-T016 (Option value calc) | US6 (T096-T099) | Needed for intrinsic/extrinsic display |
+| T017-T020 (FIFO extensions) | US2 (T035-T038) | Needed for realized P&L in US3 |
+| T021-T024 (Assignment handlers) | US5 (T078-T081) | Needed for assignment flow |
+| T025-T026 (Unrealized P&L) | US6 (T103-T104) | Requires market pricing |
+| T027-T028 (Realized P&L) | US3 (T058-T059) | Needed for closing positions |
 | T029-T034 (Validators) | US1-US3 | Moved to where first needed |
 | T035-T050 (Service extensions) | US1-US6 | Moved to where first needed |
+
+### Value Delivery Audit Adjustments (Dec 2025)
+
+| Original Task | Moved To | Rationale |
+|---------------|----------|-----------|
+| N/A | US1 (T022b-T022c - NEW) | Option positions need price basis conversion for profit_target/stop_loss display |
+| T117-T118 (OptionPositionCard) | US1 (T025-T026) | Users must see option details immediately after creating position |
+| N/A | US2 (T059 - NEW) | PositionDetail must display option trade fields for verification |
+| T117-T118 (duplicate) | US6 (T117-T118 remain) | Task ID collision resolved - unrealized P&L stays in US6 |
+| N/A | Dependency note added | T002 must complete before T004 (DB migration before type extensions) |
 
 ### Task Count Reduction
 
 | Phase | Original | Reorganized | Reduction |
 |-------|----------|-------------|-----------|
 | Setup/Foundation | 50 tasks | 8 tasks | -42 tasks (84% reduction) |
-| US1-US3 (MVP) | 38 tasks | 52 tasks | +14 tasks |
-| **MVP Total** | **88 tasks** | **66 tasks** | **-22 tasks (25% faster to value)** |
+| US1-US3 (MVP) | 38 tasks | 73 tasks | +35 tasks (includes new price basis conversion) |
+| **MVP Total** | **88 tasks** | **73 tasks** | **-15 tasks (17% faster to value)** |
+
+### Value Delivery Audit Improvements (Dec 2025)
+
+| Issue | Resolution |
+|-------|------------|
+| Missing risk-reward calculation for options | Added T022b-T022c (option price basis conversion) to US1 |
+| Task ID collision (T117-T118 used twice) | Resolved - T117-T118 remain in US6 for unrealized P&L |
+| Users can't verify position creation | OptionPositionCard (T025-T026) moved to US1 |
+| Users can't see option trade details | PositionDetail display (T059) added to US2 |
+| Database migration timing | Added dependency note: T002 must complete before T004 |
 
 ---
 
 ## Next Steps
 
-1. **Start with Phase 1 (Setup)** - Database migration and type extensions with tests
-2. **Continue to US1** - Create Short Put position plan (brings its own validator + service extension)
-3. **Continue to US2** - Execute STO trade (brings OCC utils, FIFO, trade validator, service extension)
-4. **Continue to US3** - Close via BTC (brings realized P&L calculator, closing validator)
+1. **Start with Phase 1 (Setup)** - Database migration (T002) must complete before type extensions (T004)
+2. **Continue to US1** - Create Short Put position plan with price basis conversion (T009-T030)
+3. **Continue to US2** - Execute STO trade with option trade display (T031-T059)
+4. **Continue to US3** - Close via BTC with FIFO-based realized P&L (T060-T073)
 5. **Run full test suite** after each phase
 6. **Verify backward compatibility** with existing Long Stock positions
 
