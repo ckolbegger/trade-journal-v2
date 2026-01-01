@@ -107,6 +107,10 @@
   - Step 1 - Write unit tests for assignment creation and journal type in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/__tests__/TradeService.test.ts` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/types/__tests__/journal.test.ts`
   - Step 2 - Implement assignment modal + service flow in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/AssignmentModal.tsx`, `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/TradeService.ts`, `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/types/journal.ts`
   - Step 3 - Add integration test for assignment flow in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/short-put-assignment.test.tsx`
+- [ ] T021 [US5]
+  - Step 1 - Write unit tests for assignment CTA rendering and modal open/close in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/pages/PositionDetail.test.tsx`
+  - Step 2 - Add assignment CTA and modal wiring in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/pages/PositionDetail.tsx` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/AssignmentModal.tsx`
+  - Step 3 - Update integration flow to cover CTA navigation in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/short-put-assignment.test.tsx`
 
 ---
 
@@ -116,23 +120,23 @@
 
 **Independent Test**: Can be tested by entering both stock and option prices for an open Short Put and verifying intrinsic/extrinsic values are calculated and displayed.
 
-- [ ] T014 [US6]
+- [ ] T022 [US6]
   - Step 1 - Write unit tests for current price entry behavior in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/__tests__/PriceService.test.ts`
   - Step 2 - Implement fixtures/helpers in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/test-utils.ts`
   - Step 3 - Add a minimal integration test for price entry flow in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/price-entry-smoke.test.tsx`
-- [ ] T015 [US6]
+- [ ] T023 [US6]
   - Step 1 - Write unit tests for intrinsic/extrinsic helpers in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/__tests__/optionPricing.test.ts`
   - Step 2 - Implement helpers in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/utils/optionPricing.ts`
   - Step 3 - Add integration check in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/option-pricing.integration.test.tsx`
-- [ ] T016 [US6]
+- [ ] T024 [US6]
   - Step 1 - Write unit tests for new price types in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/types/__tests__/priceHistory.test.ts`
   - Step 2 - Implement type updates in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/types/priceHistory.ts`
   - Step 3 - Add integration coverage for type usage in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/types.integration.test.tsx`
-- [ ] T017 [US6]
+- [ ] T025 [US6]
   - Step 1 - Write unit tests for price validation rules in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/__tests__/PriceValidator.test.ts`
   - Step 2 - Implement validation updates in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/validators/PriceValidator.ts`
   - Step 3 - Add integration validation coverage in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/validation.integration.test.tsx`
-- [ ] T018 [US6]
+- [ ] T026 [US6]
   - Step 1 - Write unit tests for instrument_id price reuse and staleness in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/__tests__/PriceService.test.ts`
   - Step 2 - Implement PriceService + UI updates in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/PriceService.ts`, `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/PriceUpdateCard.tsx`, `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/PriceConfirmationDialog.tsx`, `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/pages/PositionDetail.tsx`
   - Step 3 - Add integration test for price update flow in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/short-put-price-update.test.tsx`
@@ -145,7 +149,7 @@
 
 **Independent Test**: Can be tested by creating Short Put positions and verifying they display correctly on the dashboard with strategy badge and option details.
 
-- [ ] T019 [US7]
+- [ ] T027 [US7]
   - Step 1 - Write unit tests for dashboard card rendering in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/__tests__/PositionCard.test.tsx`
   - Step 2 - Implement card + dashboard updates in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/PositionCard.tsx` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/Dashboard.tsx`
   - Step 3 - Add integration test for dashboard display in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/short-put-dashboard-display.test.tsx`
@@ -156,7 +160,7 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T020
+- [ ] T028
   - Step 1 - Write unit tests for any new documentation helpers (if added) in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/__tests__/docs.test.ts`
   - Step 2 - Update docs in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/README-frontend.md` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/specs/002-short-put-strategy/quickstart.md`
   - Step 3 - Add integration checklist verification in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/docs-quickstart.integration.test.tsx`

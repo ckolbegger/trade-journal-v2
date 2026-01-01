@@ -107,12 +107,13 @@ A trader has an open short put position that goes in-the-money at expiration. Th
 
 **Acceptance Scenarios**:
 
-1. **Given** a trader has a short put position (strike $100, sold for $3.00), **When** the option is assigned, **Then** the system adds a BTC trade at $0.00, closes the option position, and guides creation of a new stock position
-2. **Given** assignment is recorded, **When** the trader views the assignment modal, **Then** they see displayed for reference (not editable): premium received from put and effective cost basis per share ($97.00 = $100 - $3)
-3. **Given** assignment is recorded, **When** the new stock position is created, **Then** the quantity reflects the contract multiplier (100 shares per contract) and cost basis = strike price, with premium received stored as cost basis adjustment
-4. **Given** partial assignment (2 of 5 contracts), **When** assignment completes, **Then** the Short Put position remains "open" with 3 contracts, and stock position is created for 200 shares only
-5. **Given** a trader completes the assignment flow, **When** they are prompted for a journal entry, **Then** they see assignment-specific prompts: "What happened that led to assignment?", "How do you feel about now owning this stock?", "What's your plan for the stock position?"
-6. **Given** assignment occurs, **When** the trader views their positions, **Then** they see the original short put position marked closed (or reduced) and a new stock position open with the acquired shares
+1. **Given** a trader has an open short put position and the option is eligible for assignment, **When** they select "Record Assignment" from the Position Detail, **Then** the assignment modal opens
+2. **Given** a trader has a short put position (strike $100, sold for $3.00), **When** the option is assigned, **Then** the system adds a BTC trade at $0.00, closes the option position, and guides creation of a new stock position
+3. **Given** assignment is recorded, **When** the trader views the assignment modal, **Then** they see displayed for reference (not editable): premium received from put and effective cost basis per share ($97.00 = $100 - $3)
+4. **Given** assignment is recorded, **When** the new stock position is created, **Then** the quantity reflects the contract multiplier (100 shares per contract) and cost basis = strike price, with premium received stored as cost basis adjustment
+5. **Given** partial assignment (2 of 5 contracts), **When** assignment completes, **Then** the Short Put position remains "open" with 3 contracts, and stock position is created for 200 shares only
+6. **Given** a trader completes the assignment flow, **When** they are prompted for a journal entry, **Then** they see assignment-specific prompts: "What happened that led to assignment?", "How do you feel about now owning this stock?", "What's your plan for the stock position?"
+7. **Given** assignment occurs, **When** the trader views their positions, **Then** they see the original short put position marked closed (or reduced) and a new stock position open with the acquired shares
 
 ---
 
