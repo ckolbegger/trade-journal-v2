@@ -26,7 +26,7 @@
 
 **Purpose**: Extend existing project with essential type definitions needed for US1
 
-- [ ] T001 Extend Position interface with option fields in src/lib/position.ts (strategy_type, trade_kind, option_type, strike_price, expiration_date, premium_per_contract, profit_target_basis, stop_loss_basis)
+- [x] T001 Extend Position interface with option fields in src/lib/position.ts (strategy_type, trade_kind, option_type, strike_price, expiration_date, premium_per_contract, profit_target_basis, stop_loss_basis)
   - Tests: type compiles with all new fields, optional fields accept undefined, existing positions remain valid
 - [ ] T002 Extend Trade interface with option fields in src/lib/position.ts (action, occ_symbol, option_type, strike_price, expiration_date, contract_quantity, underlying_price_at_trade, created_stock_position_id, cost_basis_adjustment)
   - Tests: type compiles with all new fields, optional fields accept undefined, existing trades remain valid

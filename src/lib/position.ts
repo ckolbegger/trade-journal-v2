@@ -109,11 +109,18 @@ export function validateExitTrade(
   }
 }
 
+// Type Definitions for Strategy and Trade Classification
+export type StrategyType = 'Long Stock' | 'Short Put'
+export type TradeKind = 'stock' | 'option'
+export type OptionType = 'call' | 'put'
+export type PriceBasis = 'stock' | 'option'
+
 // Phase 1A Position Interface - Core trade planning entity
 export interface Position {
   id: string
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: StrategyType
+  trade_kind?: TradeKind
   target_entry_price: number
   target_quantity: number
   profit_target: number
@@ -123,6 +130,14 @@ export interface Position {
   status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
   trades: Trade[] // New field for embedded trades (future-proof array)
+
+  // Option-specific fields (optional, only for option strategies)
+  option_type?: OptionType
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number
+  profit_target_basis?: PriceBasis
+  stop_loss_basis?: PriceBasis
 }
 
 // Position Service - IndexedDB CRUD operations
