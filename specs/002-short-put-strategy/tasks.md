@@ -38,11 +38,17 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 1: Setup & Infrastructure (8 tasks)
+## User Story 1 - Create Short Put Position Plan (P1) - 30 tasks
+
+**Goal**: Trader can create a planned Short Put position with option-specific fields
+
+**Independent Test**: Create a Short Put position plan and verify it appears in position list with "planned" status
+
+### Phase 1A: Setup & Infrastructure (8 tasks)
 
 **Goal**: Establish minimal foundation for option strategy support
 
-### Database Migration
+#### Database Migration
 
 - [ ] T001 (TEST) Write comprehensive test suite for database v3→v4 migration covering:
     • Database version increments from 3 to 4
@@ -56,7 +62,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     Run tests to verify all migration scenarios pass
     **CRITICAL DEPENDENCY**: Must complete before T004 type extensions - IndexedDB won't store new option fields until migration runs
 
-### Type Extensions - With Tests
+#### Type Extensions - With Tests
 
 - [ ] T003 (TEST) Write comprehensive type verification tests for Position interface covering:
     • Position interface extends with option fields (option_type, strike_price, expiration_date, premium_per_contract)
@@ -88,15 +94,11 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 2: User Story 1 - Create Short Put Position Plan (P1) - 18 tasks
-
-**Goal**: Trader can create a planned Short Put position with option-specific fields
-
-**Independent Test**: Create a Short Put position plan and verify it appears in position list with "planned" status
+### Phase 1B: Core User Story 1 Tasks (22 tasks)
 
 **Foundational for this story**: PositionService extension for option strategy creation
 
-### Service Extension
+#### Service Extension
 
 - [ ] T009 [US1] (TEST) Write comprehensive test suite for createWithOptionStrategy() covering:
     • Creates Short Put position with all option fields saved correctly
@@ -108,7 +110,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/services/__tests__/PositionService-options.test.ts`
 - [ ] T010 [US1] (IMPL) Implement createWithOptionStrategy() in `src/services/PositionService.ts`
 
-### Position Validator
+#### Position Validator
 
 - [ ] T011 [US1] (TEST) Write comprehensive test suite for validateOptionPosition() covering:
     • Valid Short Put position: All required option fields present → passes
@@ -123,7 +125,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/domain/validators/__tests__/OptionValidators.test.ts`
 - [ ] T012 [US1] (IMPL) Implement validateOptionPosition() in `src/domain/validators/PositionValidator.ts`
 
-### Strategy Selector Component
+#### Strategy Selector Component
 
 - [ ] T013 [US1] (TEST) Write comprehensive test suite for strategy selector dropdown covering:
     • Dropdown renders with all strategy options ('Long Stock', 'Short Put')
@@ -135,7 +137,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/__tests__/PositionPlanForm-strategy.test.tsx`
 - [ ] T014 [US1] (IMPL) Add strategy selector dropdown to `src/components/forms/PositionPlanForm.tsx`
 
-### Strike Price Input Component
+#### Strike Price Input Component
 
 - [ ] T015 [US1] (TEST) Write comprehensive test suite for StrikePriceInput component covering:
     • Component renders with label "Strike Price"
@@ -149,7 +151,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/strategy/__tests__/StrikePriceInput.test.tsx`
 - [ ] T016 [US1] (IMPL) Create StrikePriceInput component in `src/components/forms/strategy/StrikePriceInput.tsx`
 
-### Expiration Date Picker Component
+#### Expiration Date Picker Component
 
 - [ ] T017 [US1] (TEST) Write comprehensive test suite for ExpirationDatePicker component covering:
     • Component renders with label "Expiration Date"
@@ -163,7 +165,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/strategy/__tests__/ExpirationDatePicker.test.tsx`
 - [ ] T018 [US1] (IMPL) Create ExpirationDatePicker component in `src/components/forms/strategy/ExpirationDatePicker.tsx`
 
-### Price Basis Selector Component
+#### Price Basis Selector Component
 
 - [ ] T019 [US1] (TEST) Write comprehensive test suite for PriceBasisSelector component covering:
     • Component renders with label "Price Target Basis" / "Stop Loss Basis"
@@ -176,7 +178,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/strategy/__tests__/PriceBasisSelector.test.tsx`
 - [ ] T020 [US1] (IMPL) Create PriceBasisSelector component in `src/components/forms/strategy/PriceBasisSelector.tsx`
 
-### Option Fields Section
+#### Option Fields Section
 
 - [ ] T021 [US1] (TEST) Write comprehensive test suite for option fields conditional rendering covering:
     • Option fields hidden when strategy_type='Long Stock'
@@ -190,7 +192,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/__tests__/PositionPlanForm-option-fields.test.tsx`
 - [ ] T022 [US1] (IMPL) Add option fields section to PositionPlanForm with conditional rendering
 
-### Option Price Basis Conversion (NEW - Value Delivery Audit Fix)
+#### Option Price Basis Conversion (NEW - Value Delivery Audit Fix)
 
 - [ ] T022b [US1] (TEST) Write comprehensive test suite for option price basis conversion covering:
     • profit_target_basis='option_price' converts to dollar value using strike_price - premium
@@ -205,7 +207,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Used by PositionCard to display profit_target and stop_loss for option positions
     File: `src/domain/calculators/OptionPriceBasisCalculator.ts`
 
-### Option Position Display (MOVED FROM US7 - Value Delivery Audit Fix)
+#### Option Position Display (MOVED FROM US7 - Value Delivery Audit Fix)
 
 - [ ] T023 [US1] (TEST) Write comprehensive test suite for OptionPositionCard covering:
     • Card displays underlying symbol
@@ -220,7 +222,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Shows strike price, expiration, premium when strategy_type='Short Put'
     • Can be conditional rendering in existing PositionCard or separate OptionPositionCard
 
-### Field Validation
+#### Field Validation
 
 - [ ] T025 [US1] (TEST) Write comprehensive test suite for inline validation covering:
     • Strike price validation error displays inline when value <= 0
@@ -235,7 +237,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/components/forms/__tests__/PositionPlanForm-validation.test.tsx`
 - [ ] T026 [US1] (IMPL) Add option field validation and inline error display to PositionPlanForm
 
-### Integration Tests (Complete User Journeys)
+#### Integration Tests (Complete User Journeys)
 
 - [ ] T027 [US1] (TEST) Write comprehensive integration test suite for creating Short Put position covering:
     • Navigate to position creation, select Short Put strategy
@@ -262,7 +264,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 3: User Story 2 - Execute Sell-to-Open Trade (P1) - 27 tasks
+## User Story 2 - Execute Sell-to-Open Trade (P1) - 27 tasks
 
 **Goal**: Trader can execute a sell-to-open trade against a Short Put position plan
 
@@ -440,7 +442,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 4: User Story 3 - Close Position via Buy-to-Close (P1) - 16 tasks
+## User Story 3 - Close Position via Buy-to-Close (P1) - 16 tasks
 
 **Goal**: Trader can close Short Put position by buying to close
 
@@ -521,7 +523,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 5: User Story 4 - Record Expiration Worthless (P2) - 6 tasks
+## User Story 4 - Record Expiration Worthless (P2) - 6 tasks
 
 **Goal**: Trader can record that option expired worthless
 
@@ -579,7 +581,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 6: User Story 5 - Handle Short Put Assignment (P2) - 20 tasks
+## User Story 5 - Handle Short Put Assignment (P2) - 20 tasks
 
 **Goal**: Trader can record option assignment and system creates stock position
 
@@ -701,7 +703,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 7: User Story 6 - Update Prices for Stock and Option (P2) - 20 tasks
+## User Story 6 - Update Prices for Stock and Option (P2) - 20 tasks
 
 **Goal**: Trader can update prices for both stock and option instruments
 
@@ -845,7 +847,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 8: User Story 7 - View Positions on Dashboard (P3) - 6 tasks
+## User Story 7 - View Positions on Dashboard (P3) - 6 tasks
 
 **Goal**: Dashboard displays Short Put positions with option details
 
@@ -896,7 +898,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ---
 
-## Phase 9: Polish & Cross-Cutting Concerns - 14 tasks
+## Polish & Cross-Cutting Concerns - 14 tasks
 
 **Goal**: Complete feature with edge cases, performance, and documentation
 
@@ -985,13 +987,11 @@ This document provides a dependency-ordered task list for implementing Short Put
 ### User Story Completion Order
 
 ```
-Phase 1 (Setup) MUST COMPLETE FIRST (T001-T008)
-    ↓
 ┌─────────────┬─────────────┬─────────────┐
 │   US1 (P1)  │   US2 (P1)  │   US3 (P1)  │  ← Core lifecycle
-│  Create     │  Execute    │   Close     │
-│  Plan       │  STO        │   (BTC)     │
-│  T009-T030  │  T031-T057  │  T060-T071  │
+│  Setup +    │  Execute    │   Close     │
+│  Create     │  STO        │   (BTC)     │
+│  T001-T030  │  T031-T057  │  T060-T071  │
 └─────────────┴─────────────┴─────────────┘
     ↓              ↓              ↓
 ┌─────────────┬─────────────┬─────────────┐
@@ -1007,7 +1007,9 @@ Phase 1 (Setup) MUST COMPLETE FIRST (T001-T008)
 ```
 
 **Critical Path** (for MVP - US1/US2/US3 only):
-Phase 1 → US1 (T009-T030) → US2 (T031-T057) → US3 (T060-T071) → Polish (T127-T142)
+US1 (T001-T030) → US2 (T031-T057) → US3 (T060-T071) → Polish (T125-T142)
+
+**Note**: US1 Phase 1A (Setup, T001-T008) must complete before US1 Phase 1B (T009-T030) can begin
 
 **Value Delivery Audit Changes**:
 - T022b-T022c (Option price basis conversion) added to US1 - fixes profit_target/stop_loss display for options
@@ -1030,8 +1032,7 @@ Phase 1 → US1 (T009-T030) → US2 (T031-T057) → US3 (T060-T071) → Polish (
 **Recommended MVP** (Minimum Viable Product): User Stories 1-3 (P1 only)
 
 **MVP Tasks**: T001-T073 (73 tasks total)
-- Phase 1: Setup (8 tasks)
-- US1: Create Short Put Plan (24 tasks) - includes option price basis conversion (T022b-T022c)
+- US1: Setup + Create Short Put Plan (30 tasks) - includes database migration, type extensions, and all US1 tasks
 - US2: Execute STO Trade (27 tasks)
 - US3: Close via BTC (12 tasks)
 
@@ -1062,16 +1063,15 @@ This provides complete core trading workflow:
 
 | Phase | Test Suites | Impl Tasks | Total |
 |-------|-------------|------------|-------|
-| Phase 1: Setup | 4 | 4 | 8 |
-| Phase 2: US1 (Create Plan) | 12 | 12 | 24 |
-| Phase 3: US2 (Execute STO) | 14 | 13 | 27 |
-| Phase 4: US3 (Close BTC) | 6 | 6 | 12 |
-| Phase 5: US4 (Expire) | 4 | 4 | 8 |
-| Phase 6: US5 (Assign) | 10 | 10 | 20 |
-| Phase 7: US6 (Pricing) | 12 | 12 | 24 |
-| Phase 8: US7 (Dashboard) | 3 | 3 | 6 |
-| Phase 9: Polish | 7 | 7 | 14 |
-| **TOTAL** | **72** | **71** | **143** |
+| US1: Setup + Create Plan | 15 | 15 | 30 |
+| US2: Execute STO | 14 | 13 | 27 |
+| US3: Close BTC | 6 | 6 | 12 |
+| US4: Expire | 4 | 4 | 8 |
+| US5: Assign | 10 | 10 | 20 |
+| US6: Pricing | 12 | 12 | 24 |
+| US7: Dashboard | 3 | 3 | 6 |
+| Polish | 7 | 7 | 14 |
+| **TOTAL** | **71** | **70** | **141** |
 
 ### Coverage by Category
 
@@ -1214,8 +1214,8 @@ When implementing a (IMPL) task:
 
 ## Next Steps
 
-1. **Start with Phase 1 (Setup)** - Database migration (T002) must complete before type extensions (T004)
-2. **Continue to US1** - Create Short Put position plan with price basis conversion (T009-T030)
+1. **Start with US1 Phase 1A (Setup)** - Database migration (T002) must complete before type extensions (T004)
+2. **Continue to US1 Phase 1B** - Create Short Put position plan with price basis conversion (T009-T030)
 3. **Continue to US2** - Execute STO trade with option trade display (T031-T059)
 4. **Continue to US3** - Close via BTC with FIFO-based realized P&L (T060-T073)
 5. **Run full test suite** after each phase
