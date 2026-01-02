@@ -40,7 +40,7 @@
   - Test: Required option fields appear (strike, expiration, premium)
   - Test: Profit target/stop loss basis selectors render
   - Test: Premium × 100 multiplier displayed
-- [ ] T002 Create unit tests for StrikePricePicker component in src/__tests__/components/strike-picker.test.tsx
+- [x] T002 Create unit tests for StrikePricePicker component in src/__tests__/components/strike-picker.test.tsx
   - Mock: none (UI component tests)
   - Test: Renders input field
   - Test: Accepts valid numeric input
@@ -50,8 +50,8 @@
   - Test: Strike ≥ 0 validation
   - Test: Max 4 decimal places enforcement
   - Test: Clears on reset
-- [ ] T003 Create unit tests for ExpirationDatePicker in src/__tests__/components/expiration-picker.test.tsx
-  - Mock: date-fns for date comparison
+- [x] T003 Create unit tests for ExpirationDatePicker in src/__tests__/components/expiration-picker.test.tsx
+  - Mock: date-fns (via vi.setSystemTime for date comparison)
   - Test: Renders date input
   - Test: Past date selected → shows error
   - Test: Future date selected → no error
@@ -60,7 +60,10 @@
   - Test: minDate enforced
   - Test: maxDate enforced
   - Test: Timezone handling
-- [ ] T004 Create unit tests for PositionCard component in src/__tests__/components/position-card.test.tsx
+  - Test: Reset functionality
+  - Test: Disabled state
+  - Test: Error display and clearing
+- [x] T004 Create unit tests for PositionCard component in src/__tests__/components/position-card.test.tsx
   - Mock: usePositionStore
   - Test: Renders position with basic info (symbol, status, P&L)
   - Test: Displays "Short Put" strategy badge
@@ -71,10 +74,11 @@
   - Test: Click navigates to position detail
   - Test: ITM/OTM indication based on current price
   - Test: Contract count × 100 displayed
+  - Result: 17 tests (7 fail as expected, 10 pass)
 
 ### Step 2: Implementation (GREEN)
 
-- [ ] T005 Extend Position type with option fields in src/types/journal.ts
+- [x] T005 Extend Position type with option fields in src/lib/position.ts
   - Add strategy_type: 'Long Stock' | 'Short Put'
   - Add trade_kind: 'stock' | 'option'
   - Add option_type?: 'call' | 'put'

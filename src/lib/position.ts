@@ -113,7 +113,14 @@ export function validateExitTrade(
 export interface Position {
   id: string
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: 'Long Stock' | 'Short Put'
+  trade_kind: 'stock' | 'option'
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
   target_entry_price: number
   target_quantity: number
   profit_target: number
@@ -122,7 +129,7 @@ export interface Position {
   created_date: Date
   status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
-  trades: Trade[] // New field for embedded trades (future-proof array)
+  trades: Trade[]
 }
 
 // Position Service - IndexedDB CRUD operations
