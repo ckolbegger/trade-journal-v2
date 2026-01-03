@@ -238,6 +238,11 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
     expect(journals[0].position_id).toBe(mockPosition.id)
   })
 
+  // SKIPPED: Phase 2 feature - trade selection dropdown in journal modal.
+  // Current implementation (Phase 1A) only supports single-trade positions where
+  // journal-to-trade linkage is implicit. This feature will be implemented when
+  // the app supports multiple trades per position, allowing users to select which
+  // trade a journal entry should be associated with.
   it.skip('should allow changing trade selection in journal modal (Phase 2 - multiple trades)', async () => {
     // Setup: Create position with one existing trade
     const positionWithTrade: Position = {

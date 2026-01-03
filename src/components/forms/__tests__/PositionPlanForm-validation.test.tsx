@@ -326,6 +326,10 @@ describe('PositionCreate - Inline Validation for Option Fields', () => {
     })
   })
 
+  // SKIPPED: Focus-on-first-error feature was removed during T026 implementation due to
+  // timing issues with setTimeout. The feature caused race conditions between validation
+  // and form submission. This test is preserved for potential future re-implementation
+  // with a more reliable approach (e.g., using ref-based focusing).
   describe.skip('Focus on First Invalid Field', () => {
     it('should focus first invalid field on submit attempt', async () => {
       const { strikePriceInput, nextButton } = await setupShortPutForm()
