@@ -348,7 +348,13 @@ export function PositionCreate() {
             <div>
               <StrikePriceInput
                 value={formData.strike_price || 0}
-                onChange={(value) => setFormData(prev => ({ ...prev, strike_price: value }))}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, strike_price: value }))
+                  // Clear error when user updates strike price
+                  if (errors.strike_price) {
+                    setErrors(prev => ({ ...prev, strike_price: undefined }))
+                  }
+                }}
                 error={errors.strike_price}
               />
             </div>
@@ -356,7 +362,13 @@ export function PositionCreate() {
             <div>
               <ExpirationDatePicker
                 value={formData.expiration_date || new Date()}
-                onChange={(value) => setFormData(prev => ({ ...prev, expiration_date: value }))}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, expiration_date: value }))
+                  // Clear error when user updates expiration date
+                  if (errors.expiration_date) {
+                    setErrors(prev => ({ ...prev, expiration_date: undefined }))
+                  }
+                }}
                 error={errors.expiration_date}
               />
             </div>

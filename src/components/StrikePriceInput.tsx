@@ -14,7 +14,9 @@ export function StrikePriceInput({ value, onChange, error }: StrikePriceInputPro
 
   return (
     <div>
-      <label htmlFor="strike-price">Strike Price</label>
+      <label htmlFor="strike-price" className="block text-sm font-medium mb-1.5 text-gray-700">
+        Strike Price *
+      </label>
       <input
         id="strike-price"
         type="number"
@@ -22,8 +24,9 @@ export function StrikePriceInput({ value, onChange, error }: StrikePriceInputPro
         step="0.01"
         value={value}
         onChange={handleChange}
+        className="w-full p-3 border border-gray-300 rounded-md text-base"
       />
-      {error && <div>{error}</div>}
+      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
     </div>
   );
 }

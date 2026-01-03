@@ -37,8 +37,8 @@ describe('PositionCreate - Option Fields', () => {
     expect((strategySelector as HTMLSelectElement).value).toBe('Long Stock')
 
     // Option fields should not be present for Long Stock
-    expect(screen.queryByLabelText('Strike Price')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Expiration Date')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Strike Price/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Expiration Date/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Stock')).not.toBeInTheDocument() // PriceBasisSelector labels
     expect(screen.queryByText('Option')).not.toBeInTheDocument()
 
@@ -47,8 +47,8 @@ describe('PositionCreate - Option Fields', () => {
 
     // Option fields should now be visible
     await waitFor(() => {
-      expect(screen.getByLabelText('Strike Price')).toBeInTheDocument()
-      expect(screen.getByLabelText('Expiration Date')).toBeInTheDocument()
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/Expiration Date/i)).toBeInTheDocument()
       // Should have multiple "Stock" and "Option" labels (one set for profit target, one for stop loss)
       expect(screen.getAllByText('Stock').length).toBeGreaterThan(0)
       expect(screen.getAllByText('Option').length).toBeGreaterThan(0)
@@ -68,8 +68,8 @@ describe('PositionCreate - Option Fields', () => {
     expect((strategySelector as HTMLSelectElement).value).toBe('Long Stock')
 
     // Option fields should not be visible
-    expect(screen.queryByLabelText('Strike Price')).not.toBeInTheDocument()
-    expect(screen.queryByLabelText('Expiration Date')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Strike Price/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/Expiration Date/i)).not.toBeInTheDocument()
     expect(screen.queryByText('Stock')).not.toBeInTheDocument()
     expect(screen.queryByText('Option')).not.toBeInTheDocument()
   })
@@ -136,13 +136,13 @@ describe('PositionCreate - Option Fields', () => {
 
     // Fill in option fields
     await waitFor(() => {
-      expect(screen.getByLabelText('Strike Price')).toBeInTheDocument()
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
     })
 
-    const strikeInput = screen.getByLabelText('Strike Price')
+    const strikeInput = screen.getByLabelText(/Strike Price/i)
     fireEvent.change(strikeInput, { target: { value: '145' } })
 
-    const expirationInput = screen.getByLabelText('Expiration Date')
+    const expirationInput = screen.getByLabelText(/Expiration Date/i)
     const futureDate = new Date()
     futureDate.setDate(futureDate.getDate() + 30)
     const dateString = futureDate.toISOString().split('T')[0]

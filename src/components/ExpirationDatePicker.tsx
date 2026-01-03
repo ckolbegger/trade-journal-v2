@@ -23,15 +23,18 @@ export function ExpirationDatePicker({ value, onChange, error }: ExpirationDateP
 
   return (
     <div>
-      <label htmlFor="expiration-date">Expiration Date</label>
+      <label htmlFor="expiration-date" className="block text-sm font-medium mb-1.5 text-gray-700">
+        Expiration Date *
+      </label>
       <input
         id="expiration-date"
         type="date"
         min={today}
         value={dateString}
         onChange={handleChange}
+        className="w-full p-3 border border-gray-300 rounded-md text-base"
       />
-      {error && <div>{error}</div>}
+      {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
     </div>
   );
 }

@@ -317,4 +317,144 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       })
     })
   })
+
+  describe('T012: Inline Validation Error Display for Option Fields', () => {
+    it('should display strike price validation error inline', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      // Select Short Put strategy to reveal option fields
+      const strategySelect = screen.getByLabelText(/Strategy Type/i)
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      // Fill required fields but leave strike price invalid (0 or negative)
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Leave strike price at 0 or set it to invalid value
+      const strikePriceInput = screen.getByLabelText(/Strike Price/i)
+      fireEvent.change(strikePriceInput, { target: { value: '0' } })
+
+      // Try to proceed
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      // Should display inline error for strike price
+      await waitFor(() => {
+        expect(screen.getByText('Strike price is required')).toBeInTheDocument()
+      })
+    })
+
+    it('should display expiration date validation error inline', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      // Select Short Put strategy
+      const strategySelect = screen.getByLabelText(/Strategy Type/i)
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      // Fill required fields
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Set valid strike price
+      const strikePriceInput = screen.getByLabelText(/Strike Price/i)
+      fireEvent.change(strikePriceInput, { target: { value: '145' } })
+
+      // Clear expiration date (set to empty or invalid)
+      const expirationInput = screen.getByLabelText(/Expiration Date/i)
+      fireEvent.change(expirationInput, { target: { value: '' } })
+
+      // Try to proceed
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      // Should display inline error for expiration date
+      await waitFor(() => {
+        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
+      })
+    })
+
+    it('should display validation errors for all required option fields', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      // Select Short Put strategy
+      const strategySelect = screen.getByLabelText(/Strategy Type/i)
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      // Fill only the stock fields, leave option fields empty/invalid
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Try to proceed without filling option fields
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      // Should display errors for both strike price and expiration date
+      await waitFor(() => {
+        expect(screen.getByText('Strike price is required')).toBeInTheDocument()
+        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
+      })
+    })
+
+    it('should clear errors when fields become valid', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      // Select Short Put strategy
+      const strategySelect = screen.getByLabelText(/Strategy Type/i)
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      // Fill required stock fields
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Try to proceed without option fields - should show errors
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Strike price is required')).toBeInTheDocument()
+        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
+      })
+
+      // Now fix the strike price
+      const strikePriceInput = screen.getByLabelText(/Strike Price/i)
+      fireEvent.change(strikePriceInput, { target: { value: '145' } })
+
+      // Strike price error should clear
+      await waitFor(() => {
+        expect(screen.queryByText('Strike price is required')).not.toBeInTheDocument()
+      })
+
+      // Expiration error should still be present
+      expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
+
+      // Now fix expiration date
+      const tomorrow = new Date()
+      tomorrow.setDate(tomorrow.getDate() + 1)
+      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+
+      const expirationInput = screen.getByLabelText(/Expiration Date/i)
+      fireEvent.change(expirationInput, { target: { value: tomorrowStr } })
+
+      // Expiration error should clear
+      await waitFor(() => {
+        expect(screen.queryByText('Expiration date is required')).not.toBeInTheDocument()
+      })
+    })
+  })
 })
