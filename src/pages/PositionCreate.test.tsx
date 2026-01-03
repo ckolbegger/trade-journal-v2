@@ -324,4 +324,62 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       })
     })
   })
+
+  describe('Short Put Risk Calculations (B009)', () => {
+    it('should calculate Max Risk as (strike - premium) × contracts × 100', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      const strategySelect = screen.getByLabelText(/Strategy Type/i) as HTMLSelectElement
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/Strike Price/i), { target: { value: '200' } })
+      fireEvent.change(screen.getByLabelText(/Expiration Date/i), { target: { value: '2025-03-21' } })
+      fireEvent.change(screen.getByLabelText(/Premium/i), { target: { value: '1.50' } })
+      fireEvent.change(screen.getByLabelText(/Target Underlying Price/i), { target: { value: '195' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '190' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      // Step 1 → Step 2 (Journal for Short Put)
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+      await waitFor(() => expect(screen.getByText('📝 Position Plan')).toBeInTheDocument())
+
+      // Fill Journal, Step 2 → Step 3 (Risk Assessment for Short Put)
+      fireEvent.change(screen.getByLabelText(/Rationale/i), { target: { value: 'Test rationale' } })
+      fireEvent.click(screen.getByText('Next: Risk Assessment'))
+      await waitFor(() => expect(screen.getByText('Risk Assessment')).toBeInTheDocument())
+
+      expect(screen.getByText('19,850.00')).toBeInTheDocument()
+      expect(screen.getByText('150.00')).toBeInTheDocument()
+      expect(screen.getByText('198.50')).toBeInTheDocument()
+    })
+
+    it('should calculate Max Risk correctly for 5 contracts', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      const strategySelect = screen.getByLabelText(/Strategy Type/i) as HTMLSelectElement
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '5' } })
+      fireEvent.change(screen.getByLabelText(/Strike Price/i), { target: { value: '200' } })
+      fireEvent.change(screen.getByLabelText(/Expiration Date/i), { target: { value: '2025-03-21' } })
+      fireEvent.change(screen.getByLabelText(/Premium/i), { target: { value: '1.50' } })
+      fireEvent.change(screen.getByLabelText(/Target Underlying Price/i), { target: { value: '195' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '190' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
+
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+      await waitFor(() => expect(screen.getByText('📝 Position Plan')).toBeInTheDocument())
+
+      fireEvent.change(screen.getByLabelText(/Rationale/i), { target: { value: 'Test rationale' } })
+      fireEvent.click(screen.getByText('Next: Risk Assessment'))
+      await waitFor(() => expect(screen.getByText('Risk Assessment')).toBeInTheDocument())
+
+      expect(screen.getByText('99,250.00')).toBeInTheDocument()
+    })
+  })
 })

@@ -378,7 +378,7 @@ export function PositionCreate() {
           </>
         )}
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-5">
           <div>
             <Label htmlFor="target_entry_price" className="block text-sm font-medium mb-1.5 text-gray-700">
               Target {formData.strategy_type === 'Short Put' ? 'Underlying' : 'Entry'} Price *
@@ -411,61 +411,61 @@ export function PositionCreate() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label htmlFor="profit_target" className="block text-sm font-medium mb-1.5 text-gray-700">
-                  Profit Target ({formData.profit_target_basis === 'stock_price' ? 'Stock' : 'Option'} Price) *
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="profit_target"
-                    type="number"
-                    step="0.01"
-                    value={formData.profit_target}
-                    onChange={(e) => handleInputChange('profit_target', e.target.value)}
-                    placeholder="0.00"
-                    className="flex-1 p-3 border border-gray-300 rounded-md text-base"
-                  />
-                  <select
-                    value={formData.profit_target_basis}
-                    onChange={(e) => handleInputChange('profit_target_basis', e.target.value as BasisType)}
-                    className="w-32 p-3 border border-gray-300 rounded-md text-base bg-white"
-                    aria-label="Reference"
-                  >
-                    <option value="stock_price">Stock</option>
-                    <option value="option_price">Option</option>
-                  </select>
-                </div>
-                {errors.profit_target && <p className="text-red-600 text-xs mt-1">{errors.profit_target}</p>}
+          <div className="space-y-5">
+            <div>
+              <Label htmlFor="profit_target" className="block text-sm font-medium mb-1.5 text-gray-700">
+                Profit Target ({formData.profit_target_basis === 'stock_price' ? 'Stock' : 'Option'} Price) *
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="profit_target"
+                  type="number"
+                  step="0.01"
+                  value={formData.profit_target}
+                  onChange={(e) => handleInputChange('profit_target', e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1 p-3 border border-gray-300 rounded-md text-base"
+                />
+                <select
+                  value={formData.profit_target_basis}
+                  onChange={(e) => handleInputChange('profit_target_basis', e.target.value as BasisType)}
+                  className="w-32 p-3 border border-gray-300 rounded-md text-base bg-white"
+                  aria-label="Reference"
+                >
+                  <option value="stock_price">Stock</option>
+                  <option value="option_price">Option</option>
+                </select>
               </div>
+              {errors.profit_target && <p className="text-red-600 text-xs mt-1">{errors.profit_target}</p>}
+            </div>
 
-              <div>
-                <Label htmlFor="stop_loss" className="block text-sm font-medium mb-1.5 text-gray-700">
-                  Stop Loss ({formData.stop_loss_basis === 'stock_price' ? 'Stock' : 'Option'} Price) *
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="stop_loss"
-                    type="number"
-                    step="0.01"
-                    value={formData.stop_loss}
-                    onChange={(e) => handleInputChange('stop_loss', e.target.value)}
-                    placeholder="0.00"
-                    className="flex-1 p-3 border border-gray-300 rounded-md text-base"
-                  />
-                  <select
-                    value={formData.stop_loss_basis}
-                    onChange={(e) => handleInputChange('stop_loss_basis', e.target.value as BasisType)}
-                    className="w-32 p-3 border border-gray-300 rounded-md text-base bg-white"
-                    aria-label="Reference"
-                  >
-                    <option value="stock_price">Stock</option>
-                    <option value="option_price">Option</option>
-                  </select>
-                </div>
-                {errors.stop_loss && <p className="text-red-600 text-xs mt-1">{errors.stop_loss}</p>}
+            <div>
+              <Label htmlFor="stop_loss" className="block text-sm font-medium mb-1.5 text-gray-700">
+                Stop Loss ({formData.stop_loss_basis === 'stock_price' ? 'Stock' : 'Option'} Price) *
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id="stop_loss"
+                  type="number"
+                  step="0.01"
+                  value={formData.stop_loss}
+                  onChange={(e) => handleInputChange('stop_loss', e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1 p-3 border border-gray-300 rounded-md text-base"
+                />
+                <select
+                  value={formData.stop_loss_basis}
+                  onChange={(e) => handleInputChange('stop_loss_basis', e.target.value as BasisType)}
+                  className="w-32 p-3 border border-gray-300 rounded-md text-base bg-white"
+                  aria-label="Reference"
+                >
+                  <option value="stock_price">Stock</option>
+                  <option value="option_price">Option</option>
+                </select>
               </div>
-        </div>
+              {errors.stop_loss && <p className="text-red-600 text-xs mt-1">{errors.stop_loss}</p>}
+            </div>
+          </div>
 
         <div>
           <Label htmlFor="position_thesis" className="block text-sm font-medium mb-1.5 text-gray-700">
