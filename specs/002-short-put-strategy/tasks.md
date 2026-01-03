@@ -59,7 +59,7 @@
 
 - [x] T006 [P] [US1] Create StrategySelector component with comprehensive unit tests in src/components/StrategySelector.tsx
   - Tests: renders options, selection changes value, default to Long Stock, keyboard accessible
-- [ ] T007 [P] [US1] Create StrikePriceInput component with comprehensive unit tests in src/components/StrikePriceInput.tsx
+- [x] T007 [P] [US1] Create StrikePriceInput component with comprehensive unit tests in src/components/StrikePriceInput.tsx
   - Tests: happy path, rejects negative, rejects non-numeric, accepts decimals, min value 0.01
 - [ ] T008 [P] [US1] Create ExpirationDatePicker component with comprehensive unit tests in src/components/ExpirationDatePicker.tsx
   - Tests: happy path, rejects past dates, valid date format, handles timezone
