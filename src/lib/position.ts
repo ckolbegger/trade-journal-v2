@@ -49,6 +49,64 @@ export interface Trade {
    * Links to PriceHistory.underlying for price lookups and P&L calculations.
    */
   underlying: string
+
+  // Option-specific fields (optional, only for option trades)
+  /**
+   * Option action: STO (Sell to Open), BTC (Buy to Close)
+   * Only populated for option trades
+   */
+  action?: 'STO' | 'BTC'
+
+  /**
+   * OCC symbol for the option contract
+   * Format: SYMBOL YYMMDDX00000000 (e.g., "AAPL  250117P00145000")
+   * Only populated for option trades
+   */
+  occ_symbol?: string
+
+  /**
+   * Type of option: call or put
+   * Only populated for option trades
+   */
+  option_type?: OptionType
+
+  /**
+   * Strike price of the option contract
+   * Only populated for option trades
+   */
+  strike_price?: number
+
+  /**
+   * Expiration date of the option contract
+   * Only populated for option trades
+   */
+  expiration_date?: Date
+
+  /**
+   * Number of option contracts (1 contract = 100 shares)
+   * Only populated for option trades
+   */
+  contract_quantity?: number
+
+  /**
+   * Price of the underlying stock at the time of the option trade
+   * Used for intrinsic/extrinsic value calculations
+   * Only populated for option trades
+   */
+  underlying_price_at_trade?: number
+
+  /**
+   * ID of stock position created by option assignment
+   * Only populated for assignment-related trades
+   */
+  created_stock_position_id?: string
+
+  /**
+   * Adjustment to cost basis for assignment scenarios
+   * Premium received/paid affects the cost basis of assigned stock
+   * Only populated for assignment-related trades
+   */
+  cost_basis_adjustment?: number
 }
 
 // Validation Error - Domain-specific errors for position/trade operations
