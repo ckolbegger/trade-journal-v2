@@ -139,7 +139,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Strike Price Input Component
 
-- [ ] T015 [US1] (TEST) Write comprehensive test suite for StrikePriceInput component covering:
+- [x] T015 [US1] (TEST) Write comprehensive test suite for StrikePriceInput component covering:
     • Component renders with label "Strike Price"
     • Input type is "number" with step="0.01"
     • Displays $ prefix before input field
