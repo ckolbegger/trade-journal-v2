@@ -39,10 +39,9 @@ export const fillPositionForm = async (data: PositionFormData = {}) => {
     target: { value: positionThesis }
   })
 
-  // Verify strategy type is locked to "Long Stock"
-  const strategyInput = screen.getByLabelText(/Strategy Type/i)
-  expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+  // Verify strategy type selector exists with "Long Stock" as default
+  const strategySelect = screen.getByRole('combobox', { name: /Strategy Type/i })
+  expect(strategySelect).toHaveValue('Long Stock')
 }
 
 /**

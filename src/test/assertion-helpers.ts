@@ -209,7 +209,14 @@ export const assertFormFieldDisabled = (label: string | RegExp) => {
 }
 
 export const assertStrategyTypeLocked = () => {
-  const strategyInput = screen.getByLabelText(/Strategy Type/i)
-  expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+  // Updated to verify strategy selector has both options (Long Stock and Short Put)
+  const strategySelect = screen.getByRole('combobox', { name: /Strategy Type/i })
+  expect(strategySelect).toBeInTheDocument()
+
+  // Check that both options exist
+  expect(screen.getByText('Long Stock')).toBeInTheDocument()
+  expect(screen.getByText('Short Put')).toBeInTheDocument()
+
+  // Default is Long Stock
+  expect(strategySelect).toHaveValue('Long Stock')
 }

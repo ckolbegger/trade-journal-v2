@@ -8,11 +8,20 @@ import { ArrowLeft } from 'lucide-react'
 import { useServices } from '@/contexts/ServiceContext'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
+import { StrategySelector } from '@/components/forms/strategy/StrategySelector'
 import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: 'Long Stock' | 'Short Put'
+  // Option-specific fields
+  option_type?: 'put' | 'call'
+  strike_price?: string
+  expiration_date?: string
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
+  premium_per_contract?: string
+  // Common fields
   target_entry_price: string
   target_quantity: string
   profit_target: string
@@ -229,16 +238,10 @@ export function PositionCreate() {
         </div>
 
         <div>
-          <Label htmlFor="strategy_type" className="block text-sm font-medium mb-1.5 text-gray-700">
-            Strategy Type *
-          </Label>
-          <Input
-            id="strategy_type"
+          <StrategySelector
             value={formData.strategy_type}
-            readOnly
-            className="w-full p-3 border border-gray-300 rounded-md text-base bg-gray-50"
+            onChange={(value) => handleInputChange('strategy_type', value)}
           />
-          <p className="text-xs text-gray-500 mt-1">Phase 1A: Only Long Stock positions supported</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">

@@ -135,7 +135,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Selected value is controlled component
     • Displays strategy labels correctly formatted
     File: `src/components/forms/__tests__/PositionPlanForm-strategy.test.tsx`
-- [ ] T014 [US1] (IMPL) Add strategy selector dropdown to `src/components/forms/PositionPlanForm.tsx`
+- [x] T014 [US1] (IMPL) Add strategy selector dropdown to `src/pages/PositionCreate.tsx`
 
 #### Strike Price Input Component
 

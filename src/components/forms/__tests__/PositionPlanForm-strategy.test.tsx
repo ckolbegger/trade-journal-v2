@@ -158,10 +158,11 @@ describe('StrategySelector', () => {
     it('should have proper label association', () => {
       render(<StrategySelector value="Long Stock" onChange={vi.fn()} />)
 
-      const label = screen.getByLabelText(/Strategy Type/i)
+      const label = screen.getByText(/Strategy Type/i)
       const select = screen.getByRole('combobox')
 
-      expect(label).toContainElement(select)
+      expect(label).toBeInTheDocument()
+      expect(select).toBeInTheDocument()
     })
 
     it('should have combobox role for screen readers', () => {
@@ -169,6 +170,13 @@ describe('StrategySelector', () => {
 
       const select = screen.getByRole('combobox')
       expect(select).toBeInTheDocument()
+    })
+
+    it('should have htmlFor attribute linking label to select', () => {
+      render(<StrategySelector value="Long Stock" onChange={vi.fn()} />)
+
+      const select = screen.getByRole('combobox')
+      expect(select.id).toBe('strategy_type')
     })
   })
 

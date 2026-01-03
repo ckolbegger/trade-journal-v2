@@ -62,7 +62,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertFormFieldExists(/Position Thesis/i)
     })
 
-    it('should only show "Long Stock" as strategy type option in Phase 1A', async () => {
+    it('should show both "Long Stock" and "Short Put" as strategy type options', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 
       assertStrategyTypeLocked()
