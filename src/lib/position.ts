@@ -33,7 +33,9 @@ export function calculateOpenQuantity(trades: Trade[]): number {
 export interface Trade {
   id: string
   position_id: string
+  trade_kind?: 'stock' | 'option'
   trade_type: 'buy' | 'sell'
+  action?: 'STO' | 'BTC' | 'BTO' | 'STC'
   quantity: number
   price: number
   timestamp: Date
@@ -49,6 +51,14 @@ export interface Trade {
    * Links to PriceHistory.underlying for price lookups and P&L calculations.
    */
   underlying: string
+  occ_symbol?: string
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  contract_quantity?: number
+  underlying_price_at_trade?: number
+  created_stock_position_id?: string
+  cost_basis_adjustment?: number
 }
 
 // Validation Error - Domain-specific errors for position/trade operations
@@ -113,13 +123,20 @@ export function validateExitTrade(
 export interface Position {
   id: string
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: 'Long Stock' | 'Short Put'
+  trade_kind?: 'stock' | 'option'
   target_entry_price: number
   target_quantity: number
   profit_target: number
   stop_loss: number
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
   position_thesis: string
   created_date: Date
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number
   status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
   trades: Trade[] // New field for embedded trades (future-proof array)
@@ -168,6 +185,22 @@ export class PositionService {
         if (result) {
           // Convert stored date strings back to Date objects
           result.created_date = new Date(result.created_date)
+          if (result.expiration_date && !(result.expiration_date instanceof Date)) {
+            result.expiration_date = new Date(result.expiration_date)
+          }
+          // Migrate existing positions to include strategy metadata
+          if (!result.strategy_type) {
+            result.strategy_type = 'Long Stock'
+          }
+          if (!result.trade_kind) {
+            result.trade_kind = 'stock'
+          }
+          if (!result.profit_target_basis) {
+            result.profit_target_basis = 'stock_price'
+          }
+          if (!result.stop_loss_basis) {
+            result.stop_loss_basis = 'stock_price'
+          }
           // Migrate existing positions to include journal_entry_ids
           if (!result.journal_entry_ids) {
             result.journal_entry_ids = []
@@ -199,6 +232,22 @@ export class PositionService {
         // Convert stored date strings back to Date objects and migrate schema
         positions.forEach(position => {
           position.created_date = new Date(position.created_date)
+          if (position.expiration_date && !(position.expiration_date instanceof Date)) {
+            position.expiration_date = new Date(position.expiration_date)
+          }
+          // Migrate existing positions to include strategy metadata
+          if (!position.strategy_type) {
+            position.strategy_type = 'Long Stock'
+          }
+          if (!position.trade_kind) {
+            position.trade_kind = 'stock'
+          }
+          if (!position.profit_target_basis) {
+            position.profit_target_basis = 'stock_price'
+          }
+          if (!position.stop_loss_basis) {
+            position.stop_loss_basis = 'stock_price'
+          }
           // Migrate existing positions to include journal_entry_ids
           if (!position.journal_entry_ids) {
             position.journal_entry_ids = []

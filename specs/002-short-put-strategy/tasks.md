@@ -27,7 +27,7 @@
   - Step 1 - Write unit tests for schema version upgrade behavior in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/__tests__/SchemaManager.test.ts`
   - Step 2 - Implement v4 migration in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/SchemaManager.ts` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/services/ServiceContainer.ts`
   - Step 3 - Add integration coverage for upgrade path in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/backward-compatibility-v4.test.ts`
-- [ ] T003 [US1]
+- [x] T003 [US1]
   - Step 1 - Write unit tests for extended Position/Trade types in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/position.test.ts`
   - Step 2 - Implement type changes in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/position.ts`
   - Step 3 - Add integration coverage for type-backed flows in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/position-types.integration.test.tsx`
