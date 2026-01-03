@@ -274,6 +274,16 @@ This document provides a dependency-ordered task list for implementing Short Put
       - Max Loss: ($400 - $5) × 100 × 1 = $39,500
     • File: `src/pages/PositionCreate.tsx` (calculateMetrics function)
 
+- [ ] B002 [US1] (BUG) Position Plan confirmation missing Short Put option fields
+    • Confirmation step (Step 4) only displays Long Stock fields
+    • Missing Short Put specific information:
+      - Strike Price (the price at which puts can be exercised)
+      - Premium Expected (amount collected per contract)
+      - Expiration Date (when options expire)
+    • Currently shows: Symbol, Strategy, Target Entry, Quantity (shares), Profit Target, Stop Loss, Thesis
+    • Should also show for Short Put: Strike Price, Premium per Contract, Expiration Date
+    • File: `src/pages/PositionCreate.tsx` (renderStep4 function)
+
 ---
 
 ## User Story 2 - Execute Sell-to-Open Trade (P1) - 27 tasks
