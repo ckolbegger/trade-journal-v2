@@ -63,7 +63,7 @@
   - Tests: happy path, rejects negative, rejects non-numeric, accepts decimals, min value 0.01
 - [x] T008 [P] [US1] Create ExpirationDatePicker component with comprehensive unit tests in src/components/ExpirationDatePicker.tsx
   - Tests: happy path, rejects past dates, valid date format, handles timezone
-- [ ] T009 [P] [US1] Create PriceBasisSelector component with comprehensive unit tests in src/components/PriceBasisSelector.tsx
+- [x] T009 [P] [US1] Create PriceBasisSelector component with comprehensive unit tests in src/components/PriceBasisSelector.tsx
   - Tests: renders stock/option options, selection changes value, displays current selection
 - [ ] T010 [US1] Extend PositionCreate with conditional option fields in src/pages/PositionCreate.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
   - Tests: hides option fields for Long Stock, shows option fields for Short Put, form state includes option fields when visible, tab order correct with option fields
