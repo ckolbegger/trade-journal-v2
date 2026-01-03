@@ -153,7 +153,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Expiration Date Picker Component
 
-- [ ] T017 [US1] (TEST) Write comprehensive test suite for ExpirationDatePicker component covering:
+- [x] T017 [US1] (TEST) Write comprehensive test suite for ExpirationDatePicker component covering:
     • Component renders with label "Expiration Date"
     • Input type is "date"
     • min attribute set to current date (prevents past dates)
