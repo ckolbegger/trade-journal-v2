@@ -250,6 +250,14 @@ export class PositionService {
           if (!result.trades) {
             result.trades = []
           }
+          // Lazy migration: default strategy_type to 'Long Stock' for legacy positions
+          if (!result.strategy_type) {
+            result.strategy_type = 'Long Stock'
+          }
+          // Lazy migration: default trade_kind to 'stock' for legacy positions
+          if (!result.trade_kind) {
+            result.trade_kind = 'stock'
+          }
           // Compute status dynamically from trades
           result.status = PositionStatusCalculator.computeStatus(result.trades)
           resolve(result)
@@ -280,6 +288,14 @@ export class PositionService {
           // Migrate existing positions to include trades array
           if (!position.trades) {
             position.trades = []
+          }
+          // Lazy migration: default strategy_type to 'Long Stock' for legacy positions
+          if (!position.strategy_type) {
+            position.strategy_type = 'Long Stock'
+          }
+          // Lazy migration: default trade_kind to 'stock' for legacy positions
+          if (!position.trade_kind) {
+            position.trade_kind = 'stock'
           }
           // Compute status dynamically from trades
           position.status = PositionStatusCalculator.computeStatus(position.trades)
