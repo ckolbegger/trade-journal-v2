@@ -264,7 +264,21 @@ export function PositionCreate() {
         <div>
           <StrategySelector
             value={formData.strategy_type}
-            onChange={(value) => setFormData(prev => ({ ...prev, strategy_type: value }))}
+            onChange={(value) => {
+              // When switching to Short Put, initialize expiration_date to 30 days from now
+              // This ensures the date picker has a valid default value in form state
+              if (value === 'Short Put' && !formData.expiration_date) {
+                const defaultExpiration = new Date()
+                defaultExpiration.setDate(defaultExpiration.getDate() + 30)
+                setFormData(prev => ({
+                  ...prev,
+                  strategy_type: value,
+                  expiration_date: defaultExpiration
+                }))
+              } else {
+                setFormData(prev => ({ ...prev, strategy_type: value }))
+              }
+            }}
           />
         </div>
 

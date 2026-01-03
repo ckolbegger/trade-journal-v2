@@ -87,6 +87,14 @@
 
 **Checkpoint**: User Story 1 complete - Short Put position plans can be created with immutable option details
 
+### Bug Fixes for User Story 1
+
+- [x] B0001 [US1] Fix expiration date not initialized when Short Put selected in src/pages/PositionCreate.tsx
+  - **Bug**: When user selects "Short Put" strategy, the expiration date picker displays a default value but form state remains undefined, causing "Expiration date is required" validation error even though date picker shows a valid date
+  - **Root Cause**: ExpirationDatePicker shows `value={formData.expiration_date || new Date()}` but onChange only fires when user manually changes date; if user accepts default, formData.expiration_date stays undefined
+  - **Fix**: Initialize expiration_date to 30 days from now when strategy changes to "Short Put"
+  - **Tests**: Added test "allows form submission when user accepts default expiration date" to verify form works without manually changing pre-populated date; updated existing tests that expected expiration_date validation error
+
 ---
 
 ## Phase 4: User Story 2 - Execute Sell-to-Open Trade (Priority: P1)

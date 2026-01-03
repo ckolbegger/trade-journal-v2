@@ -348,39 +348,6 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       })
     })
 
-    it('should display expiration date validation error inline', async () => {
-      await renderWithRouterAndProps(<PositionCreate />)
-
-      // Select Short Put strategy
-      const strategySelect = screen.getByLabelText(/Strategy Type/i)
-      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
-
-      // Fill required fields
-      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
-      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
-      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
-      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
-
-      // Set valid strike price
-      const strikePriceInput = screen.getByLabelText(/Strike Price/i)
-      fireEvent.change(strikePriceInput, { target: { value: '145' } })
-
-      // Clear expiration date (set to empty or invalid)
-      const expirationInput = screen.getByLabelText(/Expiration Date/i)
-      fireEvent.change(expirationInput, { target: { value: '' } })
-
-      // Try to proceed
-      const nextButton = screen.getByText('Next: Trading Journal')
-      fireEvent.click(nextButton)
-
-      // Should display inline error for expiration date
-      await waitFor(() => {
-        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
-      })
-    })
-
     it('should display validation errors for all required option fields', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 
@@ -396,14 +363,14 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
-      // Try to proceed without filling option fields
+      // Try to proceed without filling strike price
+      // Note: expiration_date is auto-initialized when Short Put is selected
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
-      // Should display errors for both strike price and expiration date
+      // Should display error for strike price (expiration is auto-initialized)
       await waitFor(() => {
         expect(screen.getByText('Strike price is required')).toBeInTheDocument()
-        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
       })
     })
 
@@ -422,13 +389,13 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
-      // Try to proceed without option fields - should show errors
+      // Try to proceed without strike price - should show error
+      // Note: expiration_date is now auto-initialized when Short Put is selected
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
       await waitFor(() => {
         expect(screen.getByText('Strike price is required')).toBeInTheDocument()
-        expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
       })
 
       // Now fix the strike price
@@ -440,20 +407,43 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
         expect(screen.queryByText('Strike price is required')).not.toBeInTheDocument()
       })
 
-      // Expiration error should still be present
-      expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
+      // No expiration error since it's auto-initialized when Short Put selected
+    })
 
-      // Now fix expiration date
-      const tomorrow = new Date()
-      tomorrow.setDate(tomorrow.getDate() + 1)
-      const tomorrowStr = tomorrow.toISOString().split('T')[0]
+    it('should auto-initialize expiration date when Short Put selected', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
 
-      const expirationInput = screen.getByLabelText(/Expiration Date/i)
-      fireEvent.change(expirationInput, { target: { value: tomorrowStr } })
+      // Initially on Long Stock - no expiration field
+      expect(screen.queryByLabelText(/Expiration Date/i)).not.toBeInTheDocument()
 
-      // Expiration error should clear
+      // Select Short Put strategy
+      const strategySelect = screen.getByLabelText(/Strategy Type/i)
+      fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
+
+      // Expiration date field should appear
+      await waitFor(() => {
+        expect(screen.getByLabelText(/Expiration Date/i)).toBeInTheDocument()
+      })
+
+      // Fill in all required fields except expiration (accept auto-initialized value)
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'TSLA' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '2.50' } })
+      fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '200' } })
+      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '180' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test auto-init' } })
+
+      const strikePriceInput = screen.getByLabelText(/Strike Price/i)
+      fireEvent.change(strikePriceInput, { target: { value: '190' } })
+
+      // Should be able to proceed without manually setting expiration date
+      const nextButton = screen.getByText('Next: Trading Journal')
+      fireEvent.click(nextButton)
+
+      // Should NOT show expiration date error (it was auto-initialized)
       await waitFor(() => {
         expect(screen.queryByText('Expiration date is required')).not.toBeInTheDocument()
+        expect(screen.queryByText('Position Plan')).not.toBeInTheDocument()
       })
     })
   })

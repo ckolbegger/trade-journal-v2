@@ -96,16 +96,17 @@ describe('PositionCreate - Option Fields', () => {
       target: { value: 'Bullish on AAPL fundamentals' }
     })
 
-    // Do NOT fill in option fields (strike, expiration)
+    // Do NOT fill in strike price (expiration date is auto-initialized now)
     // Try to proceed to next step
     const nextButton = screen.getByText('Next: Trading Journal')
     expect(nextButton).toBeVisible()
     fireEvent.click(nextButton)
 
-    // Should show validation errors for option fields
+    // Should show validation error for strike price
+    // Note: expiration_date is now auto-initialized when Short Put is selected,
+    // so we only expect the strike price error
     await waitFor(() => {
       expect(screen.getByText('Strike price is required')).toBeInTheDocument()
-      expect(screen.getByText('Expiration date is required')).toBeInTheDocument()
     })
 
     // Should not proceed to next step
@@ -161,6 +162,54 @@ describe('PositionCreate - Option Fields', () => {
     // Should proceed without validation errors
     await waitFor(() => {
       expect(screen.queryByText('Strike price is required')).not.toBeInTheDocument()
+      expect(screen.queryByText('Expiration date is required')).not.toBeInTheDocument()
+      expect(screen.queryByText('Position Plan')).not.toBeInTheDocument()
+    })
+  })
+
+  it('allows form submission when user accepts default expiration date', async () => {
+    renderComponent()
+
+    // Wait for component to finish loading
+    await waitFor(() => {
+      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+    })
+
+    // Change to Short Put
+    const strategySelector = screen.getByLabelText('Strategy Type')
+    fireEvent.change(strategySelector, { target: { value: 'Short Put' } })
+
+    // Fill in all required fields
+    fireEvent.change(screen.getByLabelText('Symbol *'), { target: { value: 'TSLA' } })
+    fireEvent.change(screen.getByLabelText('Target Entry Price *'), { target: { value: '2.50' } })
+    fireEvent.change(screen.getByLabelText('Target Quantity *'), { target: { value: '1' } })
+    fireEvent.change(screen.getByLabelText('Profit Target *'), { target: { value: '200' } })
+    fireEvent.change(screen.getByLabelText('Stop Loss *'), { target: { value: '180' } })
+    fireEvent.change(screen.getByLabelText('Position Thesis *'), {
+      target: { value: 'Testing short put with default expiration date' }
+    })
+
+    // Fill in strike price
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
+    })
+
+    const strikeInput = screen.getByLabelText(/Strike Price/i)
+    fireEvent.change(strikeInput, { target: { value: '190' } })
+
+    // DO NOT change the expiration date - accept the default value shown by the picker
+    // This is the key difference from the other test - we're testing that the form
+    // works when the user doesn't manually change the pre-populated date
+
+    // Try to proceed to next step
+    const nextButton = screen.getByText('Next: Trading Journal')
+    expect(nextButton).toBeVisible()
+    fireEvent.click(nextButton)
+
+    // Should proceed without "Expiration date is required" error
+    // This test will FAIL until we fix the bug where expiration_date isn't
+    // initialized in form state when Short Put is selected
+    await waitFor(() => {
       expect(screen.queryByText('Expiration date is required')).not.toBeInTheDocument()
       expect(screen.queryByText('Position Plan')).not.toBeInTheDocument()
     })
