@@ -44,7 +44,7 @@
 - [x] T005 Add lazy migration logic for existing positions in src/services/PositionService.ts (default strategy_type to 'Long Stock', trade_kind to 'stock')
   - Tests: existing position without strategy_type gets 'Long Stock', existing position without trade_kind gets 'stock', new positions require explicit strategy_type, migration is idempotent
 
-- [ ] T005a [US1] Integration test for lazy migration in tests/integration/position-migration.test.ts
+- [x] T005a [US1] Integration test for lazy migration in tests/integration/position-migration.test.ts
   - Tests: loads legacy position from DB, migrated fields present after load, re-save preserves migrated values, new position saves with explicit strategy
 
 ---
