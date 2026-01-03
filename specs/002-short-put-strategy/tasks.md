@@ -12,11 +12,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Tasks | 74 (66 + 8 bug fixes) |
+| Total Tasks | 75 (66 + 9 bug fixes) |
 | Unit Test Tasks (Step 1) | 20 (30%) |
 | Implementation Tasks (Step 2) | 26 (39%) |
 | Integration Test Tasks (Step 3) | 20 (30%) |
-| Bug Fix Tasks | 8 |
+| Bug Fix Tasks | 9 |
 
 ---
 
@@ -197,6 +197,13 @@
   - Fix: Increase field width or apply appropriate CSS classes to make fields usable
   - Location: src/pages/PositionCreate.tsx - Target Entry Price and Stop Loss input fields
   - Screenshot: ![narrow-fields](screenshots/US1-B0008.png)
+- [ ] B009 Fix Max Loss calculation for Short Put strategy in PositionCreate.tsx
+  - Issue: Max Loss shows $50.00 for $200 strike short put instead of ~$19,850
+  - Expected: Max Loss = (strike_price × 100) - (premium_per_contract × 100)
+  - Example: $200 strike, $1.50 premium = ($200 × 100) - ($1.50 × 100) = $19,850
+  - Current formula incorrectly using stop_loss_basis instead of full assignment risk
+  - Location: src/pages/PositionCreate.tsx - Max Risk/Max Loss calculation
+  - Screenshot: ![max-loss-bug](screenshots/US1-B0009.png)
 
 ---
 
