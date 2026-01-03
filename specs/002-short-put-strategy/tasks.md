@@ -167,7 +167,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Price Basis Selector Component
 
-- [ ] T019 [US1] (TEST) Write comprehensive test suite for PriceBasisSelector component covering:
+- [x] T019 [US1] (TEST) Write comprehensive test suite for PriceBasisSelector component covering:
     • Component renders with label "Price Target Basis" / "Stop Loss Basis"
     • Dropdown/radio shows options: 'stock_price', 'option_price'
     • Default selection exists
@@ -176,7 +176,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Displays labels: "Stock Price" and "Option Premium"
     • Selected value is controlled component
     File: `src/components/forms/strategy/__tests__/PriceBasisSelector.test.tsx`
-- [ ] T020 [US1] (IMPL) Create PriceBasisSelector component in `src/components/forms/strategy/PriceBasisSelector.tsx`
+- [x] T020 [US1] (IMPL) Create PriceBasisSelector component in `src/components/forms/strategy/PriceBasisSelector.tsx`
 
 #### Option Fields Section
 
