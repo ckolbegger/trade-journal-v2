@@ -112,7 +112,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Position Validator
 
-- [ ] T011 [US1] (TEST) Write comprehensive test suite for validateOptionPosition() covering:
+- [x] T011 [US1] (TEST) Write comprehensive test suite for validateOptionPosition() covering:
     • Valid Short Put position: All required option fields present → passes
     • Missing option_type when strategy_type='Short Put' → throws ValidationError
     • Missing strike_price when strategy_type='Short Put' → throws ValidationError
