@@ -112,14 +112,14 @@ describe('PositionCreate - Short Put Wiring (T013)', () => {
     futureDate.setDate(futureDate.getDate() + 30)
     fireEvent.change(expirationInput, { target: { value: futureDate.toISOString().split('T')[0] } })
 
-    // Select price basis (optional fields) - find radio buttons for Option
-    const radioButtons = screen.getAllByRole('radio')
-    const optionRadioButton = radioButtons.find(radio =>
-      radio.getAttribute('value') === 'option'
-    )
-    if (optionRadioButton) {
-      fireEvent.click(optionRadioButton)
-    }
+    // Select price basis - BOTH profit_target_basis and stop_loss_basis are required (B0003)
+    // Find all Stock radio buttons (there should be 4 total: 2 for profit target, 2 for stop loss)
+    const stockBasisRadios = screen.getAllByLabelText('Stock')
+    expect(stockBasisRadios.length).toBeGreaterThanOrEqual(2)
+    // Click profit target basis (first Stock radio)
+    fireEvent.click(stockBasisRadios[0])
+    // Click stop loss basis (second Stock radio)
+    fireEvent.click(stockBasisRadios[1])
 
     return futureDate
   }

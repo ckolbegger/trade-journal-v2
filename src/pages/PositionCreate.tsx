@@ -40,6 +40,8 @@ interface ValidationErrors {
   position_thesis?: string
   strike_price?: string
   expiration_date?: string
+  profit_target_basis?: string
+  stop_loss_basis?: string
 }
 
 export function PositionCreate() {
@@ -115,6 +117,14 @@ export function PositionCreate() {
 
       if (!formData.expiration_date) {
         newErrors.expiration_date = 'Expiration date is required'
+      }
+
+      if (!formData.profit_target_basis) {
+        newErrors.profit_target_basis = 'Profit target basis is required'
+      }
+
+      if (!formData.stop_loss_basis) {
+        newErrors.stop_loss_basis = 'Stop loss basis is required'
       }
     }
 
@@ -403,8 +413,15 @@ export function PositionCreate() {
               <PriceBasisSelector
                 name="profit-target-basis"
                 value={formData.profit_target_basis}
-                onChange={(value) => setFormData(prev => ({ ...prev, profit_target_basis: value }))}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, profit_target_basis: value }))
+                  // Clear error when user selects a value
+                  if (errors.profit_target_basis) {
+                    setErrors(prev => ({ ...prev, profit_target_basis: undefined }))
+                  }
+                }}
               />
+              {errors.profit_target_basis && <p className="text-red-600 text-xs mt-1">{errors.profit_target_basis}</p>}
             </div>
 
             <div>
@@ -414,8 +431,15 @@ export function PositionCreate() {
               <PriceBasisSelector
                 name="stop-loss-basis"
                 value={formData.stop_loss_basis}
-                onChange={(value) => setFormData(prev => ({ ...prev, stop_loss_basis: value }))}
+                onChange={(value) => {
+                  setFormData(prev => ({ ...prev, stop_loss_basis: value }))
+                  // Clear error when user selects a value
+                  if (errors.stop_loss_basis) {
+                    setErrors(prev => ({ ...prev, stop_loss_basis: undefined }))
+                  }
+                }}
               />
+              {errors.stop_loss_basis && <p className="text-red-600 text-xs mt-1">{errors.stop_loss_basis}</p>}
             </div>
           </>
         )}

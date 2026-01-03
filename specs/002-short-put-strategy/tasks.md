@@ -101,6 +101,12 @@
   - **Fix**: Add a required `name` prop to PriceBasisSelector so each instance can have a unique radio group name (e.g., "profit-target-basis" and "stop-loss-basis")
   - **Tests**: Add test verifying both Profit Target Basis and Stop Loss Basis can be selected independently; update existing tests if needed
 
+- [x] B0003 [US1] Add validation for required profit_target_basis and stop_loss_basis fields in src/pages/PositionCreate.tsx
+  - **Bug**: User can proceed to Journal page without selecting profit_target_basis or stop_loss_basis. Both fields should be required for Short Put strategy.
+  - **Root Cause**: The validateStep1() function validates strike_price and expiration_date (lines 112-118) but is missing validation for profit_target_basis and stop_loss_basis.
+  - **Fix**: Add validation in validateStep1() to check that both profit_target_basis and stop_loss_basis are set when strategy_type is 'Short Put'
+  - **Tests**: Add test verifying that clicking Next without selecting basis fields shows validation errors; verify both fields must be selected to proceed
+
 ---
 
 ## Phase 4: User Story 2 - Execute Sell-to-Open Trade (Priority: P1)

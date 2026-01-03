@@ -436,6 +436,11 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       const strikePriceInput = screen.getByLabelText(/Strike Price/i)
       fireEvent.change(strikePriceInput, { target: { value: '190' } })
 
+      // Select both price basis fields (required as of B0003)
+      const stockBasisRadios = screen.getAllByLabelText('Stock')
+      fireEvent.click(stockBasisRadios[0]) // profit target basis
+      fireEvent.click(stockBasisRadios[1]) // stop loss basis
+
       // Should be able to proceed without manually setting expiration date
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)

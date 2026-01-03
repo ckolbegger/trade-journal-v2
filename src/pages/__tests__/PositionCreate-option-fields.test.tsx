@@ -150,9 +150,13 @@ describe('PositionCreate - Option Fields', () => {
     fireEvent.change(expirationInput, { target: { value: dateString } })
 
     // Select price basis (there are two sets - profit target and stop loss)
-    // Just verify they're present - no need to click for validation
+    // Need to click BOTH to satisfy validation requirements
     const stockBasisRadios = screen.getAllByLabelText('Stock')
     expect(stockBasisRadios.length).toBeGreaterThan(0)
+    // Click profit target basis (first Stock radio)
+    fireEvent.click(stockBasisRadios[0])
+    // Click stop loss basis (second Stock radio)
+    fireEvent.click(stockBasisRadios[1])
 
     // Try to proceed to next step
     const nextButton = screen.getByText('Next: Trading Journal')
@@ -201,6 +205,13 @@ describe('PositionCreate - Option Fields', () => {
     // This is the key difference from the other test - we're testing that the form
     // works when the user doesn't manually change the pre-populated date
 
+    // Select both price basis fields (required as of B0003 fix)
+    const stockBasisRadios = screen.getAllByLabelText('Stock')
+    // Click profit target basis (first Stock radio)
+    fireEvent.click(stockBasisRadios[0])
+    // Click stop loss basis (second Stock radio)
+    fireEvent.click(stockBasisRadios[1])
+
     // Try to proceed to next step
     const nextButton = screen.getByText('Next: Trading Journal')
     expect(nextButton).toBeVisible()
@@ -213,5 +224,150 @@ describe('PositionCreate - Option Fields', () => {
       expect(screen.queryByText('Expiration date is required')).not.toBeInTheDocument()
       expect(screen.queryByText('Position Plan')).not.toBeInTheDocument()
     })
+  })
+
+  it('validates profit_target_basis is required for Short Put', async () => {
+    renderComponent()
+
+    // Wait for component to finish loading
+    await waitFor(() => {
+      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+    })
+
+    // Change to Short Put
+    const strategySelector = screen.getByLabelText('Strategy Type')
+    fireEvent.change(strategySelector, { target: { value: 'Short Put' } })
+
+    // Fill in all required fields except profit_target_basis
+    fireEvent.change(screen.getByLabelText('Symbol *'), { target: { value: 'AAPL' } })
+    fireEvent.change(screen.getByLabelText('Target Entry Price *'), { target: { value: '150' } })
+    fireEvent.change(screen.getByLabelText('Target Quantity *'), { target: { value: '100' } })
+    fireEvent.change(screen.getByLabelText('Profit Target *'), { target: { value: '170' } })
+    fireEvent.change(screen.getByLabelText('Stop Loss *'), { target: { value: '140' } })
+    fireEvent.change(screen.getByLabelText('Position Thesis *'), {
+      target: { value: 'Bullish on AAPL fundamentals' }
+    })
+
+    // Fill in strike price
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
+    })
+
+    const strikeInput = screen.getByLabelText(/Strike Price/i)
+    fireEvent.change(strikeInput, { target: { value: '145' } })
+
+    // Select stop_loss_basis but NOT profit_target_basis
+    const stopLossBasisRadios = screen.getAllByLabelText('Stock')
+    // The second "Stock" radio is for stop loss basis (first is for profit target)
+    fireEvent.click(stopLossBasisRadios[1])
+
+    // Try to proceed to next step
+    const nextButton = screen.getByText('Next: Trading Journal')
+    expect(nextButton).toBeVisible()
+    fireEvent.click(nextButton)
+
+    // Should show validation error for profit_target_basis
+    await waitFor(() => {
+      expect(screen.getByText('Profit target basis is required')).toBeInTheDocument()
+    })
+
+    // Should not proceed to next step
+    expect(screen.getByText('Position Plan')).toBeInTheDocument()
+  })
+
+  it('validates stop_loss_basis is required for Short Put', async () => {
+    renderComponent()
+
+    // Wait for component to finish loading
+    await waitFor(() => {
+      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+    })
+
+    // Change to Short Put
+    const strategySelector = screen.getByLabelText('Strategy Type')
+    fireEvent.change(strategySelector, { target: { value: 'Short Put' } })
+
+    // Fill in all required fields except stop_loss_basis
+    fireEvent.change(screen.getByLabelText('Symbol *'), { target: { value: 'AAPL' } })
+    fireEvent.change(screen.getByLabelText('Target Entry Price *'), { target: { value: '150' } })
+    fireEvent.change(screen.getByLabelText('Target Quantity *'), { target: { value: '100' } })
+    fireEvent.change(screen.getByLabelText('Profit Target *'), { target: { value: '170' } })
+    fireEvent.change(screen.getByLabelText('Stop Loss *'), { target: { value: '140' } })
+    fireEvent.change(screen.getByLabelText('Position Thesis *'), {
+      target: { value: 'Bullish on AAPL fundamentals' }
+    })
+
+    // Fill in strike price
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
+    })
+
+    const strikeInput = screen.getByLabelText(/Strike Price/i)
+    fireEvent.change(strikeInput, { target: { value: '145' } })
+
+    // Select profit_target_basis but NOT stop_loss_basis
+    const profitTargetBasisRadios = screen.getAllByLabelText('Stock')
+    // The first "Stock" radio is for profit target basis
+    fireEvent.click(profitTargetBasisRadios[0])
+
+    // Try to proceed to next step
+    const nextButton = screen.getByText('Next: Trading Journal')
+    expect(nextButton).toBeVisible()
+    fireEvent.click(nextButton)
+
+    // Should show validation error for stop_loss_basis
+    await waitFor(() => {
+      expect(screen.getByText('Stop loss basis is required')).toBeInTheDocument()
+    })
+
+    // Should not proceed to next step
+    expect(screen.getByText('Position Plan')).toBeInTheDocument()
+  })
+
+  it('validates both profit_target_basis and stop_loss_basis are required for Short Put', async () => {
+    renderComponent()
+
+    // Wait for component to finish loading
+    await waitFor(() => {
+      expect(screen.getByText('Position Plan')).toBeInTheDocument()
+    })
+
+    // Change to Short Put
+    const strategySelector = screen.getByLabelText('Strategy Type')
+    fireEvent.change(strategySelector, { target: { value: 'Short Put' } })
+
+    // Fill in all required fields except BOTH basis fields
+    fireEvent.change(screen.getByLabelText('Symbol *'), { target: { value: 'AAPL' } })
+    fireEvent.change(screen.getByLabelText('Target Entry Price *'), { target: { value: '150' } })
+    fireEvent.change(screen.getByLabelText('Target Quantity *'), { target: { value: '100' } })
+    fireEvent.change(screen.getByLabelText('Profit Target *'), { target: { value: '170' } })
+    fireEvent.change(screen.getByLabelText('Stop Loss *'), { target: { value: '140' } })
+    fireEvent.change(screen.getByLabelText('Position Thesis *'), {
+      target: { value: 'Bullish on AAPL fundamentals' }
+    })
+
+    // Fill in strike price
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Strike Price/i)).toBeInTheDocument()
+    })
+
+    const strikeInput = screen.getByLabelText(/Strike Price/i)
+    fireEvent.change(strikeInput, { target: { value: '145' } })
+
+    // Do NOT select either profit_target_basis or stop_loss_basis
+
+    // Try to proceed to next step
+    const nextButton = screen.getByText('Next: Trading Journal')
+    expect(nextButton).toBeVisible()
+    fireEvent.click(nextButton)
+
+    // Should show validation errors for BOTH basis fields
+    await waitFor(() => {
+      expect(screen.getByText('Profit target basis is required')).toBeInTheDocument()
+      expect(screen.getByText('Stop loss basis is required')).toBeInTheDocument()
+    })
+
+    // Should not proceed to next step
+    expect(screen.getByText('Position Plan')).toBeInTheDocument()
   })
 })
