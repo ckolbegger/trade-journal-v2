@@ -196,6 +196,7 @@
   - Issue: Target Entry Price and Stop Loss input fields are too narrow to display values
   - Fix: Increase field width or apply appropriate CSS classes to make fields usable
   - Location: src/pages/PositionCreate.tsx - Target Entry Price and Stop Loss input fields
+  - Screenshot: ![narrow-fields](screenshots/US1-B008-narrow-fields.png)
 
 ---
 
