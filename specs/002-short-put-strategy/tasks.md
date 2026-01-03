@@ -224,7 +224,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Field Validation
 
-- [ ] T025 [US1] (TEST) Write comprehensive test suite for inline validation covering:
+- [x] T025 [US1] (TEST) Write comprehensive test suite for inline validation covering:
     • Strike price validation error displays inline when value <= 0
     • Strike price validation error clears when value corrected to > 0
     • Expiration date validation error displays inline when date is in past
