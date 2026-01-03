@@ -95,6 +95,12 @@
   - **Fix**: Initialize expiration_date to 30 days from now when strategy changes to "Short Put"
   - **Tests**: Added test "allows form submission when user accepts default expiration date" to verify form works without manually changing pre-populated date; updated existing tests that expected expiration_date validation error
 
+- [x] B0002 [US1] Fix Profit Target Basis and Stop Loss Basis radio buttons mutually exclusive in src/components/PriceBasisSelector.tsx
+  - **Bug**: User can only select ONE of Profit Target Basis OR Stop Loss Basis, but should be able to set both independently. Clicking any radio button in either group deselects the other group's selection.
+  - **Root Cause**: Both PriceBasisSelector component instances use hardcoded `name="price-basis"` for their radio inputs (lines 18 and 28). In HTML, radio buttons with the same name form a mutually exclusive group, making all four radio buttons share the same group.
+  - **Fix**: Add a required `name` prop to PriceBasisSelector so each instance can have a unique radio group name (e.g., "profit-target-basis" and "stop-loss-basis")
+  - **Tests**: Add test verifying both Profit Target Basis and Stop Loss Basis can be selected independently; update existing tests if needed
+
 ---
 
 ## Phase 4: User Story 2 - Execute Sell-to-Open Trade (Priority: P1)

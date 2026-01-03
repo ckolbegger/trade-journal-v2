@@ -1,11 +1,12 @@
 import type { PriceBasis } from '@/lib/position';
 
 interface PriceBasisSelectorProps {
+  name: string;
   value: PriceBasis | undefined;
   onChange: (value: PriceBasis) => void;
 }
 
-export function PriceBasisSelector({ value, onChange }: PriceBasisSelectorProps) {
+export function PriceBasisSelector({ name, value, onChange }: PriceBasisSelectorProps) {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onChange(event.target.value as PriceBasis);
   };
@@ -15,7 +16,7 @@ export function PriceBasisSelector({ value, onChange }: PriceBasisSelectorProps)
       <label>
         <input
           type="radio"
-          name="price-basis"
+          name={name}
           value="stock"
           checked={value === 'stock'}
           onChange={handleChange}
@@ -25,7 +26,7 @@ export function PriceBasisSelector({ value, onChange }: PriceBasisSelectorProps)
       <label>
         <input
           type="radio"
-          name="price-basis"
+          name={name}
           value="option"
           checked={value === 'option'}
           onChange={handleChange}

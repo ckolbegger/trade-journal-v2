@@ -401,6 +401,7 @@ export function PositionCreate() {
                 Profit Target Basis
               </Label>
               <PriceBasisSelector
+                name="profit-target-basis"
                 value={formData.profit_target_basis}
                 onChange={(value) => setFormData(prev => ({ ...prev, profit_target_basis: value }))}
               />
@@ -411,6 +412,7 @@ export function PositionCreate() {
                 Stop Loss Basis
               </Label>
               <PriceBasisSelector
+                name="stop-loss-basis"
                 value={formData.stop_loss_basis}
                 onChange={(value) => setFormData(prev => ({ ...prev, stop_loss_basis: value }))}
               />
