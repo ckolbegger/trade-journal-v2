@@ -194,7 +194,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Option Price Basis Conversion (NEW - Value Delivery Audit Fix)
 
-- [ ] T022b [US1] (TEST) Write comprehensive test suite for option price basis conversion covering:
+- [x] T022b [US1] (TEST) Write comprehensive test suite for option price basis conversion covering:
     • profit_target_basis='option_price' converts to dollar value using strike_price - premium
     • stop_loss_basis='option_price' converts to dollar value using strike_price - premium
     • stock_price basis uses raw dollar values (no conversion needed)
@@ -202,7 +202,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Example: Strike $95, Premium $2.50, Basis='stock_price', Target=$105 → profit_target = $105 (no conversion)
     • Conversion helper function calculates effective dollar value for display
     File: `src/domain/calculators/__tests__/OptionPriceBasisCalculator.test.ts`
-- [ ] T022c [US1] (IMPL) Implement option price basis conversion helper
+- [x] T022c [US1] (IMPL) Implement option price basis conversion helper
     • Create calculateOptionBasisDollarValue() in domain calculator
     • Used by PositionCard to display profit_target and stop_loss for option positions
     File: `src/domain/calculators/OptionPriceBasisCalculator.ts`
