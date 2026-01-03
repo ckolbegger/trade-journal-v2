@@ -83,7 +83,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/types/__tests__/trade-types.test.ts`
 - [x] T006 (IMPL) Extend Trade interface with option fields in `src/lib/position.ts`
 
-- [ ] T007 (TEST) Write comprehensive type verification tests for JournalEntry extensions covering:
+- [x] T007 (TEST) Write comprehensive type verification tests for JournalEntry extensions covering:
     • entry_type union accepts 'option_assignment'
     • OPTION_ASSIGNMENT_PROMPTS array exists with correct structure
     • Assignment prompts include required fields (assignment_cause)
