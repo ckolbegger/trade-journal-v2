@@ -55,7 +55,7 @@ export interface Trade {
    * Option action: STO (Sell to Open), BTC (Buy to Close)
    * Only populated for option trades
    */
-  action?: 'STO' | 'BTC'
+  action?: OptionAction
 
   /**
    * OCC symbol for the option contract
@@ -171,6 +171,7 @@ export function validateExitTrade(
 export type StrategyType = 'Long Stock' | 'Short Put'
 export type TradeKind = 'stock' | 'option'
 export type OptionType = 'call' | 'put'
+export type OptionAction = 'STO' | 'BTC'
 export type PriceBasis = 'stock' | 'option'
 
 // Phase 1A Position Interface - Core trade planning entity

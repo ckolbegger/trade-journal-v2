@@ -30,7 +30,7 @@
   - Tests: type compiles with all new fields, optional fields accept undefined, existing positions remain valid
 - [x] T002 Extend Trade interface with option fields in src/lib/position.ts (action, occ_symbol, option_type, strike_price, expiration_date, contract_quantity, underlying_price_at_trade, created_stock_position_id, cost_basis_adjustment)
   - Tests: type compiles with all new fields, optional fields accept undefined, existing trades remain valid
-- [ ] T003 [P] Add StrategyType, TradeKind, OptionAction, PriceBasis type definitions to src/lib/position.ts
+- [x] T003 [P] Add StrategyType, TradeKind, OptionAction, PriceBasis type definitions to src/lib/position.ts
   - Tests: StrategyType includes 'Long Stock' and 'Short Put', TradeKind includes 'stock' and 'option', OptionAction includes 'STO' and 'BTC', PriceBasis includes 'stock' and 'option'
 
 ---

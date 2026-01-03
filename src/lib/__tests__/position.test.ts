@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import type { Trade } from '@/lib/position'
+import type { Trade, StrategyType, TradeKind, OptionAction, PriceBasis } from '@/lib/position'
 import { calculateOpenQuantity } from '@/lib/position'
 
 describe('calculateOpenQuantity', () => {
@@ -77,5 +77,55 @@ describe('calculateOpenQuantity', () => {
     ]
 
     expect(calculateOpenQuantity(trades)).toBe(0)
+  })
+})
+
+describe('Type Definitions', () => {
+  describe('StrategyType', () => {
+    it('includes "Long Stock"', () => {
+      const strategy: StrategyType = 'Long Stock'
+      expect(strategy).toBe('Long Stock')
+    })
+
+    it('includes "Short Put"', () => {
+      const strategy: StrategyType = 'Short Put'
+      expect(strategy).toBe('Short Put')
+    })
+  })
+
+  describe('TradeKind', () => {
+    it('includes "stock"', () => {
+      const kind: TradeKind = 'stock'
+      expect(kind).toBe('stock')
+    })
+
+    it('includes "option"', () => {
+      const kind: TradeKind = 'option'
+      expect(kind).toBe('option')
+    })
+  })
+
+  describe('OptionAction', () => {
+    it('includes "STO"', () => {
+      const action: OptionAction = 'STO'
+      expect(action).toBe('STO')
+    })
+
+    it('includes "BTC"', () => {
+      const action: OptionAction = 'BTC'
+      expect(action).toBe('BTC')
+    })
+  })
+
+  describe('PriceBasis', () => {
+    it('includes "stock"', () => {
+      const basis: PriceBasis = 'stock'
+      expect(basis).toBe('stock')
+    })
+
+    it('includes "option"', () => {
+      const basis: PriceBasis = 'option'
+      expect(basis).toBe('option')
+    })
   })
 })
