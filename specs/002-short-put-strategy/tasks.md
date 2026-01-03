@@ -127,7 +127,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Strategy Selector Component
 
-- [ ] T013 [US1] (TEST) Write comprehensive test suite for strategy selector dropdown covering:
+- [x] T013 [US1] (TEST) Write comprehensive test suite for strategy selector dropdown covering:
     • Dropdown renders with all strategy options ('Long Stock', 'Short Put')
     • Default selection is 'Long Stock'
     • User can select 'Short Put' option
