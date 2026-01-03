@@ -26,7 +26,7 @@ describe('SchemaManager - Database v3→v4 Migration', () => {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(db, 3)
+        SchemaManager.initializeSchema(event, db)
       }
 
       request.onsuccess = () => {
@@ -67,7 +67,7 @@ describe('SchemaManager - Database v3→v4 Migration', () => {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(db, toVersion)
+        SchemaManager.initializeSchema(event, db)
       }
 
       request.onsuccess = () => resolve(request.result)

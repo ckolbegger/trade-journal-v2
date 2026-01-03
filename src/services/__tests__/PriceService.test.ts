@@ -56,7 +56,7 @@ describe('PriceService Core Functionality', () => {
       request.onsuccess = () => resolve(request.result)
       request.onupgradeneeded = (event) => {
         const database = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(database, 1)
+        SchemaManager.initializeSchema(event, database)
       }
     })
 

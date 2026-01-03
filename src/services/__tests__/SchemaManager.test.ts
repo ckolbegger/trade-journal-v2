@@ -146,7 +146,7 @@ function openDatabaseWithSchema(dbName: string, version: number): Promise<IDBDat
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result
-      SchemaManager.initializeSchema(db, version)
+      SchemaManager.initializeSchema(event, db)
     }
   })
 }

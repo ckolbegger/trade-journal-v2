@@ -163,7 +163,7 @@ describe('ServiceContainer', () => {
       // Verify database was created with correct name and version
       expect(db).toBeDefined()
       expect(db.name).toBe('TradingJournalDB')
-      expect(db.version).toBe(3)
+      expect(db.version).toBe(4)
 
       // Note: Schema correctness is verified by SchemaManager.test.ts
       // We trust that SchemaManager.initializeSchema() creates the stores

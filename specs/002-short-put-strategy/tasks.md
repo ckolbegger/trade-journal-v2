@@ -58,7 +58,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Migration is idempotent (running twice doesn't corrupt data)
     • All existing data is preserved during migration
     File: `src/services/__tests__/SchemaManager-option-migration.test.ts`
-- [ ] T002 (IMPL) Increment database version to 4 and add v3→v4 migration handler in `src/services/SchemaManager.ts`
+- [x] T002 (IMPL) Increment database version to 4 and add v3→v4 migration handler in `src/services/SchemaManager.ts`
     Run tests to verify all migration scenarios pass
     **CRITICAL DEPENDENCY**: Must complete before T004 type extensions - IndexedDB won't store new option fields until migration runs
 
