@@ -70,7 +70,7 @@
 - [x] T011 [US1] Extend PositionService.create() to handle option plans with comprehensive unit tests in src/services/PositionService.ts
   - Tests: creates Short Put position, validates option fields, rejects invalid strike/expiration, persists all option fields to DB
 
-- [ ] T011a [US1] Integration test for PositionService option plan creation in tests/integration/position-service-options.test.ts
+- [x] T011a [US1] Integration test for PositionService option plan creation in tests/integration/position-service-options.test.ts
   - Tests: service validates via PositionValidator, persists to IndexedDB, returns complete position object, retrievable after save
 
 - [ ] T012 [US1] Add inline validation error display to PositionCreate in src/pages/PositionCreate.tsx (FR-049, FR-050)
