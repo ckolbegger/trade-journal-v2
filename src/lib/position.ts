@@ -170,14 +170,24 @@ export class PositionService {
   async create(position: Position): Promise<Position> {
     this.validatePosition(position)
 
+    // Validate option-specific fields for option strategies
+    if (position.strategy_type === 'Short Put') {
+      PositionValidator.validateOptionPosition(position)
+    }
+
+    // Generate ID if not provided
+    const positionToSave = position.id === ''
+      ? { ...position, id: crypto.randomUUID() }
+      : position
+
     const db = this.db
     return new Promise((resolve, reject) => {
       const transaction = db.transaction([this.positionStore], 'readwrite')
       const store = transaction.objectStore(this.positionStore)
-      const request = store.add(position)
+      const request = store.add(positionToSave)
 
       request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(position)
+      request.onsuccess = () => resolve(positionToSave)
     })
   }
 

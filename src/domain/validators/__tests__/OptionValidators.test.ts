@@ -1,46 +1,9 @@
 import { describe, it, expect } from 'vitest'
+import { PositionValidator } from '@/domain/validators/PositionValidator'
 import { ValidationError } from '@/lib/position'
 
 /**
- * Mock validateOptionPosition function for testing
- * In production, this will be in PositionValidator.ts
- */
-function validateOptionPosition(position: any): void {
-  if (position.strategy_type === 'Short Put') {
-    // Validate strike_price first (value check before required check)
-    if (position.strike_price !== undefined && position.strike_price <= 0) {
-      throw new ValidationError('strike_price must be greater than 0')
-    }
-
-    // Required option fields for Short Put
-    if (position.option_type === undefined) {
-      throw new ValidationError('option_type is required for Short Put positions')
-    }
-    if (position.strike_price === undefined) {
-      throw new ValidationError('strike_price is required for Short Put positions')
-    }
-    if (position.expiration_date === undefined) {
-      throw new ValidationError('expiration_date is required for Short Put positions')
-    }
-    if (position.profit_target_basis === undefined) {
-      throw new ValidationError('profit_target_basis is required for Short Put positions')
-    }
-    if (position.stop_loss_basis === undefined) {
-      throw new ValidationError('stop_loss_basis is required for Short Put positions')
-    }
-
-    // Validate expiration_date is in the future
-    const expiration = new Date(position.expiration_date)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    if (expiration <= today) {
-      throw new ValidationError('expiration_date must be in the future')
-    }
-  }
-}
-
-/**
- * Comprehensive test suite for validateOptionPosition()
+ * Comprehensive test suite for PositionValidator.validateOptionPosition()
  *
  * This test suite verifies that option position validation works correctly:
  * - Valid Short Put position: All required option fields present → passes
@@ -53,7 +16,7 @@ function validateOptionPosition(position: any): void {
  * - Strike price <= 0 → throws ValidationError
  * - Long Stock position passes validation (no option fields required)
  */
-describe('validateOptionPosition()', () => {
+describe('PositionValidator.validateOptionPosition()', () => {
   describe('Valid Short Put Position', () => {
     it('should pass when all required option fields are present', () => {
       const futureDate = new Date()
@@ -80,7 +43,7 @@ describe('validateOptionPosition()', () => {
         trades: []
       }
 
-      expect(() => validateOptionPosition(validShortPut)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(validShortPut)).not.toThrow()
     })
 
     it('should accept valid option_type as "put" or "call"', () => {
@@ -105,8 +68,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(putPosition)).not.toThrow()
-      expect(() => validateOptionPosition(callPosition)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(putPosition)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(callPosition)).not.toThrow()
     })
   })
 
@@ -121,8 +84,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(missingOptionType)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(missingOptionType)).toThrow('option_type is required')
+      expect(() => PositionValidator.validateOptionPosition(missingOptionType)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(missingOptionType)).toThrow('option_type is required')
     })
 
     it('should throw ValidationError when strike_price is missing', () => {
@@ -135,8 +98,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(missingStrike)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(missingStrike)).toThrow('strike_price is required')
+      expect(() => PositionValidator.validateOptionPosition(missingStrike)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(missingStrike)).toThrow('strike_price is required')
     })
 
     it('should throw ValidationError when expiration_date is missing', () => {
@@ -149,8 +112,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(missingExpiration)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(missingExpiration)).toThrow('expiration_date is required')
+      expect(() => PositionValidator.validateOptionPosition(missingExpiration)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(missingExpiration)).toThrow('expiration_date is required')
     })
 
     it('should throw ValidationError when profit_target_basis is missing', () => {
@@ -163,8 +126,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(missingProfitBasis)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(missingProfitBasis)).toThrow('profit_target_basis is required')
+      expect(() => PositionValidator.validateOptionPosition(missingProfitBasis)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(missingProfitBasis)).toThrow('profit_target_basis is required')
     })
 
     it('should throw ValidationError when stop_loss_basis is missing', () => {
@@ -177,8 +140,8 @@ describe('validateOptionPosition()', () => {
         // stop_loss_basis is missing
       }
 
-      expect(() => validateOptionPosition(missingStopBasis)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(missingStopBasis)).toThrow('stop_loss_basis is required')
+      expect(() => PositionValidator.validateOptionPosition(missingStopBasis)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(missingStopBasis)).toThrow('stop_loss_basis is required')
     })
   })
 
@@ -193,8 +156,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(pastExpiration)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(pastExpiration)).toThrow('must be in the future')
+      expect(() => PositionValidator.validateOptionPosition(pastExpiration)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(pastExpiration)).toThrow('must be in the future')
     })
 
     it('should throw ValidationError when expiration_date is today', () => {
@@ -207,7 +170,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(todayExpiration)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(todayExpiration)).toThrow(ValidationError)
     })
 
     it('should pass when expiration_date is in the future', () => {
@@ -223,7 +186,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(futureExpiration)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(futureExpiration)).not.toThrow()
     })
   })
 
@@ -238,8 +201,8 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(zeroStrike)).toThrow(ValidationError)
-      expect(() => validateOptionPosition(zeroStrike)).toThrow('must be greater than 0')
+      expect(() => PositionValidator.validateOptionPosition(zeroStrike)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(zeroStrike)).toThrow('must be greater than 0')
     })
 
     it('should throw ValidationError when strike_price is negative', () => {
@@ -252,7 +215,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(negativeStrike)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(negativeStrike)).toThrow(ValidationError)
     })
 
     it('should pass when strike_price is positive', () => {
@@ -276,7 +239,7 @@ describe('validateOptionPosition()', () => {
           profit_target_basis: 'stock_price',
           stop_loss_basis: 'stock_price'
         }
-        expect(() => validateOptionPosition(position)).not.toThrow()
+        expect(() => PositionValidator.validateOptionPosition(position)).not.toThrow()
       })
     })
   })
@@ -299,7 +262,7 @@ describe('validateOptionPosition()', () => {
         // No option fields - they are optional
       }
 
-      expect(() => validateOptionPosition(longStock)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(longStock)).not.toThrow()
     })
 
     it('should not require option fields for Long Stock position', () => {
@@ -308,7 +271,7 @@ describe('validateOptionPosition()', () => {
         // No option fields at all
       }
 
-      expect(() => validateOptionPosition(longStock)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(longStock)).not.toThrow()
     })
   })
 
@@ -326,7 +289,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'stock_price'
       }
 
-      expect(() => validateOptionPosition(stockPriceBasis)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(stockPriceBasis)).not.toThrow()
     })
 
     it('should accept "option_price" as valid profit_target_basis', () => {
@@ -342,7 +305,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'option_price'
       }
 
-      expect(() => validateOptionPosition(optionPriceBasis)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(optionPriceBasis)).not.toThrow()
     })
 
     it('should accept mixed basis (stock for profit, option for stop)', () => {
@@ -358,7 +321,7 @@ describe('validateOptionPosition()', () => {
         stop_loss_basis: 'option_price'
       }
 
-      expect(() => validateOptionPosition(mixedBasis)).not.toThrow()
+      expect(() => PositionValidator.validateOptionPosition(mixedBasis)).not.toThrow()
     })
   })
 
@@ -369,7 +332,7 @@ describe('validateOptionPosition()', () => {
         // Missing required fields
       }
 
-      expect(() => validateOptionPosition(invalidPosition)).toThrow(ValidationError)
+      expect(() => PositionValidator.validateOptionPosition(invalidPosition)).toThrow(ValidationError)
     })
 
     it('should include descriptive error message', () => {
@@ -378,7 +341,7 @@ describe('validateOptionPosition()', () => {
         // Missing required fields
       }
 
-      expect(() => validateOptionPosition(invalidPosition)).toThrow()
+      expect(() => PositionValidator.validateOptionPosition(invalidPosition)).toThrow()
     })
   })
 })

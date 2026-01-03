@@ -47,13 +47,16 @@ describe('PositionService - createWithOptionStrategy()', () => {
 
   describe('Short Put Position Creation', () => {
     it('should create Short Put position with all option fields', async () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+
       const shortPutPosition: Position = {
         id: '',  // Will be generated
         symbol: 'AAPL',
         strategy_type: 'Short Put',
         option_type: 'put',
         strike_price: 150,
-        expiration_date: '2025-01-17',
+        expiration_date: futureDate.toISOString().split('T')[0],
         premium_per_contract: 3.50,
         profit_target_basis: 'stock_price',
         profit_target: 140,
@@ -75,18 +78,21 @@ describe('PositionService - createWithOptionStrategy()', () => {
       expect(result.strategy_type).toBe('Short Put')
       expect(result.option_type).toBe('put')
       expect(result.strike_price).toBe(150)
-      expect(result.expiration_date).toBe('2025-01-17')
+      expect(result.expiration_date).toBe(futureDate.toISOString().split('T')[0])
       expect(result.premium_per_contract).toBe(3.50)
     })
 
     it('should save position to IndexedDB positions store', async () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+
       const shortPutPosition: Position = {
         id: 'test-short-put-1',
         symbol: 'SPY',
         strategy_type: 'Short Put',
         option_type: 'put',
         strike_price: 400,
-        expiration_date: '2025-02-21',
+        expiration_date: futureDate.toISOString().split('T')[0],
         premium_per_contract: 2.75,
         profit_target_basis: 'option_price',
         profit_target: 20,
@@ -108,20 +114,25 @@ describe('PositionService - createWithOptionStrategy()', () => {
       expect(retrieved).toBeDefined()
       expect(retrieved?.strategy_type).toBe('Short Put')
       expect(retrieved?.strike_price).toBe(400)
-      expect(retrieved?.expiration_date).toBe('2025-02-21')
+      expect(retrieved?.expiration_date).toBe(futureDate.toISOString().split('T')[0])
     })
   })
 
   describe('ID Generation', () => {
     it('should generate ID when position has empty string ID', async () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+
       const positionWithoutId: Position = {
         id: '',
         symbol: 'TSLA',
         strategy_type: 'Short Put',
         option_type: 'put',
         strike_price: 200,
-        expiration_date: '2025-01-17',
+        expiration_date: futureDate.toISOString().split('T')[0],
         premium_per_contract: 5.50,
+        profit_target_basis: 'stock_price',
+        stop_loss_basis: 'stock_price',
         target_entry_price: 200,
         target_quantity: 3,
         profit_target: 190,
@@ -140,14 +151,19 @@ describe('PositionService - createWithOptionStrategy()', () => {
     })
 
     it('should use provided ID when position has ID', async () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+
       const positionWithId: Position = {
         id: 'my-custom-id',
         symbol: 'TSLA',
         strategy_type: 'Short Put',
         option_type: 'put',
         strike_price: 200,
-        expiration_date: '2025-01-17',
+        expiration_date: futureDate.toISOString().split('T')[0],
         premium_per_contract: 5.50,
+        profit_target_basis: 'stock_price',
+        stop_loss_basis: 'stock_price',
         target_entry_price: 200,
         target_quantity: 3,
         profit_target: 190,
@@ -310,13 +326,16 @@ describe('PositionService - createWithOptionStrategy()', () => {
 
   describe('Return Value', () => {
     it('should return the created position with all fields', async () => {
+      const futureDate = new Date()
+      futureDate.setFullYear(futureDate.getFullYear() + 1)
+
       const position: Position = {
         id: 'test-return-1',
         symbol: 'AAPL',
         strategy_type: 'Short Put',
         option_type: 'put',
         strike_price: 150,
-        expiration_date: '2025-01-17',
+        expiration_date: futureDate.toISOString().split('T')[0],
         premium_per_contract: 3.50,
         profit_target_basis: 'stock_price',
         profit_target: 140,
@@ -338,7 +357,7 @@ describe('PositionService - createWithOptionStrategy()', () => {
       expect(result.strategy_type).toBe('Short Put')
       expect(result.option_type).toBe('put')
       expect(result.strike_price).toBe(150)
-      expect(result.expiration_date).toBe('2025-01-17')
+      expect(result.expiration_date).toBe(futureDate.toISOString().split('T')[0])
       expect(result.premium_per_contract).toBe(3.50)
       expect(result.profit_target_basis).toBe('stock_price')
       expect(result.profit_target).toBe(140)

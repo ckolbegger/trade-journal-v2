@@ -108,7 +108,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Long Stock positions still create correctly
     • Position saves to IndexedDB positions store
     File: `src/services/__tests__/PositionService-options.test.ts`
-- [ ] T010 [US1] (IMPL) Implement createWithOptionStrategy() in `src/services/PositionService.ts`
+- [x] T010 [US1] (IMPL) Implement createWithOptionStrategy() in `src/services/PositionService.ts`
 
 #### Position Validator
 
@@ -123,7 +123,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Strike price <= 0 → throws ValidationError
     • Long Stock position passes validation (no option fields required)
     File: `src/domain/validators/__tests__/OptionValidators.test.ts`
-- [ ] T012 [US1] (IMPL) Implement validateOptionPosition() in `src/domain/validators/PositionValidator.ts`
+- [x] T012 [US1] (IMPL) Implement validateOptionPosition() in `src/domain/validators/PositionValidator.ts`
 
 #### Strategy Selector Component
 

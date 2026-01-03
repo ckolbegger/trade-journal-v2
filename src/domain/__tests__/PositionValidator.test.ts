@@ -65,10 +65,10 @@ describe('PositionValidator', () => {
   })
 
   describe('required fields validation', () => {
-    it('should reject missing id', () => {
+    it('should accept empty id (for auto-generation)', () => {
       const position = { ...validPosition, id: '' }
       expect(() => PositionValidator.validatePosition(position))
-        .toThrow('Invalid position data')
+        .not.toThrow()
     })
 
     it('should reject missing symbol', () => {
