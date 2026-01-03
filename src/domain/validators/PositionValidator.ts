@@ -26,6 +26,41 @@ export class PositionValidator {
       throw new Error('position_thesis cannot be empty')
     }
 
+    // Option-specific field validations
+    if (position.strike_price !== undefined && position.strike_price <= 0) {
+      throw new Error('strike_price must be positive')
+    }
+
+    if (position.expiration_date !== undefined) {
+      const now = new Date()
+      if (position.expiration_date < now) {
+        throw new Error('expiration_date must be in the future')
+      }
+    }
+
+    if (position.premium_per_contract !== undefined && position.premium_per_contract < 0) {
+      throw new Error('premium_per_contract must be positive when provided')
+    }
+
+    // Strategy-specific required field validations
+    if (position.strategy_type === 'Short Put') {
+      if (!position.option_type) {
+        throw new Error('option_type is required for Short Put strategy')
+      }
+      if (position.strike_price === undefined) {
+        throw new Error('strike_price is required for Short Put strategy')
+      }
+      if (!position.expiration_date) {
+        throw new Error('expiration_date is required for Short Put strategy')
+      }
+      if (!position.profit_target_basis) {
+        throw new Error('profit_target_basis is required for Short Put strategy')
+      }
+      if (!position.stop_loss_basis) {
+        throw new Error('stop_loss_basis is required for Short Put strategy')
+      }
+    }
+
     // Check required fields last
     if (!position.id || !position.symbol || !position.strategy_type ||
         position.target_entry_price === undefined || position.target_quantity === undefined ||

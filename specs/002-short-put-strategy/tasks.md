@@ -39,7 +39,7 @@
 
 **Purpose**: Validators needed for position plan creation
 
-- [ ] T004 Extend PositionValidator with option plan validation in src/domain/validators/PositionValidator.ts (strike_price > 0, expiration future date, premium > 0 when provided)
+- [x] T004 Extend PositionValidator with option plan validation in src/domain/validators/PositionValidator.ts (strike_price > 0, expiration future date, premium > 0 when provided)
   - Tests: accepts valid Short Put plan, rejects strike_price <= 0, rejects past expiration date, rejects negative premium, accepts zero premium (undefined), validates all fields present for Short Put
 - [ ] T005 Add lazy migration logic for existing positions in src/services/PositionService.ts (default strategy_type to 'Long Stock', trade_kind to 'stock')
   - Tests: existing position without strategy_type gets 'Long Stock', existing position without trade_kind gets 'stock', new positions require explicit strategy_type, migration is idempotent
