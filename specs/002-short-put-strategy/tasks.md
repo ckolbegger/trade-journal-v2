@@ -57,7 +57,7 @@
 
 ### Implementation for User Story 1
 
-- [ ] T006 [P] [US1] Create StrategySelector component with comprehensive unit tests in src/components/StrategySelector.tsx
+- [x] T006 [P] [US1] Create StrategySelector component with comprehensive unit tests in src/components/StrategySelector.tsx
   - Tests: renders options, selection changes value, default to Long Stock, keyboard accessible
 - [ ] T007 [P] [US1] Create StrikePriceInput component with comprehensive unit tests in src/components/StrikePriceInput.tsx
   - Tests: happy path, rejects negative, rejects non-numeric, accepts decimals, min value 0.01
