@@ -6,12 +6,20 @@ import { generatePositionId, generateJournalId } from '@/lib/uuid'
 
 export interface CreatePositionData {
   symbol: string
+  strategy_type: 'Long Stock' | 'Short Put'
   target_entry_price: number
   target_quantity: number
   profit_target: number
   stop_loss: number
   position_thesis: string
   journalFields: JournalField[]
+  // Option-specific fields
+  option_type?: 'put' | 'call'
+  strike_price?: number
+  expiration_date?: string | Date
+  premium_per_contract?: number
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
 }
 
 export interface TransactionResult {
@@ -62,7 +70,7 @@ export class PositionJournalTransaction {
       const position: Position = {
         id: positionId,
         symbol: data.symbol.toUpperCase(),
-        strategy_type: 'Long Stock',
+        strategy_type: data.strategy_type,
         target_entry_price: data.target_entry_price,
         target_quantity: data.target_quantity,
         profit_target: data.profit_target,
@@ -71,7 +79,16 @@ export class PositionJournalTransaction {
         created_date: new Date(),
         status: 'planned',
         journal_entry_ids: [journalId],
-        trades: [] // New position plan has no trades yet
+        trades: [], // New position plan has no trades yet
+        // Option-specific fields
+        option_type: data.option_type,
+        strike_price: data.strike_price,
+        expiration_date: data.expiration_date instanceof Date
+          ? data.expiration_date.toISOString()
+          : data.expiration_date,
+        premium_per_contract: data.premium_per_contract,
+        profit_target_basis: data.profit_target_basis,
+        stop_loss_basis: data.stop_loss_basis
       }
 
       const createdPosition = await this.positionService.create(position)

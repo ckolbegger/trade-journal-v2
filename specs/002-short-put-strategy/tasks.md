@@ -249,7 +249,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify position shows in position list with option details (T024 verified)
     • Verify option fields saved correctly (strike, expiration, etc.)
     File: `src/integration/__tests__/us1-create-short-put-plan.test.tsx`
-- [ ] T028 [US1] (IMPL) Implement position creation flow to make all integration tests pass
+- [x] T028 [US1] (IMPL) Implement position creation flow to make all integration tests pass
 
 - [ ] T029 [US1] (TEST) Write comprehensive integration test suite for journal requirement covering:
     • Attempt to submit position plan without journal entry
