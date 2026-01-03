@@ -130,34 +130,6 @@ export function PositionCreate() {
     }
 
     setErrors(newErrors)
-
-    // Focus the first invalid field if there are errors
-    const firstErrorField = Object.keys(newErrors)[0] as keyof typeof newErrors
-    if (firstErrorField) {
-      // Map field names to their element IDs
-      const fieldIdMap: Record<string, string> = {
-        symbol: 'symbol',
-        target_entry_price: 'target_entry_price',
-        target_quantity: 'target_quantity',
-        profit_target: 'profit_target',
-        stop_loss: 'stop_loss',
-        position_thesis: 'position_thesis',
-        strike_price: 'strike_price',
-        expiration_date: 'expiration_date'
-      }
-
-      const elementId = fieldIdMap[firstErrorField]
-      if (elementId) {
-        // Use setTimeout to ensure the DOM has updated with the error messages
-        setTimeout(() => {
-          const element = document.getElementById(elementId)
-          if (element) {
-            element.focus()
-          }
-        }, 0)
-      }
-    }
-
     return Object.keys(newErrors).length === 0
   }
 
@@ -230,8 +202,8 @@ export function PositionCreate() {
       // Create transaction service
       const transactionService = new PositionJournalTransaction(positionService, journalService)
 
-      // Execute UUID-based transaction
-      const result = await transactionService.createPositionWithJournal({
+      // Prepare base position data
+      const positionData: any = {
         symbol: formData.symbol,
         target_entry_price: parseFloat(formData.target_entry_price),
         target_quantity: parseInt(formData.target_quantity),
@@ -239,7 +211,23 @@ export function PositionCreate() {
         stop_loss: parseFloat(formData.stop_loss),
         position_thesis: formData.position_thesis,
         journalFields: journalFields
-      })
+      }
+
+      // Add option-specific fields for Short Put
+      if (formData.strategy_type === 'Short Put') {
+        positionData.strategy_type = 'Short Put'
+        positionData.option_type = 'put'
+        positionData.strike_price = parseFloat(formData.strike_price || '0')
+        positionData.expiration_date = formData.expiration_date
+        positionData.premium_per_contract = formData.premium_per_contract ? parseFloat(formData.premium_per_contract) : undefined
+        positionData.profit_target_basis = formData.profit_target_basis || 'stock_price'
+        positionData.stop_loss_basis = formData.stop_loss_basis || 'stock_price'
+      } else {
+        positionData.strategy_type = 'Long Stock'
+      }
+
+      // Execute UUID-based transaction
+      const result = await transactionService.createPositionWithJournal(positionData)
 
       // Navigate to position detail on success
       navigate(`/position/${result.position.id}`)

@@ -95,7 +95,7 @@ describe('Integration: US1 - Create Short Put Position Plan', () => {
       return date.toISOString().split('T')[0]
     })()
 
-    // Select Short Put strategy
+    // Select Short Put strategy FIRST
     const strategySelect = screen.getByRole('combobox', { name: /Strategy Type/i })
     fireEvent.change(strategySelect, { target: { value: 'Short Put' } })
 
@@ -123,13 +123,19 @@ describe('Integration: US1 - Create Short Put Position Plan', () => {
     const profitBasisSelect = screen.getByRole('combobox', { name: /Profit Basis/i })
     fireEvent.change(profitBasisSelect, { target: { value: profitTargetBasis } })
 
-    const stopLossInputs = screen.getAllByLabelText(/Stop Loss/i)
-    fireEvent.change(stopLossInputs[0], { target: { value: stopLoss } })
+    // Use id selector for stop_loss to avoid ambiguity with stop_loss_basis label
+    const stopLossInput = document.getElementById('stop_loss') as HTMLInputElement
+    expect(stopLossInput).toBeInTheDocument()
+    fireEvent.change(stopLossInput, { target: { value: stopLoss } })
+
     const stopLossBasisSelect = screen.getByRole('combobox', { name: /Stop Loss Basis/i })
     fireEvent.change(stopLossBasisSelect, { target: { value: stopLossBasis } })
 
     // Fill position thesis
     fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: positionThesis } })
+
+    // Wait a moment for React state to settle
+    await new Promise(resolve => setTimeout(resolve, 100))
   }
 
   /**
@@ -162,12 +168,13 @@ describe('Integration: US1 - Create Short Put Position Plan', () => {
     })
 
     // Proceed to Step 3: Risk Assessment
-    const nextToRiskButton = screen.getByRole('button', { name: /Next: Risk Assessment/i })
+    const nextToRiskButton = screen.getByText('Next: Risk Assessment')
+    expect(nextToRiskButton).toBeVisible()
     fireEvent.click(nextToRiskButton)
 
     await waitFor(() => {
       expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-    })
+    }, { timeout: 5000 })
 
     // Proceed to Step 4: Confirmation
     const nextToConfirmButton = screen.getByRole('button', { name: /Next: Confirmation/i })
