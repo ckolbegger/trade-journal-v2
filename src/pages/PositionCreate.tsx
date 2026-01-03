@@ -10,6 +10,7 @@ import { PositionJournalTransaction } from '@/services/PositionJournalTransactio
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import { StrategySelector } from '@/components/forms/strategy/StrategySelector'
 import { StrikePriceInput } from '@/components/forms/strategy/StrikePriceInput'
+import { ExpirationDatePicker } from '@/components/forms/strategy/ExpirationDatePicker'
 import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
@@ -277,19 +278,12 @@ export function PositionCreate() {
                 onChange={(value) => handleInputChange('strike_price', value)}
                 error={errors.strike_price}
               />
-              <div>
-                <Label htmlFor="expiration_date" className="block text-sm font-medium mb-1.5 text-gray-700">
-                  Expiration Date *
-                </Label>
-                <Input
-                  id="expiration_date"
-                  type="date"
-                  value={formData.expiration_date || ''}
-                  onChange={(e) => handleInputChange('expiration_date', e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-md text-base"
-                />
-                {errors.expiration_date && <p className="text-red-600 text-xs mt-1">{errors.expiration_date}</p>}
-              </div>
+              <ExpirationDatePicker
+                value={formData.expiration_date || ''}
+                onChange={(value) => handleInputChange('expiration_date', value)}
+                error={errors.expiration_date}
+                required
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">

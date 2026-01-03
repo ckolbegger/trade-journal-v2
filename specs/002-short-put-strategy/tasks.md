@@ -163,7 +163,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Value changes trigger onChange callback
     • Date value formatted correctly (YYYY-MM-DD)
     File: `src/components/forms/strategy/__tests__/ExpirationDatePicker.test.tsx`
-- [ ] T018 [US1] (IMPL) Create ExpirationDatePicker component in `src/components/forms/strategy/ExpirationDatePicker.tsx`
+- [x] T018 [US1] (IMPL) Create ExpirationDatePicker component in `src/components/forms/strategy/ExpirationDatePicker.tsx`
 
 #### Price Basis Selector Component
 
