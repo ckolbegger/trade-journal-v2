@@ -264,7 +264,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 ### Bug Fixes
 
-- [ ] B001 [US1] (BUG) Fix risk assessment calculations for Short Put positions
+- [x] B001 [US1] (BUG) Fix risk assessment calculations for Short Put positions
     • Current implementation uses Long Stock formula for max profit/loss
     • For Short Put:
       - Max Profit = Premium × quantity (the premium collected)

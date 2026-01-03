@@ -165,10 +165,33 @@ export function PositionCreate() {
     const profitTarget = parseFloat(formData.profit_target) || 0
     const stopLoss = parseFloat(formData.stop_loss) || 0
 
-    const totalInvestment = entryPrice * quantity
-    const maxProfit = (profitTarget - entryPrice) * quantity
-    const maxLoss = (entryPrice - stopLoss) * quantity
-    const riskRewardRatio = maxLoss > 0 ? `1:${Math.round(maxProfit / maxLoss)}` : '0:0'
+    let totalInvestment: number
+    let maxProfit: number
+    let maxLoss: number
+    let riskRewardRatio: string
+
+    if (formData.strategy_type === 'Short Put') {
+      // Short Put calculations
+      const strikePrice = parseFloat(formData.strike_price || '0') || 0
+      const premiumPerContract = parseFloat(formData.premium_per_contract || '0') || 0
+
+      // Max Profit = Premium × Quantity × 100
+      maxProfit = premiumPerContract * quantity * 100
+
+      // Max Loss = (Strike Price - Premium) × 100 × Quantity
+      maxLoss = (strikePrice - premiumPerContract) * 100 * quantity
+
+      // Total investment (margin requirement) = Strike Price × 100 × Quantity
+      // This is a simplification - actual margin requirements vary by broker
+      totalInvestment = strikePrice * 100 * quantity
+    } else {
+      // Long Stock calculations
+      totalInvestment = entryPrice * quantity
+      maxProfit = (profitTarget - entryPrice) * quantity
+      maxLoss = (entryPrice - stopLoss) * quantity
+    }
+
+    riskRewardRatio = maxLoss > 0 ? `1:${Math.round(maxProfit / maxLoss)}` : '0:0'
 
     return {
       totalInvestment,
