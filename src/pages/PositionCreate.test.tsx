@@ -84,6 +84,16 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertFormFieldExists(/Stop Loss Basis/i)
     })
 
+    it('should not show strike price suggestion chips', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '3.00' } })
+
+      expect(screen.queryByRole('button', { name: /\$1\.00/i })).not.toBeInTheDocument()
+      expect(screen.queryByRole('button', { name: /\$3\.00/i })).not.toBeInTheDocument()
+    })
+
     it('should validate required fields before proceeding to step 2', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 

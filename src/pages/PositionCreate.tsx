@@ -71,23 +71,6 @@ const parseQuantity = (value: string): number => {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
-const buildStrikeSuggestions = (entryPrice: string): number[] => {
-  const numeric = Number.parseFloat(entryPrice)
-  if (!Number.isFinite(numeric) || numeric <= 0) {
-    return []
-  }
-  const increment = numeric >= 50 ? 5 : 1
-  const rounded = Math.round(numeric / increment) * increment
-  const suggestions = [
-    rounded - (increment * 2),
-    rounded - increment,
-    rounded,
-    rounded + increment,
-    rounded + (increment * 2)
-  ]
-  return suggestions.filter((value, index, array) => value > 0 && array.indexOf(value) === index)
-}
-
 export function PositionCreate() {
   const navigate = useNavigate()
   const services = useServices()
@@ -404,7 +387,6 @@ export function PositionCreate() {
               value={formData.strike_price}
               onChange={(value) => handleInputChange('strike_price', value)}
               error={errors.strike_price}
-              suggestedStrikes={buildStrikeSuggestions(formData.target_entry_price)}
             />
             <ExpirationDatePicker
               value={formData.expiration_date}

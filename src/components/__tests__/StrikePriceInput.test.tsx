@@ -39,18 +39,15 @@ describe('StrikePriceInput', () => {
     expect(screen.getByText(/strike price is required/i)).toBeInTheDocument()
   })
 
-  it('[Unit] should render suggested strike buttons and apply selection', () => {
-    const onChange = vi.fn()
+  it('[Unit] should not render suggestion chips', () => {
     render(
       <StrikePriceInput
         value=""
-        onChange={onChange}
+        onChange={vi.fn()}
         suggestedStrikes={[95, 100, 105]}
       />
     )
 
-    const pickButton = screen.getByRole('button', { name: /\$100\.00/i })
-    fireEvent.click(pickButton)
-    expect(onChange).toHaveBeenCalledWith('100.00')
+    expect(screen.queryByRole('button', { name: /\$100\.00/i })).not.toBeInTheDocument()
   })
 })

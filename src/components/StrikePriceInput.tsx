@@ -17,7 +17,6 @@ export function StrikePriceInput({
   value,
   onChange,
   error,
-  suggestedStrikes = [],
   disabled = false
 }: StrikePriceInputProps) {
   return (
@@ -38,21 +37,6 @@ export function StrikePriceInput({
           disabled={disabled}
         />
       </div>
-      {suggestedStrikes.length > 0 && (
-        <div className="mt-2 flex flex-wrap gap-2">
-          {suggestedStrikes.map((strike) => (
-            <button
-              key={strike}
-              type="button"
-              onClick={() => onChange(strike.toFixed(2))}
-              className="px-2 py-1 text-xs border border-gray-300 rounded text-gray-600 hover:border-gray-400"
-              disabled={disabled}
-            >
-              ${strike.toFixed(2)}
-            </button>
-          ))}
-        </div>
-      )}
       {error && <p className="text-red-600 text-xs mt-1">{error}</p>}
     </div>
   )

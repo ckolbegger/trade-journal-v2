@@ -217,3 +217,13 @@ Task: "Step 3 - Add integration test for STO flow in /home/ckolbegger/src/trade-
 5. Add User Story 5 → Test independently → Demo
 6. Add User Story 6 → Test independently → Demo
 7. Add User Story 7 → Test independently → Demo
+
+---
+
+## Bugs
+
+- [x] B001 [US1] Remove extra strike suggestion chips below Strike Price
+  - Repro: Open Create Position → select Short Put → enter Target Entry Price (e.g., 3.00) → observe Strike Price field.
+  - Actual: Extra button chips ($1.00, $2.00, $3.00, $4.00, $5.00) appear under Strike Price (see `screenshots/ExtraFields.png`).
+  - Expected: No extra chips shown; only the Strike Price input remains.
+  - Suspected source: `src/components/StrikePriceInput.tsx` (suggested strike buttons) wired from `src/pages/PositionCreate.tsx`.
