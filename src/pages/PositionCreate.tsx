@@ -9,6 +9,7 @@ import { useServices } from '@/contexts/ServiceContext'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
 import { StrategySelector } from '@/components/forms/strategy/StrategySelector'
+import { StrikePriceInput } from '@/components/forms/strategy/StrikePriceInput'
 import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
@@ -36,6 +37,9 @@ interface ValidationErrors {
   profit_target?: string
   stop_loss?: string
   position_thesis?: string
+  // Option-specific errors
+  strike_price?: string
+  expiration_date?: string
 }
 
 export function PositionCreate() {
@@ -101,6 +105,27 @@ export function PositionCreate() {
 
     if (!formData.position_thesis.trim()) {
       newErrors.position_thesis = 'Position thesis is required'
+    }
+
+    // Option-specific validation for Short Put
+    if (formData.strategy_type === 'Short Put') {
+      if (!formData.strike_price) {
+        newErrors.strike_price = 'Strike price is required'
+      } else if (parseFloat(formData.strike_price) <= 0) {
+        newErrors.strike_price = 'Strike price must be greater than 0'
+      }
+
+      if (!formData.expiration_date) {
+        newErrors.expiration_date = 'Expiration date is required'
+      } else {
+        // Check if expiration date is in the future
+        const expiration = new Date(formData.expiration_date)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (expiration <= today) {
+          newErrors.expiration_date = 'Expiration date must be in the future'
+        }
+      }
     }
 
     setErrors(newErrors)
@@ -243,6 +268,83 @@ export function PositionCreate() {
             onChange={(value) => handleInputChange('strategy_type', value)}
           />
         </div>
+
+        {formData.strategy_type === 'Short Put' && (
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              <StrikePriceInput
+                value={formData.strike_price || ''}
+                onChange={(value) => handleInputChange('strike_price', value)}
+                error={errors.strike_price}
+              />
+              <div>
+                <Label htmlFor="expiration_date" className="block text-sm font-medium mb-1.5 text-gray-700">
+                  Expiration Date *
+                </Label>
+                <Input
+                  id="expiration_date"
+                  type="date"
+                  value={formData.expiration_date || ''}
+                  onChange={(e) => handleInputChange('expiration_date', e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-md text-base"
+                />
+                {errors.expiration_date && <p className="text-red-600 text-xs mt-1">{errors.expiration_date}</p>}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="premium_per_contract" className="block text-sm font-medium mb-1.5 text-gray-700">
+                  Premium per Contract
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                  <Input
+                    id="premium_per_contract"
+                    type="number"
+                    step="0.01"
+                    value={formData.premium_per_contract || ''}
+                    onChange={(e) => handleInputChange('premium_per_contract', e.target.value)}
+                    placeholder="0.00"
+                    className="pl-7 w-full p-3 border border-gray-300 rounded-md text-base"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label htmlFor="profit_target_basis" className="block text-sm font-medium mb-1.5 text-gray-700">
+                    Profit Basis *
+                  </Label>
+                  <select
+                    id="profit_target_basis"
+                    value={formData.profit_target_basis || 'stock_price'}
+                    onChange={(e) => handleInputChange('profit_target_basis', e.target.value as 'stock_price' | 'option_price')}
+                    className="w-full p-3 border border-gray-300 rounded-md text-base bg-white"
+                  >
+                    <option value="stock_price">Stock Price</option>
+                    <option value="option_price">Option Price</option>
+                  </select>
+                </div>
+
+                <div>
+                  <Label htmlFor="stop_loss_basis" className="block text-sm font-medium mb-1.5 text-gray-700">
+                    Stop Loss Basis *
+                  </Label>
+                  <select
+                    id="stop_loss_basis"
+                    value={formData.stop_loss_basis || 'stock_price'}
+                    onChange={(e) => handleInputChange('stop_loss_basis', e.target.value as 'stock_price' | 'option_price')}
+                    className="w-full p-3 border border-gray-300 rounded-md text-base bg-white"
+                  >
+                    <option value="stock_price">Stock Price</option>
+                    <option value="option_price">Option Price</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="grid grid-cols-2 gap-3">
           <div>

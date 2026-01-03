@@ -149,7 +149,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Value changes trigger onChange callback
     • Displays current value correctly formatted
     File: `src/components/forms/strategy/__tests__/StrikePriceInput.test.tsx`
-- [ ] T016 [US1] (IMPL) Create StrikePriceInput component in `src/components/forms/strategy/StrikePriceInput.tsx`
+- [x] T016 [US1] (IMPL) Create StrikePriceInput component in `src/components/forms/strategy/StrikePriceInput.tsx`
 
 #### Expiration Date Picker Component
 
