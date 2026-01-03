@@ -262,6 +262,18 @@ This document provides a dependency-ordered task list for implementing Short Put
     File: `src/integration/__tests__/us1-journal-required.test.tsx`
 - [x] T030 [US1] (IMPL) Enforce journal entry requirement in position creation flow
 
+### Bug Fixes
+
+- [ ] B001 [US1] (BUG) Fix risk assessment calculations for Short Put positions
+    • Current implementation uses Long Stock formula for max profit/loss
+    • For Short Put:
+      - Max Profit = Premium × quantity (the premium collected)
+      - Max Loss = (Strike Price - Premium) × 100 × quantity
+    • Example: Sold $400 Put, $5.00 premium
+      - Max Profit: $5.00 × 1 contract = $500
+      - Max Loss: ($400 - $5) × 100 × 1 = $39,500
+    • File: `src/pages/PositionCreate.tsx` (calculateMetrics function)
+
 ---
 
 ## User Story 2 - Execute Sell-to-Open Trade (P1) - 27 tasks
