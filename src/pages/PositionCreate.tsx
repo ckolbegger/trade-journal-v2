@@ -130,6 +130,34 @@ export function PositionCreate() {
     }
 
     setErrors(newErrors)
+
+    // Focus the first invalid field if there are errors
+    const firstErrorField = Object.keys(newErrors)[0] as keyof typeof newErrors
+    if (firstErrorField) {
+      // Map field names to their element IDs
+      const fieldIdMap: Record<string, string> = {
+        symbol: 'symbol',
+        target_entry_price: 'target_entry_price',
+        target_quantity: 'target_quantity',
+        profit_target: 'profit_target',
+        stop_loss: 'stop_loss',
+        position_thesis: 'position_thesis',
+        strike_price: 'strike_price',
+        expiration_date: 'expiration_date'
+      }
+
+      const elementId = fieldIdMap[firstErrorField]
+      if (elementId) {
+        // Use setTimeout to ensure the DOM has updated with the error messages
+        setTimeout(() => {
+          const element = document.getElementById(elementId)
+          if (element) {
+            element.focus()
+          }
+        }, 0)
+      }
+    }
+
     return Object.keys(newErrors).length === 0
   }
 

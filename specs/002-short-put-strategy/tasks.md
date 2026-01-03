@@ -235,7 +235,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Form submit blocked while validation errors exist
     • All validation errors display simultaneously for multiple invalid fields
     File: `src/components/forms/__tests__/PositionPlanForm-validation.test.tsx`
-- [ ] T026 [US1] (IMPL) Add option field validation and inline error display to PositionPlanForm
+- [x] T026 [US1] (IMPL) Add option field validation and inline error display to PositionPlanForm
 
 #### Integration Tests (Complete User Journeys)
 
