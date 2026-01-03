@@ -71,6 +71,7 @@ describe('Position-Journal Transaction Flow', () => {
       // This will fail until we implement the transaction flow
       const result = await transactionService.createPositionWithJournal({
         symbol: 'AAPL',
+        strategy_type: 'Long Stock',
         target_entry_price: 150,
         target_quantity: 100,
         profit_target: 165,
@@ -105,6 +106,7 @@ describe('Position-Journal Transaction Flow', () => {
       // This will fail until we implement rollback logic
       const invalidPositionData = {
         symbol: 'AAPL',
+        strategy_type: 'Long Stock' as const,
         target_entry_price: -150, // Invalid negative price
         target_quantity: 100,
         profit_target: 165,
@@ -130,6 +132,7 @@ describe('Position-Journal Transaction Flow', () => {
       // This will fail until we implement the full transaction flow
       const result = await transactionService.createPositionWithJournal({
         symbol: 'MSFT',
+        strategy_type: 'Long Stock',
         target_entry_price: 300,
         target_quantity: 50,
         profit_target: 330,

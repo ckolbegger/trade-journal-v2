@@ -194,12 +194,21 @@ export function PositionCreate() {
       // Execute UUID-based transaction
       const result = await transactionService.createPositionWithJournal({
         symbol: formData.symbol,
+        strategy_type: formData.strategy_type,
         target_entry_price: parseFloat(formData.target_entry_price),
         target_quantity: parseInt(formData.target_quantity),
         profit_target: parseFloat(formData.profit_target),
         stop_loss: parseFloat(formData.stop_loss),
         position_thesis: formData.position_thesis,
-        journalFields: journalFields
+        journalFields: journalFields,
+        // Option fields for Short Put strategy
+        ...(formData.strategy_type === 'Short Put' && {
+          strike_price: formData.strike_price,
+          expiration_date: formData.expiration_date,
+          premium_per_contract: formData.premium_per_contract,
+          profit_target_basis: formData.profit_target_basis,
+          stop_loss_basis: formData.stop_loss_basis
+        })
       })
 
       // Navigate to position detail on success

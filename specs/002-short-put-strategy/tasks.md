@@ -75,7 +75,7 @@
 
 - [x] T012 [US1] Add inline validation error display to PositionCreate in src/pages/PositionCreate.tsx (FR-049, FR-050)
   - Tests: shows error under invalid field, clears error when field corrected, multiple errors display simultaneously, error styling applied to invalid field
-- [ ] T013 [US1] Wire PositionCreate page to support Short Put strategy in src/pages/PositionCreate.tsx
+- [x] T013 [US1] Wire PositionCreate page to support Short Put strategy in src/pages/PositionCreate.tsx
   - Tests: strategy selector visible on page, form submission calls PositionService, success navigates to position list, error displays on page
 
 ### Integration Tests for User Story 1
