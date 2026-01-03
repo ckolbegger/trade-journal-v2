@@ -82,7 +82,7 @@
 
 > **Write after implementation is complete** to verify the full user flow
 
-- [ ] T014 [US1] Integration test for Short Put plan flow in tests/integration/short-put-plan.test.ts
+- [x] T014 [US1] Integration test for Short Put plan flow in tests/integration/short-put-plan.test.ts
   - Tests: complete UI flow from strategy selection to plan saved, validation errors displayed inline (strike <= 0, past expiration), plan retrievable after save with all option fields, position status 'planned' in list view
 
 **Checkpoint**: User Story 1 complete - Short Put position plans can be created with immutable option details
