@@ -132,6 +132,30 @@ describe('SchemaManager', () => {
     expect(db.objectStoreNames.contains('journal_entries')).toBe(true)
     expect(db.objectStoreNames.contains('price_history')).toBe(true)
   })
+
+  it('should add missing indexes to existing stores on upgrade', async () => {
+    db = await openDatabaseWithLegacySchema(dbName, 1)
+    db.close()
+
+    db = await openDatabaseWithSchema(dbName, 2)
+
+    const positionStore = db.transaction(['positions'], 'readonly').objectStore('positions')
+    expect(positionStore.indexNames.contains('symbol')).toBe(true)
+    expect(positionStore.indexNames.contains('status')).toBe(true)
+    expect(positionStore.indexNames.contains('created_date')).toBe(true)
+
+    const journalStore = db.transaction(['journal_entries'], 'readonly').objectStore('journal_entries')
+    expect(journalStore.indexNames.contains('position_id')).toBe(true)
+    expect(journalStore.indexNames.contains('trade_id')).toBe(true)
+    expect(journalStore.indexNames.contains('entry_type')).toBe(true)
+    expect(journalStore.indexNames.contains('created_at')).toBe(true)
+
+    const priceStore = db.transaction(['price_history'], 'readonly').objectStore('price_history')
+    expect(priceStore.indexNames.contains('underlying_date')).toBe(true)
+    expect(priceStore.indexNames.contains('underlying')).toBe(true)
+    expect(priceStore.indexNames.contains('date')).toBe(true)
+    expect(priceStore.indexNames.contains('updated_at')).toBe(true)
+  })
 })
 
 /**
@@ -146,7 +170,31 @@ function openDatabaseWithSchema(dbName: string, version: number): Promise<IDBDat
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result
-      SchemaManager.initializeSchema(db, version)
+      SchemaManager.initializeSchema(db, version, request.transaction || undefined)
+    }
+  })
+}
+
+function openDatabaseWithLegacySchema(dbName: string, version: number): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(dbName, version)
+
+    request.onerror = () => reject(request.error)
+    request.onsuccess = () => resolve(request.result)
+
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result
+
+      const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
+      positionStore.createIndex('symbol', 'symbol', { unique: false })
+
+      const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
+      journalStore.createIndex('position_id', 'position_id', { unique: false })
+
+      const priceStore = db.createObjectStore('price_history', { keyPath: 'id' })
+      priceStore.createIndex('underlying_date', ['underlying', 'date'], { unique: true })
+      priceStore.createIndex('underlying', 'underlying', { unique: false })
+      priceStore.createIndex('date', 'date', { unique: false })
     }
   })
 }

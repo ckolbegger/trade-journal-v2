@@ -10,36 +10,61 @@ export class SchemaManager {
    *
    * @param db - IDBDatabase instance during onupgradeneeded event
    * @param _version - Database version number (reserved for future use)
+   * @param transaction - Upgrade transaction used to access existing stores
    */
-  static initializeSchema(db: IDBDatabase, _version: number): void {
+  static initializeSchema(
+    db: IDBDatabase,
+    _version: number,
+    transaction?: IDBTransaction
+  ): void {
+    const getOrCreateStore = (
+      name: string,
+      options: IDBObjectStoreParameters
+    ): IDBObjectStore | null => {
+      if (db.objectStoreNames.contains(name)) {
+        return transaction ? transaction.objectStore(name) : null
+      }
+      return db.createObjectStore(name, options)
+    }
+
+    const ensureIndex = (
+      store: IDBObjectStore,
+      name: string,
+      keyPath: string | string[],
+      options?: IDBIndexParameters
+    ): void => {
+      if (!store.indexNames.contains(name)) {
+        store.createIndex(name, keyPath, options)
+      }
+    }
+
     // Create positions object store
-    if (!db.objectStoreNames.contains('positions')) {
-      const positionStore = db.createObjectStore('positions', { keyPath: 'id' })
-      positionStore.createIndex('symbol', 'symbol', { unique: false })
-      positionStore.createIndex('status', 'status', { unique: false })
-      positionStore.createIndex('created_date', 'created_date', { unique: false })
+    const positionStore = getOrCreateStore('positions', { keyPath: 'id' })
+    if (positionStore) {
+      ensureIndex(positionStore, 'symbol', 'symbol', { unique: false })
+      ensureIndex(positionStore, 'status', 'status', { unique: false })
+      ensureIndex(positionStore, 'created_date', 'created_date', { unique: false })
     }
 
     // Create journal_entries object store
-    if (!db.objectStoreNames.contains('journal_entries')) {
-      const journalStore = db.createObjectStore('journal_entries', { keyPath: 'id' })
-      journalStore.createIndex('position_id', 'position_id', { unique: false })
-      journalStore.createIndex('trade_id', 'trade_id', { unique: false })
-      journalStore.createIndex('entry_type', 'entry_type', { unique: false })
-      journalStore.createIndex('created_at', 'created_at', { unique: false })
+    const journalStore = getOrCreateStore('journal_entries', { keyPath: 'id' })
+    if (journalStore) {
+      ensureIndex(journalStore, 'position_id', 'position_id', { unique: false })
+      ensureIndex(journalStore, 'trade_id', 'trade_id', { unique: false })
+      ensureIndex(journalStore, 'entry_type', 'entry_type', { unique: false })
+      ensureIndex(journalStore, 'created_at', 'created_at', { unique: false })
     }
 
     // Create price_history object store
-    if (!db.objectStoreNames.contains('price_history')) {
-      const priceStore = db.createObjectStore('price_history', { keyPath: 'id' })
-
+    const priceStore = getOrCreateStore('price_history', { keyPath: 'id' })
+    if (priceStore) {
       // Compound unique index: ensures one price per underlying per date
-      priceStore.createIndex('underlying_date', ['underlying', 'date'], { unique: true })
+      ensureIndex(priceStore, 'underlying_date', ['underlying', 'date'], { unique: true })
 
       // Individual indexes for efficient lookups
-      priceStore.createIndex('underlying', 'underlying', { unique: false })
-      priceStore.createIndex('date', 'date', { unique: false })
-      priceStore.createIndex('updated_at', 'updated_at', { unique: false })
+      ensureIndex(priceStore, 'underlying', 'underlying', { unique: false })
+      ensureIndex(priceStore, 'date', 'date', { unique: false })
+      ensureIndex(priceStore, 'updated_at', 'updated_at', { unique: false })
     }
   }
 }

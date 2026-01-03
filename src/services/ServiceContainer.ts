@@ -50,7 +50,7 @@ export class ServiceContainer {
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(db, 3)
+        SchemaManager.initializeSchema(db, 3, request.transaction || undefined)
       }
     })
   }
