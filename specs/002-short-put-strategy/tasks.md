@@ -72,7 +72,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Type imports use type-only syntax: `import type { Position }`
     • Type compiles without errors in browser context
     File: `src/types/__tests__/position-types.test.ts`
-- [ ] T004 (IMPL) Extend Position interface with option fields in `src/lib/position.ts`
+- [x] T004 (IMPL) Extend Position interface with option fields in `src/lib/position.ts`
 
 - [ ] T005 (TEST) Write comprehensive type verification tests for Trade interface covering:
     • Trade interface extends with option fields (action, occ_symbol, option_type, strike_price, expiration_date, underlying_price_at_trade)

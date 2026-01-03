@@ -109,11 +109,24 @@ export function validateExitTrade(
   }
 }
 
-// Phase 1A Position Interface - Core trade planning entity
+// Position Interface - Core trade planning entity
+// Supports both Long Stock and option strategies (Short Put, with more to come)
 export interface Position {
   id: string
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: 'Long Stock' | 'Short Put'
+
+  // Option-specific fields (only used for option strategies)
+  option_type?: 'put' | 'call'
+  strike_price?: number
+  expiration_date?: string
+  premium_per_contract?: number
+
+  // Price basis fields for options (how profit_target/stop_loss are calculated)
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
+
+  // Core position fields
   target_entry_price: number
   target_quantity: number
   profit_target: number
@@ -122,7 +135,7 @@ export interface Position {
   created_date: Date
   status: 'planned' | 'open' | 'closed'
   journal_entry_ids: string[]
-  trades: Trade[] // New field for embedded trades (future-proof array)
+  trades: Trade[]
 }
 
 // Position Service - IndexedDB CRUD operations
