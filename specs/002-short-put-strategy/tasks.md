@@ -260,7 +260,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Verify position created with journal_entry_ids populated
     • Verify journal entry linked via position_id
     File: `src/integration/__tests__/us1-journal-required.test.tsx`
-- [ ] T030 [US1] (IMPL) Enforce journal entry requirement in position creation flow
+- [x] T030 [US1] (IMPL) Enforce journal entry requirement in position creation flow
 
 ---
 

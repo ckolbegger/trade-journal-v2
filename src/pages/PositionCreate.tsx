@@ -51,6 +51,7 @@ export function PositionCreate() {
   const [immutableConfirmed, setImmutableConfirmed] = useState(false)
   const [journalFields, setJournalFields] = useState<JournalField[]>([])
   const [isCreating, setIsCreating] = useState(false)
+  const [journalError, setJournalError] = useState<string | null>(null)
 
   // Initialize journal fields with current prompts when component mounts
   useEffect(() => {
@@ -133,6 +134,31 @@ export function PositionCreate() {
     return Object.keys(newErrors).length === 0
   }
 
+  const validateJournalFields = (): boolean => {
+    // Check if all required journal fields have been filled with valid responses
+    const requiredFields = journalFields.filter(field => field.required)
+
+    for (const field of requiredFields) {
+      const response = field.response?.trim() || ''
+
+      // Check if required field is empty
+      if (!response) {
+        setJournalError(`Journal entry is required. Please complete the "${field.prompt || field.name}" field.`)
+        return false
+      }
+
+      // Check if required field meets minimum length
+      if (response.length < 10) {
+        setJournalError(`Journal entry "${field.prompt || field.name}" must be at least 10 characters. Current length: ${response.length}`)
+        return false
+      }
+    }
+
+    // Clear error if all validations pass
+    setJournalError(null)
+    return true
+  }
+
   const calculateRiskMetrics = () => {
     const entryPrice = parseFloat(formData.target_entry_price) || 0
     const quantity = parseInt(formData.target_quantity) || 0
@@ -167,8 +193,12 @@ export function PositionCreate() {
   const handleNextStep = () => {
     if (currentStep === 1 && validateStep1()) {
       setCurrentStep(2)
-    } else if (currentStep === 2 && journalFields.length > 0) {
-      setCurrentStep(3)
+    } else if (currentStep === 2) {
+      // Validate journal fields before proceeding
+      if (validateJournalFields()) {
+        setCurrentStep(3)
+      }
+      // If validation fails, error is already set by validateJournalFields
     } else if (currentStep === 3) {
       setCurrentStep(4)
     }
@@ -182,6 +212,22 @@ export function PositionCreate() {
 
   const handleJournalSave = (fields: JournalField[]) => {
     setJournalFields(fields)
+
+    // Validate journal fields before proceeding to next step
+    const requiredFields = fields.filter(field => field.required)
+
+    for (const field of requiredFields) {
+      const response = field.response?.trim() || ''
+
+      // Check if required field is empty or too short
+      if (!response || response.length < 10) {
+        setJournalError('Journal entry is required. Please complete all required fields.')
+        return // Don't advance to next step
+      }
+    }
+
+    // Clear error and advance to next step if all validations pass
+    setJournalError(null)
     setCurrentStep(3)
   }
 
@@ -190,7 +236,15 @@ export function PositionCreate() {
   }
 
   const handleCreatePosition = async () => {
-    if (!immutableConfirmed || journalFields.length === 0) return
+    if (!immutableConfirmed) {
+      return
+    }
+
+    // Validate journal fields before creating position
+    if (!validateJournalFields()) {
+      // Error is already set by validateJournalFields
+      return
+    }
 
     setIsCreating(true)
 
@@ -487,6 +541,11 @@ export function PositionCreate() {
 
   const renderStep3 = () => (
     <div className="p-5 pb-32">
+      {journalError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{journalError}</p>
+        </div>
+      )}
       <EnhancedJournalEntryForm
         entryType="position_plan"
         onSave={handleJournalSave}
@@ -503,6 +562,12 @@ export function PositionCreate() {
       <p className="text-sm text-gray-500 mb-6 leading-relaxed">
         Final review before creating your immutable position plan.
       </p>
+
+      {journalError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800">{journalError}</p>
+        </div>
+      )}
 
       <div className="bg-gray-50 rounded-lg p-5 mb-5">
         <div className="space-y-3">

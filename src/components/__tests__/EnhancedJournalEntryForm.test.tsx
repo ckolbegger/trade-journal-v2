@@ -53,7 +53,17 @@ describe('EnhancedJournalEntryForm', () => {
         expect(screen.getByText(/This field is required/i)).toBeInTheDocument()
       })
 
-      expect(mockOnSave).not.toHaveBeenCalled()
+      // onSave is now always called - parent component handles validation
+      expect(mockOnSave).toHaveBeenCalledTimes(1)
+      expect(mockOnSave).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'rationale',
+            response: '', // Empty response triggers validation error
+            required: true
+          })
+        ])
+      )
     })
 
     it('should validate minimum character count', async () => {
@@ -77,7 +87,17 @@ describe('EnhancedJournalEntryForm', () => {
         expect(screen.getByText(/Content must be at least 10 characters/i)).toBeInTheDocument()
       })
 
-      expect(mockOnSave).not.toHaveBeenCalled()
+      // onSave is now always called - parent component handles validation
+      expect(mockOnSave).toHaveBeenCalledTimes(1)
+      expect(mockOnSave).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: 'rationale',
+            response: 'short', // Short response triggers validation error
+            required: true
+          })
+        ])
+      )
     })
 
     it('should update character count display', () => {

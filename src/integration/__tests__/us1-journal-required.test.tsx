@@ -153,42 +153,15 @@ describe('Integration: US1 - Journal Entry Requirement', () => {
       // Do NOT fill journal entry - click Next immediately
       fireEvent.click(screen.getByText('Next: Risk Assessment'))
 
+      // Navigation should be blocked - user stays on journal step
+      // Error message should be shown
       await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-      }, { timeout: 5000 })
+        // Still on journal step (📝 Position Plan is the journal heading)
+        const stillOnJournal = screen.queryByText('📝 Position Plan') !== null
+        // Error message contains "Journal entry is required"
+        const errorMessage = screen.queryByText(/Journal entry is required/i) !== null
 
-      fireEvent.click(screen.getByText('Next: Confirmation'))
-
-      await waitFor(() => {
-        expect(screen.getByText('Confirmation')).toBeInTheDocument()
-      })
-
-      // Confirm immutability
-      const immutableCheckbox = screen.getByRole('checkbox', {
-        name: /I understand this position plan will be immutable after creation/i
-      })
-      fireEvent.click(immutableCheckbox)
-
-      // Attempt to create position WITHOUT journal entry
-      const createButton = screen.getByRole('button', { name: /Create Position Plan/i })
-      expect(createButton).toBeVisible()
-
-      // Click create button - should be blocked or show error
-      fireEvent.click(createButton)
-
-      // Verify that position creation was blocked
-      // Either:
-      // 1. Still on confirmation page (navigation blocked)
-      // 2. Error message shown about missing journal entry
-      // 3. Redirected back to journal step
-
-      // Check for error message or blocked navigation
-      await waitFor(() => {
-        // Either we're still on confirmation page, or we see an error
-        const stillOnConfirmation = screen.queryByText('Confirmation') !== null
-        const errorMessage = screen.queryByText(/journal/i) !== null
-
-        expect(stillOnConfirmation || errorMessage).toBe(true)
+        expect(stillOnJournal && errorMessage).toBe(true)
       })
 
       // Verify no position was created
@@ -234,9 +207,9 @@ describe('Integration: US1 - Journal Entry Requirement', () => {
       await waitFor(() => {
         // Check if we're still on journal step or see an error
         const stillOnJournal = screen.queryByText('📝 Position Plan') !== null
-        const validationError = screen.queryByText(/required/i) !== null
+        const validationErrors = screen.queryAllByText(/required/i)
 
-        expect(stillOnJournal || validationError).toBe(true)
+        expect(stillOnJournal || validationErrors.length > 0).toBe(true)
       })
     })
 
@@ -344,37 +317,18 @@ describe('Integration: US1 - Journal Entry Requirement', () => {
         expect(screen.getByText('📝 Position Plan')).toBeInTheDocument()
       })
 
-      // Skip journal - go straight to confirmation
+      // Skip journal - try to go to Risk Assessment without filling required fields
       fireEvent.click(screen.getByText('Next: Risk Assessment'))
 
+      // Verify clear error message is shown and user stays on journal step
       await waitFor(() => {
-        expect(screen.getByText('Risk Assessment')).toBeInTheDocument()
-      }, { timeout: 5000 })
+        // Still on journal step (📝 Position Plan is the journal heading)
+        const stillOnJournal = screen.queryByText('📝 Position Plan') !== null
 
-      fireEvent.click(screen.getByText('Next: Confirmation'))
+        // Look for error message containing "Journal entry is required"
+        const errorMessage = screen.queryByText(/Journal entry is required/i) !== null
 
-      await waitFor(() => {
-        expect(screen.getByText('Confirmation')).toBeInTheDocument()
-      })
-
-      // Confirm immutability
-      const immutableCheckbox = screen.getByRole('checkbox', {
-        name: /I understand this position plan will be immutable after creation/i
-      })
-      fireEvent.click(immutableCheckbox)
-
-      // Attempt to create position
-      const createButton = screen.getByRole('button', { name: /Create Position Plan/i })
-      fireEvent.click(createButton)
-
-      // Verify clear error message is shown
-      await waitFor(() => {
-        // Look for error message mentioning journal requirement
-        const errorMessage = screen.queryByText(/journal.*required/i) ||
-                            screen.queryByText(/complete.*journal/i) ||
-                            screen.queryByText(/journal.*entry/i)
-
-        expect(errorMessage).toBeInTheDocument()
+        expect(stillOnJournal && errorMessage).toBe(true)
       })
     })
   })

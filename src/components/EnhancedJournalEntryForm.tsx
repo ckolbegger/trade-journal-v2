@@ -84,17 +84,19 @@ export function EnhancedJournalEntryForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
-      // Convert form data back to field format, preserving stored prompts and required values
-      const fields: JournalField[] = fieldDefinitions.map(field => ({
-        name: field.name,
-        prompt: field.prompt, // Use stored prompt
-        response: (formData[field.name] || '').trim(),
-        required: field.required // Preserve stored required value
-      }))
+    // Always run validation to show inline errors
+    validateForm()
 
-      onSave(fields)
-    }
+    // Convert form data back to field format, preserving stored prompts and required values
+    const fields: JournalField[] = fieldDefinitions.map(field => ({
+      name: field.name,
+      prompt: field.prompt, // Use stored prompt
+      response: (formData[field.name] || '').trim(),
+      required: field.required // Preserve stored required value
+    }))
+
+    // Always call onSave - let parent component decide what to do
+    onSave(fields)
   }
 
   const handleInputChange = (fieldName: string, value: string) => {
