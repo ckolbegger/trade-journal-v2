@@ -64,7 +64,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Type Extensions - With Tests
 
-- [ ] T003 (TEST) Write comprehensive type verification tests for Position interface covering:
+- [x] T003 (TEST) Write comprehensive type verification tests for Position interface covering:
     • Position interface extends with option fields (option_type, strike_price, expiration_date, premium_per_contract)
     • strategy_type union accepts 'Long Stock' and 'Short Put'
     • New fields are optional (undefined is valid for Long Stock)
