@@ -123,9 +123,9 @@ describe('SchemaManager', () => {
     expect(db.objectStoreNames.length).toBe(3)
     db.close()
 
-    // Upgrade to version 2 (schema should remain compatible)
-    db = await openDatabaseWithSchema(dbName, 2)
-    expect(db.version).toBe(2)
+    // Upgrade to version 4 (schema should remain compatible)
+    db = await openDatabaseWithSchema(dbName, 4)
+    expect(db.version).toBe(4)
 
     // All stores should still exist
     expect(db.objectStoreNames.contains('positions')).toBe(true)
@@ -133,16 +133,32 @@ describe('SchemaManager', () => {
     expect(db.objectStoreNames.contains('price_history')).toBe(true)
   })
 
+  it('should add v4 indexes when upgrading from v3', async () => {
+    db = await openDatabaseWithSchema(dbName, 3)
+
+    const v3Store = db.transaction(['positions'], 'readonly').objectStore('positions')
+    expect(v3Store.indexNames.contains('strategy_type')).toBe(false)
+    expect(v3Store.indexNames.contains('trade_kind')).toBe(false)
+    db.close()
+
+    db = await openDatabaseWithSchema(dbName, 4)
+    const positionStore = db.transaction(['positions'], 'readonly').objectStore('positions')
+    expect(positionStore.indexNames.contains('strategy_type')).toBe(true)
+    expect(positionStore.indexNames.contains('trade_kind')).toBe(true)
+  })
+
   it('should add missing indexes to existing stores on upgrade', async () => {
     db = await openDatabaseWithLegacySchema(dbName, 1)
     db.close()
 
-    db = await openDatabaseWithSchema(dbName, 2)
+    db = await openDatabaseWithSchema(dbName, 4)
 
     const positionStore = db.transaction(['positions'], 'readonly').objectStore('positions')
     expect(positionStore.indexNames.contains('symbol')).toBe(true)
     expect(positionStore.indexNames.contains('status')).toBe(true)
     expect(positionStore.indexNames.contains('created_date')).toBe(true)
+    expect(positionStore.indexNames.contains('strategy_type')).toBe(true)
+    expect(positionStore.indexNames.contains('trade_kind')).toBe(true)
 
     const journalStore = db.transaction(['journal_entries'], 'readonly').objectStore('journal_entries')
     expect(journalStore.indexNames.contains('position_id')).toBe(true)

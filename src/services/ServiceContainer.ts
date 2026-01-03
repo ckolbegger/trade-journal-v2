@@ -43,14 +43,14 @@ export class ServiceContainer {
     }
 
     this.db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
+      const request = indexedDB.open('TradingJournalDB', 4)
 
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
 
       request.onupgradeneeded = (event) => {
         const db = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(db, 3, request.transaction || undefined)
+        SchemaManager.initializeSchema(db, 4, request.transaction || undefined)
       }
     })
   }

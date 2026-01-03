@@ -9,7 +9,7 @@ describe('JournalService - Trade Linking', () => {
   beforeEach(async () => {
     // Open database for each test
     db = await new Promise<IDBDatabase>((resolve, reject) => {
-      const request = indexedDB.open('TradingJournalDB', 3)
+      const request = indexedDB.open('TradingJournalDB', 4)
       request.onerror = () => reject(request.error)
       request.onsuccess = () => resolve(request.result)
       request.onupgradeneeded = (event) => {

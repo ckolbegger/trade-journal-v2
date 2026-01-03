@@ -9,14 +9,15 @@ export class SchemaManager {
    * Initialize all database object stores and indexes
    *
    * @param db - IDBDatabase instance during onupgradeneeded event
-   * @param _version - Database version number (reserved for future use)
+   * @param version - Database version number
    * @param transaction - Upgrade transaction used to access existing stores
    */
   static initializeSchema(
     db: IDBDatabase,
-    _version: number,
+    version: number,
     transaction?: IDBTransaction
   ): void {
+    const shouldAddV4Indexes = version >= 4
     const getOrCreateStore = (
       name: string,
       options: IDBObjectStoreParameters
@@ -44,6 +45,10 @@ export class SchemaManager {
       ensureIndex(positionStore, 'symbol', 'symbol', { unique: false })
       ensureIndex(positionStore, 'status', 'status', { unique: false })
       ensureIndex(positionStore, 'created_date', 'created_date', { unique: false })
+      if (shouldAddV4Indexes) {
+        ensureIndex(positionStore, 'strategy_type', 'strategy_type', { unique: false })
+        ensureIndex(positionStore, 'trade_kind', 'trade_kind', { unique: false })
+      }
     }
 
     // Create journal_entries object store
