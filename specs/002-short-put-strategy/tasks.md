@@ -67,7 +67,7 @@
   - Tests: renders stock/option options, selection changes value, displays current selection
 - [x] T010 [US1] Extend PositionCreate with conditional option fields in src/pages/PositionCreate.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
   - Tests: hides option fields for Long Stock, shows option fields for Short Put, form state includes option fields when visible, tab order correct with option fields
-- [ ] T011 [US1] Extend PositionService.create() to handle option plans with comprehensive unit tests in src/services/PositionService.ts
+- [x] T011 [US1] Extend PositionService.create() to handle option plans with comprehensive unit tests in src/services/PositionService.ts
   - Tests: creates Short Put position, validates option fields, rejects invalid strike/expiration, persists all option fields to DB
 
 - [ ] T011a [US1] Integration test for PositionService option plan creation in tests/integration/position-service-options.test.ts
