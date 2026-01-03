@@ -274,7 +274,7 @@ This document provides a dependency-ordered task list for implementing Short Put
       - Max Loss: ($400 - $5) × 100 × 1 = $39,500
     • File: `src/pages/PositionCreate.tsx` (calculateMetrics function)
 
-- [ ] B002 [US1] (BUG) Position Plan confirmation missing Short Put option fields
+- [x] B002 [US1] (BUG) Position Plan confirmation missing Short Put option fields
     • Confirmation step (Step 4) only displays Long Stock fields
     • Missing Short Put specific information:
       - Strike Price (the price at which puts can be exercised)

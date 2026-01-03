@@ -579,68 +579,112 @@ export function PositionCreate() {
     </div>
   )
 
-  const renderStep4 = () => (
-    <div className="p-5 pb-32">
-      <h2 className="text-2xl font-semibold mb-2">Confirmation</h2>
-      <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-        Final review before creating your immutable position plan.
-      </p>
+  const renderStep4 = () => {
+    // Format expiration date for display
+    const formatExpirationDate = (dateString: string) => {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      })
+    }
 
-      {journalError && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{journalError}</p>
+    // Determine quantity label based on strategy
+    const quantityLabel = formData.strategy_type === 'Short Put' ? 'contracts' : 'shares'
+
+    return (
+      <div className="p-5 pb-32">
+        <h2 className="text-2xl font-semibold mb-2">Confirmation</h2>
+        <p className="text-sm text-gray-500 mb-6 leading-relaxed">
+          Final review before creating your immutable position plan.
+        </p>
+
+        {journalError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-800">{journalError}</p>
+          </div>
+        )}
+
+        <div className="bg-gray-50 rounded-lg p-5 mb-5">
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Symbol:</span>
+              <span className="font-medium">{formData.symbol}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Strategy:</span>
+              <span className="font-medium">{formData.strategy_type}</span>
+            </div>
+
+            {/* Short Put specific fields */}
+            {formData.strategy_type === 'Short Put' && formData.strike_price && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Strike Price:</span>
+                <span className="font-medium">${parseFloat(formData.strike_price).toFixed(2)}</span>
+              </div>
+            )}
+
+            {formData.strategy_type === 'Short Put' && formData.premium_per_contract && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Premium per Contract:</span>
+                <span className="font-medium">${parseFloat(formData.premium_per_contract).toFixed(2)}</span>
+              </div>
+            )}
+
+            {formData.strategy_type === 'Short Put' && formData.expiration_date && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Expiration Date:</span>
+                <span className="font-medium">{formatExpirationDate(formData.expiration_date)}</span>
+              </div>
+            )}
+
+            {/* Long Stock field - only show for Long Stock */}
+            {formData.strategy_type === 'Long Stock' && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Target Entry:</span>
+                <span className="font-medium">${parseFloat(formData.target_entry_price).toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Quantity:</span>
+              <span className="font-medium">{formData.target_quantity} {quantityLabel}</span>
+            </div>
+
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Profit Target:</span>
+              <span className="font-medium">${parseFloat(formData.profit_target).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Stop Loss:</span>
+              <span className="font-medium">${parseFloat(formData.stop_loss).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-start text-sm">
+              <span className="text-gray-600 mr-2">Thesis:</span>
+              <span className="font-medium text-left max-w-60">{formData.position_thesis}</span>
+            </div>
+          </div>
         </div>
-      )}
 
-      <div className="bg-gray-50 rounded-lg p-5 mb-5">
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Symbol:</span>
-            <span className="font-medium">{formData.symbol}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Strategy:</span>
-            <span className="font-medium">{formData.strategy_type}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Target Entry:</span>
-            <span className="font-medium">${parseFloat(formData.target_entry_price).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Quantity:</span>
-            <span className="font-medium">{formData.target_quantity} shares</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Profit Target:</span>
-            <span className="font-medium">${parseFloat(formData.profit_target).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-gray-600">Stop Loss:</span>
-            <span className="font-medium">${parseFloat(formData.stop_loss).toFixed(2)}</span>
-          </div>
-          <div className="flex justify-start text-sm">
-            <span className="text-gray-600 mr-2">Thesis:</span>
-            <span className="font-medium text-left max-w-60">{formData.position_thesis}</span>
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-5">
+          <div className="flex items-start">
+            <input
+              type="checkbox"
+              id="immutable-confirm"
+              checked={immutableConfirmed}
+              onChange={(e) => setImmutableConfirmed(e.target.checked)}
+              className="mr-3 mt-0.5"
+            />
+            <label htmlFor="immutable-confirm" className="text-sm text-red-800 leading-relaxed">
+              I understand this position plan will be immutable after creation and cannot be modified. 🔒
+            </label>
           </div>
         </div>
       </div>
-
-      <div className="bg-red-50 border border-red-200 p-4 rounded-lg mb-5">
-        <div className="flex items-start">
-          <input
-            type="checkbox"
-            id="immutable-confirm"
-            checked={immutableConfirmed}
-            onChange={(e) => setImmutableConfirmed(e.target.checked)}
-            className="mr-3 mt-0.5"
-          />
-          <label htmlFor="immutable-confirm" className="text-sm text-red-800 leading-relaxed">
-            I understand this position plan will be immutable after creation and cannot be modified. 🔒
-          </label>
-        </div>
-      </div>
-    </div>
-  )
+    )
+  }
 
   const renderBottomActions = () => {
     // Step 2 (journal form) handles its own actions, so don't render bottom actions
