@@ -46,7 +46,7 @@ describe('Integration: Position type support', () => {
       created_date: new Date('2025-01-02T00:00:00.000Z'),
       option_type: 'put',
       strike_price: 100,
-      expiration_date: new Date('2025-01-17T00:00:00.000Z'),
+      expiration_date: new Date('2099-01-17T00:00:00.000Z'),
       premium_per_contract: 2.5,
       status: 'planned',
       journal_entry_ids: [],
