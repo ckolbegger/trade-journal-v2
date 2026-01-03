@@ -239,7 +239,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Integration Tests (Complete User Journeys)
 
-- [ ] T027 [US1] (TEST) Write comprehensive integration test suite for creating Short Put position covering:
+- [x] T027 [US1] (TEST) Write comprehensive integration test suite for creating Short Put position covering:
     • Navigate to position creation, select Short Put strategy
     • Fill in all required option fields (strike, expiration, premium, targets)
     • Select price basis options (stock_price or option_price)
