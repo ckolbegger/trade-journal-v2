@@ -50,7 +50,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Database Migration
 
-- [ ] T001 (TEST) Write comprehensive test suite for database v3→v4 migration covering:
+- [x] T001 (TEST) Write comprehensive test suite for database v3→v4 migration covering:
     • Database version increments from 3 to 4
     • Migration handler runs automatically on upgrade
     • Existing positions without strategy_type default to 'Long Stock'
