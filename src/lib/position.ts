@@ -1,4 +1,6 @@
+import type { JournalField } from '@/types/journal'
 import { PositionValidator } from '@/domain/validators/PositionValidator'
+import { JournalService } from '@/services/JournalService'
 import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
@@ -109,7 +111,23 @@ export function validateExitTrade(
   }
 }
 
-// Phase 1A Position Interface - Core trade planning entity
+export interface PositionInput {
+  symbol: string
+  strategy_type: 'Long Stock' | 'Short Put'
+  trade_kind: 'stock' | 'option'
+  option_type?: 'call' | 'put'
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number
+  profit_target_basis?: 'stock_price' | 'option_price'
+  stop_loss_basis?: 'stock_price' | 'option_price'
+  target_entry_price: number
+  target_quantity: number
+  profit_target: number
+  stop_loss: number
+  position_thesis: string
+  journal_fields: JournalField[]
+}
 export interface Position {
   id: string
   symbol: string
@@ -146,6 +164,106 @@ export class PositionService {
    */
   private validatePosition(position: Position): void {
     PositionValidator.validatePosition(position)
+  }
+
+  async createPosition(input: PositionInput, journalService: JournalService): Promise<Position> {
+    const errors: string[] = []
+
+    if (!input.symbol || input.symbol.trim() === '') {
+      errors.push('Symbol is required')
+    }
+
+    if (!input.strategy_type) {
+      errors.push('Strategy type is required')
+    }
+
+    if (input.target_entry_price === undefined || input.target_entry_price <= 0) {
+      errors.push('Target entry price must be a positive number')
+    }
+
+    if (input.target_quantity === undefined || input.target_quantity <= 0) {
+      errors.push('Target quantity must be a positive number')
+    }
+
+    if (input.profit_target === undefined || input.profit_target <= 0) {
+      errors.push('Profit target must be a positive number')
+    }
+
+    if (input.stop_loss === undefined || input.stop_loss <= 0) {
+      errors.push('Stop loss must be a positive number')
+    }
+
+    if (!input.position_thesis || input.position_thesis.trim().length < 10) {
+      errors.push('Position thesis must be at least 10 characters')
+    }
+
+    if (input.strategy_type === 'Short Put') {
+      if (input.trade_kind !== 'option') {
+        errors.push('Short Put strategy requires trade_kind to be "option"')
+      }
+      if (input.option_type !== 'put') {
+        errors.push('Short Put strategy requires option_type to be "put"')
+      }
+      if (input.strike_price === undefined || input.strike_price <= 0) {
+        errors.push('Strike price is required for Short Put strategy')
+      }
+      if (input.expiration_date === undefined) {
+        errors.push('Expiration date is required for Short Put strategy')
+      }
+      if (input.premium_per_contract === undefined || input.premium_per_contract <= 0) {
+        errors.push('Premium per contract is required for Short Put strategy')
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(errors.join('; '))
+    }
+
+    const positionId = `pos-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const journalId = `journal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+    const position: Position = {
+      id: positionId,
+      symbol: input.symbol.toUpperCase(),
+      strategy_type: input.strategy_type,
+      trade_kind: input.trade_kind,
+      option_type: input.option_type,
+      strike_price: input.strike_price,
+      expiration_date: input.expiration_date,
+      premium_per_contract: input.premium_per_contract,
+      profit_target_basis: input.profit_target_basis,
+      stop_loss_basis: input.stop_loss_basis,
+      target_entry_price: input.target_entry_price,
+      target_quantity: input.target_quantity,
+      profit_target: input.profit_target,
+      stop_loss: input.stop_loss,
+      position_thesis: input.position_thesis,
+      created_date: new Date(),
+      status: 'planned',
+      journal_entry_ids: [journalId],
+      trades: []
+    }
+
+    const journalEntry = {
+      id: journalId,
+      position_id: positionId,
+      entry_type: 'position_plan' as const,
+      fields: input.journal_fields,
+      created_at: new Date().toISOString()
+    }
+
+    const db = this.db
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction(['positions', 'journal_entries'], 'readwrite')
+
+      const positionRequest = transaction.objectStore('positions').add(position)
+      positionRequest.onerror = () => reject(positionRequest.error)
+      positionRequest.onsuccess = () => {
+        const journalRequest = transaction.objectStore('journal_entries').add(journalEntry)
+        journalRequest.onerror = () => reject(journalRequest.error)
+        journalRequest.onsuccess = () => resolve(position)
+      }
+    })
   }
 
   async create(position: Position): Promise<Position> {

@@ -1,0 +1,96 @@
+{
+  "taskId": "T001",
+  "taskName": "Create unit tests for PositionCreate form validation",
+  "status": "completed",
+  "phase": "Step 1: Unit Tests (RED)",
+  "startedAt": "2026-01-02T16:35:00Z",
+  "completedAt": "2026-01-02T16:40:00Z",
+  "testFile": "src/components/__tests__/position-create.test.tsx",
+  "testsTotal": 15,
+  "testsFailed": 12,
+  "testsPassed": 3,
+  "testCases": [
+    {
+      "name": "should show option fields when Short Put strategy is selected",
+      "status": "failed",
+      "reason": "Strike Price label not found - Short Put fields not implemented"
+    },
+    {
+      "name": "should hide option fields when Long Stock is selected",
+      "status": "passed"
+    },
+    {
+      "name": "should validate strike price as positive number",
+      "status": "failed",
+      "reason": "Strike Price field not implemented"
+    },
+    {
+      "name": "should accept valid strike price",
+      "status": "failed",
+      "reason": "Strike Price field not implemented"
+    },
+    {
+      "name": "should clear strike price error when valid value is entered",
+      "status": "failed",
+      "reason": "Strike Price field not implemented"
+    },
+    {
+      "name": "should show error for past expiration date",
+      "status": "failed",
+      "reason": "Expiration Date field not implemented"
+    },
+    {
+      "name": "should not show error for future expiration date",
+      "status": "failed",
+      "reason": "Expiration Date field not implemented"
+    },
+    {
+      "name": "should not show error for today as expiration date",
+      "status": "failed",
+      "reason": "Expiration Date field not implemented"
+    },
+    {
+      "name": "should show error when thesis is less than 10 characters",
+      "status": "passed"
+    },
+    {
+      "name": "should not show error when thesis is 10 or more characters",
+      "status": "passed"
+    },
+    {
+      "name": "should call createPosition when form is submitted with valid Short Put fields",
+      "status": "failed",
+      "reason": "Short Put fields not implemented"
+    },
+    {
+      "name": "should focus first error field when form is submitted with invalid fields",
+      "status": "failed",
+      "reason": "Strategy type change not working"
+    },
+    {
+      "name": "should render profit target basis selector for Short Put",
+      "status": "failed",
+      "reason": "Basis selectors not implemented for Short Put"
+    },
+    {
+      "name": "should render stop loss basis selector for Short Put",
+      "status": "failed",
+      "reason": "Basis selectors not implemented for Short Put"
+    },
+    {
+      "name": "should display premium × 100 multiplier",
+      "status": "failed",
+      "reason": "Premium multiplier not implemented for Short Put"
+    }
+  ],
+  "nextStep": "Step 2: Implementation (GREEN) - T005-T011",
+  "implementationRequired": [
+    "Add Short Put option to strategy selector",
+    "Implement StrikePricePicker component",
+    "Implement ExpirationDatePicker component",
+    "Add premium per contract field",
+    "Add profit/stop loss basis selectors",
+    "Implement premium × 100 multiplier display",
+    "Extend form validation for Short Put fields"
+  ]
+}

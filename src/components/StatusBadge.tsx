@@ -10,16 +10,26 @@ export interface StatusBadgeProps {
 /**
  * StatusBadge component displays the current status of a position
  * 'planned' = gray badge (no trades)
- * 'open' = green badge (has trades)
+ * 'open' = green badge (has trades and net quantity > 0)
+ * 'closed' = blue badge (net quantity is 0 or position.status is 'closed')
  */
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ position, size = 'medium', 'data-testid': testId }) => {
   if (!position) {
     return null
   }
 
-  // Determine status based on trades array
-  const hasTrades = position.trades && position.trades.length > 0
-  const status = hasTrades ? 'open' : 'planned'
+  // Use explicit status if provided, otherwise compute from trades
+  let status: 'planned' | 'open' | 'closed' = 'planned'
+  
+  if (position.status === 'closed') {
+    status = 'closed'
+  } else if (position.trades && position.trades.length > 0) {
+    // Check if position has open quantity
+    const openQuantity = position.trades.reduce((net, trade) => {
+      return trade.trade_type === 'buy' ? net + trade.quantity : net - trade.quantity
+    }, 0)
+    status = openQuantity > 0 ? 'open' : 'closed'
+  }
 
   // Determine CSS classes based on status and size
   const getStatusClasses = () => {
@@ -27,7 +37,9 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ position, size = 'medi
 
     const statusClasses = status === 'open'
       ? 'bg-green-100 text-green-800'
-      : 'bg-gray-100 text-gray-800'
+      : status === 'closed'
+        ? 'bg-blue-100 text-blue-800'
+        : 'bg-gray-100 text-gray-800'
 
     const sizeClasses = {
       small: 'text-xs',
@@ -40,10 +52,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ position, size = 'medi
 
   // Determine text display
   const getStatusText = () => {
-    if (status === 'open') {
-      return 'open'
-    }
-    return 'planned'
+    return status
   }
 
   return (

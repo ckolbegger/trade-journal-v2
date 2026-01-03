@@ -62,10 +62,17 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertFormFieldExists(/Position Thesis/i)
     })
 
-    it('should only show "Long Stock" as strategy type option in Phase 1A', async () => {
+    it('should show both "Long Stock" and "Short Put" strategy type options', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 
-      assertStrategyTypeLocked()
+      const strategySelect = screen.getByLabelText(/Strategy Type/i) as HTMLSelectElement
+      expect(strategySelect).toBeInTheDocument()
+      expect(strategySelect.value).toBe('Long Stock')
+
+      const options = strategySelect.options
+      expect(options.length).toBe(2)
+      expect(options[0].value).toBe('Long Stock')
+      expect(options[1].value).toBe('Short Put')
     })
 
     it('should validate required fields before proceeding to step 2', async () => {

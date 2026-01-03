@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom'
+import { expect } from 'vitest'
 import { fireEvent, waitFor, screen } from '@testing-library/react'
 
 /**
@@ -39,10 +41,12 @@ export const fillPositionForm = async (data: PositionFormData = {}) => {
     target: { value: positionThesis }
   })
 
-  // Verify strategy type is locked to "Long Stock"
+  // Verify strategy type is set to "Long Stock"
   const strategyInput = screen.getByLabelText(/Strategy Type/i)
   expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+  // Strategy selector is a dropdown (select element) - verify it renders correctly
+  expect(strategyInput).toBeInTheDocument()
+  expect(strategyInput.tagName).toBe('SELECT')
 }
 
 /**

@@ -187,10 +187,11 @@
   - Issue: StrikePricePicker filters negative signs before validation, preventing error display
   - Fix: Validate negative values before filtering; show error when value < 0
   - Failing test: "should display error for negative strike price and allow correction"
-- [ ] B007 Fix ShortPutCreation integration test failures in src/integration/short-put-creation.test.tsx
+- [x] B007 Fix ShortPutCreation integration test failures in src/integration/short-put-creation.test.tsx
   - Issue: 3 tests failing due to PositionJournalTransaction only supporting Long Stock
-  - Fix: Extend PositionJournalTransaction to support Short Put strategy_type, or update tests to work around the limitation
+  - Fix: Extended PositionJournalTransaction to support Short Put strategy_type
   - Failing tests: Full Short Put creation flow tests blocked by transaction layer
+  - Status: FIXED - Updated CreatePositionData interface and createPositionWithJournal to accept and use strategy_type, added Short Put option fields (option_type, strike_price, expiration_date, premium_per_contract, profit_target_basis, stop_loss_basis), updated existing tests to pass strategy_type explicitly, added new test for Short Put position creation
 
 ---
 
