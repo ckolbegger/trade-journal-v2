@@ -90,7 +90,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Assignment prompts include optional fields (feelings_about_stock, stock_plan)
     • Type compiles without errors
     File: `src/types/__tests__/journal-types.test.ts`
-- [ ] T008 (IMPL) Add option_assignment journal entry type and prompts in `src/types/journal.ts`
+- [x] T008 (IMPL) Add option_assignment journal entry type and prompts in `src/types/journal.ts`
 
 ---
 

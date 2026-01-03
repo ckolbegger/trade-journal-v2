@@ -9,7 +9,7 @@ export interface JournalEntry {
   id: string;
   position_id?: string;
   trade_id?: string;
-  entry_type: 'position_plan' | 'trade_execution';
+  entry_type: 'position_plan' | 'trade_execution' | 'option_assignment';
   fields: JournalField[];
   created_at: string;
   executed_at?: string;
@@ -57,6 +57,23 @@ export const JOURNAL_PROMPTS = {
     {
       name: 'execution_strategy',
       prompt: 'How will you enter and exit this position?',
+      required: false
+    }
+  ],
+  option_assignment: [
+    {
+      name: 'assignment_cause',
+      prompt: 'What happened that led to the assignment?',
+      required: true
+    },
+    {
+      name: 'feelings_about_stock',
+      prompt: 'How do you feel about now owning this stock?',
+      required: false
+    },
+    {
+      name: 'stock_plan',
+      prompt: 'What is your plan for the stock position?',
       required: false
     }
   ]
