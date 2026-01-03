@@ -180,7 +180,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Option Fields Section
 
-- [ ] T021 [US1] (TEST) Write comprehensive test suite for option fields conditional rendering covering:
+- [x] T021 [US1] (TEST) Write comprehensive test suite for option fields conditional rendering covering:
     • Option fields hidden when strategy_type='Long Stock'
     • Option fields visible when strategy_type='Short Put'
     • StrikePriceInput renders when Short Put selected
@@ -190,7 +190,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • All option fields have correct labels and placeholders
     • Fields are properly associated with form state
     File: `src/components/forms/__tests__/PositionPlanForm-option-fields.test.tsx`
-- [ ] T022 [US1] (IMPL) Add option fields section to PositionPlanForm with conditional rendering
+- [x] T022 [US1] (IMPL) Add option fields section to PositionPlanForm with conditional rendering
 
 #### Option Price Basis Conversion (NEW - Value Delivery Audit Fix)
 
