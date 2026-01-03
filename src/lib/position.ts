@@ -38,6 +38,7 @@ export interface Trade {
   price: number
   timestamp: Date
   notes?: string
+
   /**
    * The underlying instrument identifier for this trade
    * - Stock: Ticker symbol (e.g., "AAPL", "TSLA")
@@ -49,6 +50,18 @@ export interface Trade {
    * Links to PriceHistory.underlying for price lookups and P&L calculations.
    */
   underlying: string
+
+  // Option-specific fields (only used for option trades)
+  action?: 'STO' | 'BTC' | 'BTO' | 'STC'  // Sell-to-Open, Buy-to-Close, Buy-to-Open, Sell-to-Close
+  occ_symbol?: string  // OCC symbol format (21 characters)
+  option_type?: 'put' | 'call'
+  strike_price?: number
+  expiration_date?: string
+  underlying_price_at_trade?: number  // Stock price at time of option trade
+
+  // Assignment linkage fields (used when option assignment creates stock position)
+  created_stock_position_id?: string  // ID of stock position created by assignment
+  cost_basis_adjustment?: number  // Premium received deducted from stock cost basis
 }
 
 // Validation Error - Domain-specific errors for position/trade operations

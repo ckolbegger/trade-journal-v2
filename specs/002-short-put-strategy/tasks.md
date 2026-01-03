@@ -81,7 +81,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Assignment linkage fields (created_stock_position_id, cost_basis_adjustment) are optional
     • Type compiles without errors in browser context
     File: `src/types/__tests__/trade-types.test.ts`
-- [ ] T006 (IMPL) Extend Trade interface with option fields in `src/lib/position.ts`
+- [x] T006 (IMPL) Extend Trade interface with option fields in `src/lib/position.ts`
 
 - [ ] T007 (TEST) Write comprehensive type verification tests for JournalEntry extensions covering:
     • entry_type union accepts 'option_assignment'
