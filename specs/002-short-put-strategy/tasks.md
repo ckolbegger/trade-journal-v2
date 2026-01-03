@@ -100,7 +100,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Service Extension
 
-- [ ] T009 [US1] (TEST) Write comprehensive test suite for createWithOptionStrategy() covering:
+- [x] T009 [US1] (TEST) Write comprehensive test suite for createWithOptionStrategy() covering:
     • Creates Short Put position with all option fields saved correctly
     • Returns created position with generated ID
     • Calls validateOptionPosition() before saving
