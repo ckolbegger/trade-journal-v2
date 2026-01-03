@@ -35,7 +35,7 @@
   - Step 1 - Write unit tests for short put plan validation in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/__tests__/PositionValidator.test.ts`
   - Step 2 - Implement validation updates in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/validators/PositionValidator.ts`
   - Step 3 - Add integration validation coverage in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/validation.integration.test.tsx`
-- [ ] T005 [US1]
+- [x] T005 [US1]
   - Step 1 - Write unit tests for plan form behavior in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/pages/PositionCreate.test.tsx`, plus component tests in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/__tests__/StrikePriceInput.test.tsx` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/__tests__/ExpirationDatePicker.test.tsx`, and risk calculation tests in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/__tests__/PositionRiskCalculator.test.ts`
   - Step 2 - Implement UI + data wiring in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/pages/PositionCreate.tsx`, new components in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/StrikePriceInput.tsx` and `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/components/ExpirationDatePicker.tsx`, the risk calculator in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/domain/calculators/PositionRiskCalculator.ts`, and any type adjustments in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/lib/position.ts`
   - Step 3 - Add integration test for plan creation in `/home/ckolbegger/src/trade-journal-v2/worktree/codex/src/integration/short-put-position-plan.test.tsx`

@@ -8,7 +8,7 @@ import {
   assertStepVisible,
   assertFormValidationErrors,
   assertFormFieldExists,
-  assertStrategyTypeLocked,
+  assertStrategyTypeDefault,
   assertRiskCalculations,
   assertStepDotsStatus,
   assertImmutableConfirmationVisible,
@@ -47,7 +47,7 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
   })
 
   describe('Step 1: Position Plan', () => {
-    it('should display position plan form with all required fields', async () => {
+    it('should display position plan form with all required fields for long stock', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 
       assertStepVisible('Position Plan')
@@ -57,15 +57,31 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       assertFormFieldExists(/Strategy Type/i)
       assertFormFieldExists(/Target Entry Price/i)
       assertFormFieldExists(/Target Quantity/i)
-      assertFormFieldExists(/Profit Target/i)
-      assertFormFieldExists(/Stop Loss/i)
+      assertFormFieldExists(/^Profit Target \*$/i)
+      assertFormFieldExists(/^Stop Loss \*$/i)
       assertFormFieldExists(/Position Thesis/i)
+
+      expect(screen.queryByLabelText(/Strike Price/i)).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/Expiration Date/i)).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/Target Premium/i)).not.toBeInTheDocument()
     })
 
-    it('should only show "Long Stock" as strategy type option in Phase 1A', async () => {
+    it('should default strategy type to Long Stock', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
 
-      assertStrategyTypeLocked()
+      assertStrategyTypeDefault()
+    })
+
+    it('should show option fields when Short Put is selected', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+
+      assertFormFieldExists(/Strike Price/i)
+      assertFormFieldExists(/Expiration Date/i)
+      assertFormFieldExists(/Target Premium/i)
+      assertFormFieldExists(/Profit Target Basis/i)
+      assertFormFieldExists(/Stop Loss Basis/i)
     })
 
     it('should validate required fields before proceeding to step 2', async () => {
@@ -79,7 +95,10 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
         assertFormValidationErrors([
           'Symbol is required',
           'Target entry price is required',
-          'Target quantity is required'
+          'Target quantity is required',
+          'Profit target is required',
+          'Stop loss is required',
+          'Position thesis is required'
         ])
       })
 
@@ -92,6 +111,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       // Fill in negative values
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '-10' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '0' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '-5' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '0' } })
 
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
@@ -99,7 +120,9 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       await waitFor(() => {
         assertFormValidationErrors([
           'Target entry price must be positive',
-          'Target quantity must be positive'
+          'Target quantity must be positive',
+          'Profit target must be positive',
+          'Stop loss must be positive'
         ])
       })
     })
@@ -111,14 +134,61 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '135' } })
 
       const nextButton = screen.getByText('Next: Trading Journal')
       fireEvent.click(nextButton)
 
       await waitFor(() => {
         assertFormValidationErrors(['Position thesis is required'])
+      })
+    })
+
+    it('should validate required short put fields', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'TSLA' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Contract Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '2.50' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '5.00' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Short put thesis' } })
+
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+
+      await waitFor(() => {
+        assertFormValidationErrors([
+          'Strike price is required',
+          'Expiration date is required',
+          'Target premium is required'
+        ])
+      })
+    })
+
+    it('should reject expiration dates in the past for short puts', async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      const pastDate = new Date()
+      pastDate.setDate(pastDate.getDate() - 1)
+      const pastDateValue = pastDate.toISOString().split('T')[0]
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'TSLA' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Contract Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/Strike Price/i), { target: { value: '200' } })
+      fireEvent.change(screen.getByLabelText(/Expiration Date/i), { target: { value: pastDateValue } })
+      fireEvent.change(screen.getByLabelText(/Target Premium/i), { target: { value: '2.50' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '2.00' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '5.00' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Short put thesis' } })
+
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+
+      await waitFor(() => {
+        assertFormValidationErrors(['Expiration date must be in the future'])
       })
     })
   })
@@ -131,8 +201,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
       const nextButton = screen.getByText('Next: Trading Journal')
@@ -184,8 +254,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
       // Go to step 2 (Journal)
@@ -227,6 +297,41 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
     })
   })
 
+  describe('Step 3: Risk Assessment - Short Put', () => {
+    beforeEach(async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'TSLA' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Contract Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/Strike Price/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Expiration Date/i), { target: { value: '2099-01-17' } })
+      fireEvent.change(screen.getByLabelText(/Target Premium/i), { target: { value: '20.00' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '10.00' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '30.00' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Short put thesis' } })
+
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+      await waitFor(() => assertStepVisible('📝 Position Plan'))
+
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
+        target: { value: 'Short put rationale' }
+      })
+      fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
+      await waitFor(() => assertStepVisible('Risk Assessment'))
+    })
+
+    it('should display risk calculation based on short put plan', () => {
+      assertRiskCalculations({
+        totalInvestment: '10,000.00',
+        maxProfit: '2,000.00',
+        maxLoss: '8,000.00',
+        riskRewardRatio: '1:0.25'
+      })
+    })
+  })
+
   describe('Step 4: Confirmation', () => {
     beforeEach(async () => {
       // Navigate to step 4
@@ -236,8 +341,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
       // Go to step 2 (Journal)
@@ -288,6 +393,44 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
 
   })
 
+  describe('Step 4: Confirmation - Short Put', () => {
+    beforeEach(async () => {
+      await renderWithRouterAndProps(<PositionCreate />)
+
+      fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: 'Short Put' } })
+      fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'TSLA' } })
+      fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '210' } })
+      fireEvent.change(screen.getByLabelText(/Contract Quantity/i), { target: { value: '1' } })
+      fireEvent.change(screen.getByLabelText(/Strike Price/i), { target: { value: '100' } })
+      fireEvent.change(screen.getByLabelText(/Expiration Date/i), { target: { value: '2099-01-17' } })
+      fireEvent.change(screen.getByLabelText(/Target Premium/i), { target: { value: '20.00' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '10.00' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '30.00' } })
+      fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Short put thesis' } })
+
+      fireEvent.click(screen.getByText('Next: Trading Journal'))
+      await waitFor(() => assertStepVisible('📝 Position Plan'))
+
+      fireEvent.change(screen.getByLabelText(/Rationale/i), {
+        target: { value: 'Short put rationale' }
+      })
+
+      fireEvent.click(screen.getByRole('button', { name: /Next: Risk Assessment/i }))
+      await waitFor(() => assertStepVisible('Risk Assessment'))
+
+      fireEvent.click(screen.getByRole('button', { name: /Next: Confirmation/i }))
+      await waitFor(() => assertStepVisible('Confirmation'))
+    })
+
+    it('should display short put summary fields for confirmation', () => {
+      expect(screen.getByText('TSLA')).toBeInTheDocument()
+      expect(screen.getByText('Short Put')).toBeInTheDocument()
+      expect(screen.getByText('$100.00')).toBeInTheDocument()
+      expect(screen.getByText('2099-01-17')).toBeInTheDocument()
+      expect(screen.getByText('$20.00')).toBeInTheDocument()
+    })
+  })
+
   describe('Step Navigation', () => {
     it('should display step progress indicator', async () => {
       await renderWithRouterAndProps(<PositionCreate />)
@@ -306,8 +449,8 @@ describe('PositionCreate - Phase 1A: Position Creation Flow', () => {
       fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: 'AAPL' } })
       fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: '150' } })
       fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: '100' } })
-      fireEvent.change(screen.getByLabelText(/Profit Target/i), { target: { value: '165' } })
-      fireEvent.change(screen.getByLabelText(/Stop Loss/i), { target: { value: '135' } })
+      fireEvent.change(screen.getByLabelText(/^Profit Target \*$/i), { target: { value: '165' } })
+      fireEvent.change(screen.getByLabelText(/^Stop Loss \*$/i), { target: { value: '135' } })
       fireEvent.change(screen.getByLabelText(/Position Thesis/i), { target: { value: 'Test thesis' } })
 
       fireEvent.click(screen.getByText('Next: Trading Journal'))

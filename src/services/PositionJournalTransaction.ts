@@ -6,11 +6,19 @@ import { generatePositionId, generateJournalId } from '@/lib/uuid'
 
 export interface CreatePositionData {
   symbol: string
+  strategy_type: Position['strategy_type']
+  trade_kind: NonNullable<Position['trade_kind']>
   target_entry_price: number
   target_quantity: number
   profit_target: number
+  profit_target_basis: NonNullable<Position['profit_target_basis']>
   stop_loss: number
+  stop_loss_basis: NonNullable<Position['stop_loss_basis']>
   position_thesis: string
+  option_type?: Position['option_type']
+  strike_price?: Position['strike_price']
+  expiration_date?: Position['expiration_date']
+  premium_per_contract?: Position['premium_per_contract']
   journalFields: JournalField[]
 }
 
@@ -62,12 +70,19 @@ export class PositionJournalTransaction {
       const position: Position = {
         id: positionId,
         symbol: data.symbol.toUpperCase(),
-        strategy_type: 'Long Stock',
+        strategy_type: data.strategy_type,
+        trade_kind: data.trade_kind,
         target_entry_price: data.target_entry_price,
         target_quantity: data.target_quantity,
         profit_target: data.profit_target,
+        profit_target_basis: data.profit_target_basis,
         stop_loss: data.stop_loss,
+        stop_loss_basis: data.stop_loss_basis,
         position_thesis: data.position_thesis,
+        option_type: data.option_type,
+        strike_price: data.strike_price,
+        expiration_date: data.expiration_date,
+        premium_per_contract: data.premium_per_contract,
         created_date: new Date(),
         status: 'planned',
         journal_entry_ids: [journalId],

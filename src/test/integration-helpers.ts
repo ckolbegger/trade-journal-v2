@@ -14,6 +14,7 @@ export interface PositionFormData {
   profitTarget?: string
   stopLoss?: string
   positionThesis?: string
+  strategyType?: 'Long Stock' | 'Short Put'
 }
 
 /**
@@ -26,10 +27,12 @@ export const fillPositionForm = async (data: PositionFormData = {}) => {
     targetQuantity = '100',
     profitTarget = '165.00',
     stopLoss = '135.00',
-    positionThesis = 'Integration test: Bullish on Q4 earnings and iPhone cycle'
+    positionThesis = 'Integration test: Bullish on Q4 earnings and iPhone cycle',
+    strategyType = 'Long Stock'
   } = data
 
   // Fill out all form fields
+  fireEvent.change(screen.getByLabelText(/Strategy Type/i), { target: { value: strategyType } })
   fireEvent.change(screen.getByLabelText(/Symbol/i), { target: { value: symbol } })
   fireEvent.change(screen.getByLabelText(/Target Entry Price/i), { target: { value: targetEntryPrice } })
   fireEvent.change(screen.getByLabelText(/Target Quantity/i), { target: { value: targetQuantity } })
@@ -39,10 +42,8 @@ export const fillPositionForm = async (data: PositionFormData = {}) => {
     target: { value: positionThesis }
   })
 
-  // Verify strategy type is locked to "Long Stock"
   const strategyInput = screen.getByLabelText(/Strategy Type/i)
-  expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+  expect(strategyInput).toHaveValue(strategyType)
 }
 
 /**

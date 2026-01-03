@@ -8,16 +8,24 @@ import { ArrowLeft } from 'lucide-react'
 import { useServices } from '@/contexts/ServiceContext'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
+import { StrikePriceInput } from '@/components/StrikePriceInput'
+import { ExpirationDatePicker } from '@/components/ExpirationDatePicker'
+import { PositionRiskCalculator } from '@/domain/calculators/PositionRiskCalculator'
 import type { JournalField } from '@/types/journal'
 
 interface PositionFormData {
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: 'Long Stock' | 'Short Put'
   target_entry_price: string
   target_quantity: string
   profit_target: string
+  profit_target_basis: 'stock_price' | 'option_price'
   stop_loss: string
+  stop_loss_basis: 'stock_price' | 'option_price'
   position_thesis: string
+  strike_price: string
+  expiration_date: string
+  premium_per_contract: string
 }
 
 interface ValidationErrors {
@@ -25,8 +33,59 @@ interface ValidationErrors {
   target_entry_price?: string
   target_quantity?: string
   profit_target?: string
+  profit_target_basis?: string
   stop_loss?: string
+  stop_loss_basis?: string
   position_thesis?: string
+  strike_price?: string
+  expiration_date?: string
+  premium_per_contract?: string
+}
+
+const formatBasisLabel = (basis: PositionFormData['profit_target_basis']): string => {
+  return basis === 'option_price' ? 'Option Premium' : 'Stock Price'
+}
+
+const parseDateInput = (value: string): Date | null => {
+  if (!value) return null
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return null
+  return new Date(year, month - 1, day)
+}
+
+const isDateInPast = (value: string): boolean => {
+  const parsed = parseDateInput(value)
+  if (!parsed) return false
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return parsed < today
+}
+
+const parseCurrency = (value: string): number => {
+  const parsed = Number.parseFloat(value)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const parseQuantity = (value: string): number => {
+  const parsed = Number.parseInt(value, 10)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+const buildStrikeSuggestions = (entryPrice: string): number[] => {
+  const numeric = Number.parseFloat(entryPrice)
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return []
+  }
+  const increment = numeric >= 50 ? 5 : 1
+  const rounded = Math.round(numeric / increment) * increment
+  const suggestions = [
+    rounded - (increment * 2),
+    rounded - increment,
+    rounded,
+    rounded + increment,
+    rounded + (increment * 2)
+  ]
+  return suggestions.filter((value, index, array) => value > 0 && array.indexOf(value) === index)
 }
 
 export function PositionCreate() {
@@ -55,11 +114,17 @@ export function PositionCreate() {
     target_entry_price: '',
     target_quantity: '',
     profit_target: '',
+    profit_target_basis: 'stock_price',
     stop_loss: '',
-    position_thesis: ''
+    stop_loss_basis: 'stock_price',
+    position_thesis: '',
+    strike_price: '',
+    expiration_date: '',
+    premium_per_contract: ''
   })
 
   const validateStep1 = (): boolean => {
+    const isShortPut = formData.strategy_type === 'Short Put'
     const newErrors: ValidationErrors = {}
 
     if (!formData.symbol.trim()) {
@@ -84,10 +149,38 @@ export function PositionCreate() {
       newErrors.profit_target = 'Profit target must be positive'
     }
 
+    if (!formData.profit_target_basis) {
+      newErrors.profit_target_basis = 'Profit target basis is required'
+    }
+
     if (!formData.stop_loss) {
       newErrors.stop_loss = 'Stop loss is required'
     } else if (parseFloat(formData.stop_loss) <= 0) {
       newErrors.stop_loss = 'Stop loss must be positive'
+    }
+
+    if (!formData.stop_loss_basis) {
+      newErrors.stop_loss_basis = 'Stop loss basis is required'
+    }
+
+    if (isShortPut) {
+      if (!formData.strike_price) {
+        newErrors.strike_price = 'Strike price is required'
+      } else if (parseFloat(formData.strike_price) <= 0) {
+        newErrors.strike_price = 'Strike price must be positive'
+      }
+
+      if (!formData.expiration_date) {
+        newErrors.expiration_date = 'Expiration date is required'
+      } else if (isDateInPast(formData.expiration_date)) {
+        newErrors.expiration_date = 'Expiration date must be in the future'
+      }
+
+      if (!formData.premium_per_contract) {
+        newErrors.premium_per_contract = 'Target premium is required'
+      } else if (parseFloat(formData.premium_per_contract) <= 0) {
+        newErrors.premium_per_contract = 'Target premium must be positive'
+      }
     }
 
     if (!formData.position_thesis.trim()) {
@@ -96,25 +189,6 @@ export function PositionCreate() {
 
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
-  }
-
-  const calculateRiskMetrics = () => {
-    const entryPrice = parseFloat(formData.target_entry_price) || 0
-    const quantity = parseInt(formData.target_quantity) || 0
-    const profitTarget = parseFloat(formData.profit_target) || 0
-    const stopLoss = parseFloat(formData.stop_loss) || 0
-
-    const totalInvestment = entryPrice * quantity
-    const maxProfit = (profitTarget - entryPrice) * quantity
-    const maxLoss = (entryPrice - stopLoss) * quantity
-    const riskRewardRatio = maxLoss > 0 ? `1:${Math.round(maxProfit / maxLoss)}` : '0:0'
-
-    return {
-      totalInvestment,
-      maxProfit,
-      maxLoss,
-      riskRewardRatio
-    }
   }
 
   const formatCurrency = (amount: number): string => {
@@ -127,6 +201,38 @@ export function PositionCreate() {
     if (field in errors && errors[field as keyof ValidationErrors]) {
       setErrors(prev => ({ ...prev, [field as keyof ValidationErrors]: undefined }))
     }
+  }
+
+  const handleStrategyChange = (value: PositionFormData['strategy_type']) => {
+    setFormData(prev => {
+      if (value === 'Short Put') {
+        return {
+          ...prev,
+          strategy_type: value,
+          profit_target_basis: 'option_price',
+          stop_loss_basis: 'option_price'
+        }
+      }
+
+      return {
+        ...prev,
+        strategy_type: value,
+        profit_target_basis: 'stock_price',
+        stop_loss_basis: 'stock_price',
+        strike_price: '',
+        expiration_date: '',
+        premium_per_contract: ''
+      }
+    })
+
+    setErrors(prev => ({
+      ...prev,
+      strike_price: undefined,
+      expiration_date: undefined,
+      premium_per_contract: undefined,
+      profit_target_basis: undefined,
+      stop_loss_basis: undefined
+    }))
   }
 
   const handleNextStep = () => {
@@ -170,11 +276,23 @@ export function PositionCreate() {
       // Execute UUID-based transaction
       const result = await transactionService.createPositionWithJournal({
         symbol: formData.symbol,
-        target_entry_price: parseFloat(formData.target_entry_price),
-        target_quantity: parseInt(formData.target_quantity),
-        profit_target: parseFloat(formData.profit_target),
-        stop_loss: parseFloat(formData.stop_loss),
+        strategy_type: formData.strategy_type,
+        trade_kind: formData.strategy_type === 'Short Put' ? 'option' : 'stock',
+        target_entry_price: parseCurrency(formData.target_entry_price),
+        target_quantity: parseQuantity(formData.target_quantity),
+        profit_target: parseCurrency(formData.profit_target),
+        profit_target_basis: formData.profit_target_basis,
+        stop_loss: parseCurrency(formData.stop_loss),
+        stop_loss_basis: formData.stop_loss_basis,
         position_thesis: formData.position_thesis,
+        option_type: formData.strategy_type === 'Short Put' ? 'put' : undefined,
+        strike_price: formData.strategy_type === 'Short Put' ? parseCurrency(formData.strike_price) : undefined,
+        expiration_date: formData.strategy_type === 'Short Put'
+          ? parseDateInput(formData.expiration_date) ?? undefined
+          : undefined,
+        premium_per_contract: formData.strategy_type === 'Short Put'
+          ? parseCurrency(formData.premium_per_contract)
+          : undefined,
         journalFields: journalFields
       })
 
@@ -232,13 +350,16 @@ export function PositionCreate() {
           <Label htmlFor="strategy_type" className="block text-sm font-medium mb-1.5 text-gray-700">
             Strategy Type *
           </Label>
-          <Input
+          <select
             id="strategy_type"
             value={formData.strategy_type}
-            readOnly
-            className="w-full p-3 border border-gray-300 rounded-md text-base bg-gray-50"
-          />
-          <p className="text-xs text-gray-500 mt-1">Phase 1A: Only Long Stock positions supported</p>
+            onChange={(e) => handleStrategyChange(e.target.value as PositionFormData['strategy_type'])}
+            className="w-full p-3 border border-gray-300 rounded-md text-base bg-white"
+          >
+            <option value="Long Stock">Long Stock</option>
+            <option value="Short Put">Short Put</option>
+          </select>
+          <p className="text-xs text-gray-500 mt-1">Select a strategy to tailor plan fields.</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -246,21 +367,24 @@ export function PositionCreate() {
             <Label htmlFor="target_entry_price" className="block text-sm font-medium mb-1.5 text-gray-700">
               Target Entry Price *
             </Label>
-            <Input
-              id="target_entry_price"
-              type="number"
-              step="0.01"
-              value={formData.target_entry_price}
-              onChange={(e) => handleInputChange('target_entry_price', e.target.value)}
-              placeholder="0.00"
-              className="w-full p-3 border border-gray-300 rounded-md text-base"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="target_entry_price"
+                type="number"
+                step="0.01"
+                value={formData.target_entry_price}
+                onChange={(e) => handleInputChange('target_entry_price', e.target.value)}
+                placeholder="0.00"
+                className="w-full p-3 pl-7 border border-gray-300 rounded-md text-base"
+              />
+            </div>
             {errors.target_entry_price && <p className="text-red-600 text-xs mt-1">{errors.target_entry_price}</p>}
           </div>
 
           <div>
             <Label htmlFor="target_quantity" className="block text-sm font-medium mb-1.5 text-gray-700">
-              Target Quantity *
+              {formData.strategy_type === 'Short Put' ? 'Contract Quantity *' : 'Target Quantity *'}
             </Label>
             <Input
               id="target_quantity"
@@ -274,37 +398,122 @@ export function PositionCreate() {
           </div>
         </div>
 
+        {formData.strategy_type === 'Short Put' && (
+          <div className="grid grid-cols-2 gap-3">
+            <StrikePriceInput
+              value={formData.strike_price}
+              onChange={(value) => handleInputChange('strike_price', value)}
+              error={errors.strike_price}
+              suggestedStrikes={buildStrikeSuggestions(formData.target_entry_price)}
+            />
+            <ExpirationDatePicker
+              value={formData.expiration_date}
+              onChange={(value) => handleInputChange('expiration_date', value)}
+              error={errors.expiration_date}
+            />
+          </div>
+        )}
+
+        {formData.strategy_type === 'Short Put' && (
+          <div>
+            <Label htmlFor="premium_per_contract" className="block text-sm font-medium mb-1.5 text-gray-700">
+              Target Premium (per contract) *
+            </Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="premium_per_contract"
+                type="number"
+                step="0.01"
+                value={formData.premium_per_contract}
+                onChange={(e) => handleInputChange('premium_per_contract', e.target.value)}
+                placeholder="0.00"
+                className="w-full p-3 pl-7 border border-gray-300 rounded-md text-base"
+              />
+            </div>
+            {errors.premium_per_contract && <p className="text-red-600 text-xs mt-1">{errors.premium_per_contract}</p>}
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label htmlFor="profit_target" className="block text-sm font-medium mb-1.5 text-gray-700">
               Profit Target *
             </Label>
-            <Input
-              id="profit_target"
-              type="number"
-              step="0.01"
-              value={formData.profit_target}
-              onChange={(e) => handleInputChange('profit_target', e.target.value)}
-              placeholder="0.00"
-              className="w-full p-3 border border-gray-300 rounded-md text-base"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="profit_target"
+                type="number"
+                step="0.01"
+                value={formData.profit_target}
+                onChange={(e) => handleInputChange('profit_target', e.target.value)}
+                placeholder="0.00"
+                className="w-full p-3 pl-7 border border-gray-300 rounded-md text-base"
+              />
+            </div>
             {errors.profit_target && <p className="text-red-600 text-xs mt-1">{errors.profit_target}</p>}
+            {formData.strategy_type === 'Short Put' ? (
+              <>
+                <Label htmlFor="profit_target_basis" className="block text-xs font-medium mt-2 text-gray-700">
+                  Profit Target Basis *
+                </Label>
+                <select
+                  id="profit_target_basis"
+                  value={formData.profit_target_basis}
+                  onChange={(e) => handleInputChange('profit_target_basis', e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="option_price">Option Premium</option>
+                  <option value="stock_price">Stock Price</option>
+                </select>
+                {errors.profit_target_basis && (
+                  <p className="text-red-600 text-xs mt-1">{errors.profit_target_basis}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Based on stock price</p>
+            )}
           </div>
 
           <div>
             <Label htmlFor="stop_loss" className="block text-sm font-medium mb-1.5 text-gray-700">
               Stop Loss *
             </Label>
-            <Input
-              id="stop_loss"
-              type="number"
-              step="0.01"
-              value={formData.stop_loss}
-              onChange={(e) => handleInputChange('stop_loss', e.target.value)}
-              placeholder="0.00"
-              className="w-full p-3 border border-gray-300 rounded-md text-base"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+              <Input
+                id="stop_loss"
+                type="number"
+                step="0.01"
+                value={formData.stop_loss}
+                onChange={(e) => handleInputChange('stop_loss', e.target.value)}
+                placeholder="0.00"
+                className="w-full p-3 pl-7 border border-gray-300 rounded-md text-base"
+              />
+            </div>
             {errors.stop_loss && <p className="text-red-600 text-xs mt-1">{errors.stop_loss}</p>}
+            {formData.strategy_type === 'Short Put' ? (
+              <>
+                <Label htmlFor="stop_loss_basis" className="block text-xs font-medium mt-2 text-gray-700">
+                  Stop Loss Basis *
+                </Label>
+                <select
+                  id="stop_loss_basis"
+                  value={formData.stop_loss_basis}
+                  onChange={(e) => handleInputChange('stop_loss_basis', e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="option_price">Option Premium</option>
+                  <option value="stock_price">Stock Price</option>
+                </select>
+                {errors.stop_loss_basis && (
+                  <p className="text-red-600 text-xs mt-1">{errors.stop_loss_basis}</p>
+                )}
+              </>
+            ) : (
+              <p className="text-xs text-gray-500 mt-1">Based on stock price</p>
+            )}
           </div>
         </div>
 
@@ -328,7 +537,15 @@ export function PositionCreate() {
   )
 
   const renderStep2 = () => {
-    const metrics = calculateRiskMetrics()
+    const metrics = PositionRiskCalculator.calculate({
+      strategy_type: formData.strategy_type,
+      target_entry_price: parseCurrency(formData.target_entry_price),
+      target_quantity: parseQuantity(formData.target_quantity),
+      profit_target: parseCurrency(formData.profit_target),
+      stop_loss: parseCurrency(formData.stop_loss),
+      strike_price: parseCurrency(formData.strike_price),
+      premium_per_contract: parseCurrency(formData.premium_per_contract)
+    })
 
     return (
       <div className="p-5 pb-32">
@@ -401,19 +618,43 @@ export function PositionCreate() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Target Entry:</span>
-            <span className="font-medium">${parseFloat(formData.target_entry_price).toFixed(2)}</span>
+            <span className="font-medium">${parseCurrency(formData.target_entry_price).toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Quantity:</span>
-            <span className="font-medium">{formData.target_quantity} shares</span>
+            <span className="font-medium">
+              {formData.target_quantity} {formData.strategy_type === 'Short Put' ? 'contracts' : 'shares'}
+            </span>
           </div>
+          {formData.strategy_type === 'Short Put' && (
+            <>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Strike Price:</span>
+                <span className="font-medium">${parseCurrency(formData.strike_price).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Expiration Date:</span>
+                <span className="font-medium">{formData.expiration_date}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Target Premium:</span>
+                <span className="font-medium">${parseCurrency(formData.premium_per_contract).toFixed(2)}</span>
+              </div>
+            </>
+          )}
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Profit Target:</span>
-            <span className="font-medium">${parseFloat(formData.profit_target).toFixed(2)}</span>
+            <span className="font-medium">
+              ${parseCurrency(formData.profit_target).toFixed(2)}
+              {formData.strategy_type === 'Short Put' ? ` (${formatBasisLabel(formData.profit_target_basis)})` : ''}
+            </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-gray-600">Stop Loss:</span>
-            <span className="font-medium">${parseFloat(formData.stop_loss).toFixed(2)}</span>
+            <span className="font-medium">
+              ${parseCurrency(formData.stop_loss).toFixed(2)}
+              {formData.strategy_type === 'Short Put' ? ` (${formatBasisLabel(formData.stop_loss_basis)})` : ''}
+            </span>
           </div>
           <div className="flex justify-start text-sm">
             <span className="text-gray-600 mr-2">Thesis:</span>

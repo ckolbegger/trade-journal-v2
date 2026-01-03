@@ -208,8 +208,9 @@ export const assertFormFieldDisabled = (label: string | RegExp) => {
   expect(field).toHaveAttribute('readonly')
 }
 
-export const assertStrategyTypeLocked = () => {
-  const strategyInput = screen.getByLabelText(/Strategy Type/i)
-  expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+export const assertStrategyTypeDefault = () => {
+  const strategySelect = screen.getByLabelText(/Strategy Type/i)
+  expect(strategySelect).toHaveValue('Long Stock')
+  expect(within(strategySelect).getByRole('option', { name: /Long Stock/i })).toBeInTheDocument()
+  expect(within(strategySelect).getByRole('option', { name: /Short Put/i })).toBeInTheDocument()
 }
