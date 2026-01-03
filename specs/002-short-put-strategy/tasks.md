@@ -12,11 +12,11 @@
 
 | Metric | Count |
 |--------|-------|
-| Total Tasks | 73 (66 + 7 bug fixes) |
+| Total Tasks | 74 (66 + 8 bug fixes) |
 | Unit Test Tasks (Step 1) | 20 (30%) |
 | Implementation Tasks (Step 2) | 26 (39%) |
 | Integration Test Tasks (Step 3) | 20 (30%) |
-| Bug Fix Tasks | 7 |
+| Bug Fix Tasks | 8 |
 
 ---
 
@@ -192,6 +192,10 @@
   - Fix: Extended PositionJournalTransaction to support Short Put strategy_type
   - Failing tests: Full Short Put creation flow tests blocked by transaction layer
   - Status: FIXED - Updated CreatePositionData interface and createPositionWithJournal to accept and use strategy_type, added Short Put option fields (option_type, strike_price, expiration_date, premium_per_contract, profit_target_basis, stop_loss_basis), updated existing tests to pass strategy_type explicitly, added new test for Short Put position creation
+- [ ] B008 Fix Target Entry Price and Stop Loss field widths in PositionCreate.tsx
+  - Issue: Target Entry Price and Stop Loss input fields are too narrow to display values
+  - Fix: Increase field width or apply appropriate CSS classes to make fields usable
+  - Location: src/pages/PositionCreate.tsx - Target Entry Price and Stop Loss input fields
 
 ---
 
