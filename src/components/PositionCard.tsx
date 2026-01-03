@@ -3,6 +3,16 @@ import { StatusBadge } from './StatusBadge'
 import { PnLDisplay } from './PnLDisplay'
 import type { Position } from '@/lib/position'
 
+// Helper function to format date for display
+function formatDate(dateString: string): string {
+  const date = new Date(dateString)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const month = months[date.getMonth()]
+  const day = date.getDate()
+  const year = date.getFullYear()
+  return `${month} ${day}, ${year}`
+}
+
 export interface PositionCardProps {
   position: Position
   onViewDetails: (positionId: string) => void
@@ -81,9 +91,38 @@ export const PositionCard: React.FC<PositionCardProps> = ({
         </div>
       </div>
 
+      {/* Option-specific fields for Short Put */}
+      {position.strategy_type === 'Short Put' && (
+        <div className="grid grid-cols-3 gap-3 mb-3 py-2 border-t border-b border-gray-200">
+          <div className="text-center">
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Strike</div>
+            <div className="text-sm font-medium text-gray-900">
+              {position.strike_price !== undefined ? `$${position.strike_price.toFixed(2)}` : '—'}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Expires</div>
+            <div className="text-sm font-medium text-gray-900">
+              {position.expiration_date ? formatDate(position.expiration_date) : '—'}
+            </div>
+          </div>
+          <div className="text-center">
+            <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">Premium</div>
+            <div className="text-sm font-medium text-gray-900">
+              {position.premium_per_contract !== undefined ? `$${position.premium_per_contract.toFixed(2)}` : '—'}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Position footer */}
       <div className="flex justify-between items-center text-xs text-gray-500">
-        <span>Target Qty: {position.target_quantity}</span>
+        <span>
+          {position.strategy_type === 'Short Put'
+            ? `Contracts: ${position.target_quantity}`
+            : `Target Qty: ${position.target_quantity}`
+          }
+        </span>
         <span>
           {position.trades.length > 0
             ? `${position.trades.length} trade${position.trades.length > 1 ? 's' : ''}`

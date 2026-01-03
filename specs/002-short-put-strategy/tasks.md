@@ -209,7 +209,7 @@ This document provides a dependency-ordered task list for implementing Short Put
 
 #### Option Position Display (MOVED FROM US7 - Value Delivery Audit Fix)
 
-- [ ] T023 [US1] (TEST) Write comprehensive test suite for OptionPositionCard covering:
+- [x] T023 [US1] (TEST) Write comprehensive test suite for OptionPositionCard covering:
     • Card displays underlying symbol
     • Card displays strategy type badge "Short Put"
     • Card displays strike price with $ formatting
@@ -218,7 +218,7 @@ This document provides a dependency-ordered task list for implementing Short Put
     • Card displays number of contracts
     • Card shows current status (planned/open/closed)
     File: `src/components/positions/__tests__/OptionPositionCard.test.tsx`
-- [ ] T024 [US1] (IMPL) Create or extend PositionCard component with Short Put option display
+- [x] T024 [US1] (IMPL) Create or extend PositionCard component with Short Put option display
     • Shows strike price, expiration, premium when strategy_type='Short Put'
     • Can be conditional rendering in existing PositionCard or separate OptionPositionCard
 
