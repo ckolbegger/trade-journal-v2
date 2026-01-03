@@ -209,7 +209,12 @@ export const assertFormFieldDisabled = (label: string | RegExp) => {
 }
 
 export const assertStrategyTypeLocked = () => {
+  // Strategy type is now a select dropdown, not a locked readonly field
   const strategyInput = screen.getByLabelText(/Strategy Type/i)
   expect(strategyInput).toHaveValue('Long Stock')
-  expect(strategyInput).toHaveAttribute('readonly')
+  // Verify it's a select element with both options available
+  expect(strategyInput.tagName).toBe('SELECT')
+  const options = Array.from((strategyInput as HTMLSelectElement).options).map(opt => opt.value)
+  expect(options).toContain('Long Stock')
+  expect(options).toContain('Short Put')
 }

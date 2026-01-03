@@ -8,16 +8,27 @@ import { ArrowLeft } from 'lucide-react'
 import { useServices } from '@/contexts/ServiceContext'
 import { PositionJournalTransaction } from '@/services/PositionJournalTransaction'
 import { EnhancedJournalEntryForm } from '@/components/EnhancedJournalEntryForm'
+import { StrategySelector } from '@/components/StrategySelector'
+import { StrikePriceInput } from '@/components/StrikePriceInput'
+import { ExpirationDatePicker } from '@/components/ExpirationDatePicker'
+import { PriceBasisSelector } from '@/components/PriceBasisSelector'
 import type { JournalField } from '@/types/journal'
+import type { StrategyType, PriceBasis } from '@/lib/position'
 
 interface PositionFormData {
   symbol: string
-  strategy_type: 'Long Stock'
+  strategy_type: StrategyType
   target_entry_price: string
   target_quantity: string
   profit_target: string
   stop_loss: string
   position_thesis: string
+  // Option fields
+  strike_price?: number
+  expiration_date?: Date
+  premium_per_contract?: number
+  profit_target_basis?: PriceBasis
+  stop_loss_basis?: PriceBasis
 }
 
 interface ValidationErrors {
@@ -27,6 +38,8 @@ interface ValidationErrors {
   profit_target?: string
   stop_loss?: string
   position_thesis?: string
+  strike_price?: string
+  expiration_date?: string
 }
 
 export function PositionCreate() {
@@ -92,6 +105,17 @@ export function PositionCreate() {
 
     if (!formData.position_thesis.trim()) {
       newErrors.position_thesis = 'Position thesis is required'
+    }
+
+    // Validate option fields if Short Put strategy
+    if (formData.strategy_type === 'Short Put') {
+      if (!formData.strike_price || formData.strike_price <= 0) {
+        newErrors.strike_price = 'Strike price is required'
+      }
+
+      if (!formData.expiration_date) {
+        newErrors.expiration_date = 'Expiration date is required'
+      }
     }
 
     setErrors(newErrors)
@@ -229,16 +253,10 @@ export function PositionCreate() {
         </div>
 
         <div>
-          <Label htmlFor="strategy_type" className="block text-sm font-medium mb-1.5 text-gray-700">
-            Strategy Type *
-          </Label>
-          <Input
-            id="strategy_type"
+          <StrategySelector
             value={formData.strategy_type}
-            readOnly
-            className="w-full p-3 border border-gray-300 rounded-md text-base bg-gray-50"
+            onChange={(value) => setFormData(prev => ({ ...prev, strategy_type: value }))}
           />
-          <p className="text-xs text-gray-500 mt-1">Phase 1A: Only Long Stock positions supported</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -323,6 +341,47 @@ export function PositionCreate() {
           {errors.position_thesis && <p className="text-red-600 text-xs mt-1">{errors.position_thesis}</p>}
           <p className="text-xs text-gray-500 mt-1">Required for every position plan</p>
         </div>
+
+        {/* Option fields - only show for Short Put */}
+        {formData.strategy_type === 'Short Put' && (
+          <>
+            <div>
+              <StrikePriceInput
+                value={formData.strike_price || 0}
+                onChange={(value) => setFormData(prev => ({ ...prev, strike_price: value }))}
+                error={errors.strike_price}
+              />
+            </div>
+
+            <div>
+              <ExpirationDatePicker
+                value={formData.expiration_date || new Date()}
+                onChange={(value) => setFormData(prev => ({ ...prev, expiration_date: value }))}
+                error={errors.expiration_date}
+              />
+            </div>
+
+            <div>
+              <Label className="block text-sm font-medium mb-1.5 text-gray-700">
+                Profit Target Basis
+              </Label>
+              <PriceBasisSelector
+                value={formData.profit_target_basis}
+                onChange={(value) => setFormData(prev => ({ ...prev, profit_target_basis: value }))}
+              />
+            </div>
+
+            <div>
+              <Label className="block text-sm font-medium mb-1.5 text-gray-700">
+                Stop Loss Basis
+              </Label>
+              <PriceBasisSelector
+                value={formData.stop_loss_basis}
+                onChange={(value) => setFormData(prev => ({ ...prev, stop_loss_basis: value }))}
+              />
+            </div>
+          </>
+        )}
       </div>
     </div>
   )

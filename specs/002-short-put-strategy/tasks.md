@@ -65,7 +65,7 @@
   - Tests: happy path, rejects past dates, valid date format, handles timezone
 - [x] T009 [P] [US1] Create PriceBasisSelector component with comprehensive unit tests in src/components/PriceBasisSelector.tsx
   - Tests: renders stock/option options, selection changes value, displays current selection
-- [ ] T010 [US1] Extend PositionCreate with conditional option fields in src/pages/PositionCreate.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
+- [x] T010 [US1] Extend PositionCreate with conditional option fields in src/pages/PositionCreate.tsx (show strike, expiration, premium when strategy_type === 'Short Put')
   - Tests: hides option fields for Long Stock, shows option fields for Short Put, form state includes option fields when visible, tab order correct with option fields
 - [ ] T011 [US1] Extend PositionService.create() to handle option plans with comprehensive unit tests in src/services/PositionService.ts
   - Tests: creates Short Put position, validates option fields, rejects invalid strike/expiration, persists all option fields to DB
