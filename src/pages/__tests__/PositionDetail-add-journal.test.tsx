@@ -100,12 +100,18 @@ describe('PositionDetail - Add Journal Entry', () => {
 
       renderPositionDetail()
 
+      // Wait for position to load
       await waitFor(() => {
         expect(screen.getByText('AAPL')).toBeInTheDocument()
       })
 
+      // Wait for journal entries to finish loading (async useEffect)
+      await waitFor(() => {
+        const addJournalButton = screen.getByRole('button', { name: /add journal entry/i })
+        expect(addJournalButton).toBeVisible()
+      })
+
       const addJournalButton = screen.getByRole('button', { name: /add journal entry/i })
-      expect(addJournalButton).toBeVisible()
       expect(addJournalButton).toBeEnabled()
     })
 
@@ -354,8 +360,14 @@ describe('PositionDetail - Add Journal Entry', () => {
 
       renderPositionDetail()
 
+      // Wait for position and journal entries to load
       await waitFor(() => {
         expect(screen.getByText('AAPL')).toBeInTheDocument()
+      })
+
+      // Wait for the add journal button to be ready (after all async loads)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add journal entry/i })).toBeVisible()
       })
 
       fireEvent.click(screen.getByRole('button', { name: /add journal entry/i }))
@@ -385,6 +397,11 @@ describe('PositionDetail - Add Journal Entry', () => {
           })
         )
       })
+
+      // Wait for modal to close and journal entries to reload (async state updates)
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-journal-modal')).not.toBeInTheDocument()
+      })
     })
 
     it('should create journal with position_id AND trade_id when trade selected', async () => {
@@ -394,8 +411,14 @@ describe('PositionDetail - Add Journal Entry', () => {
 
       renderPositionDetail()
 
+      // Wait for position and journal entries to load
       await waitFor(() => {
         expect(screen.getByText('AAPL')).toBeInTheDocument()
+      })
+
+      // Wait for the add journal button to be ready (after all async loads)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add journal entry/i })).toBeVisible()
       })
 
       fireEvent.click(screen.getByRole('button', { name: /add journal entry/i }))
@@ -428,6 +451,11 @@ describe('PositionDetail - Add Journal Entry', () => {
             entry_type: 'trade_execution'
           })
         )
+      })
+
+      // Wait for modal to close and journal entries to reload (async state updates)
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-journal-modal')).not.toBeInTheDocument()
       })
     })
 
@@ -594,8 +622,14 @@ describe('PositionDetail - Add Journal Entry', () => {
 
       renderPositionDetail()
 
+      // Wait for position and journal entries to load
       await waitFor(() => {
         expect(screen.getByText('AAPL')).toBeInTheDocument()
+      })
+
+      // Wait for the add journal button to be ready (after all async loads)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add journal entry/i })).toBeVisible()
       })
 
       fireEvent.click(screen.getByRole('button', { name: /add journal entry/i }))
@@ -627,6 +661,11 @@ describe('PositionDetail - Add Journal Entry', () => {
         expect(field).toHaveProperty('response')
         expect(field).toHaveProperty('required')
       })
+
+      // Wait for modal to close and journal entries to reload (async state updates)
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-journal-modal')).not.toBeInTheDocument()
+      })
     })
 
     it('should honor ADR-003 schema evolution (store field metadata)', async () => {
@@ -636,8 +675,14 @@ describe('PositionDetail - Add Journal Entry', () => {
 
       renderPositionDetail()
 
+      // Wait for position and journal entries to load
       await waitFor(() => {
         expect(screen.getByText('AAPL')).toBeInTheDocument()
+      })
+
+      // Wait for the add journal button to be ready (after all async loads)
+      await waitFor(() => {
+        expect(screen.getByRole('button', { name: /add journal entry/i })).toBeVisible()
       })
 
       fireEvent.click(screen.getByRole('button', { name: /add journal entry/i }))
@@ -663,6 +708,11 @@ describe('PositionDetail - Add Journal Entry', () => {
       expect(savedRationaleField).toBeDefined()
       expect(savedRationaleField.prompt).toBe('Why this trade? Why now?') // Current prompt stored
       expect(savedRationaleField.required).toBe(true) // Validation metadata stored
+
+      // Wait for modal to close and journal entries to reload (async state updates)
+      await waitFor(() => {
+        expect(screen.queryByTestId('add-journal-modal')).not.toBeInTheDocument()
+      })
     })
   })
 })

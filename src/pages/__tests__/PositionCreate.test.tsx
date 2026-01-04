@@ -155,11 +155,16 @@ describe('PositionCreate - Short Put Wiring (T013)', () => {
     })
   }
 
-  it('displays strategy selector on page', () => {
+  it('displays strategy selector on page', async () => {
     renderComponent()
 
+    // Wait for the component to finish loading journal fields
+    await waitFor(() => {
+      const strategySelector = screen.getByRole('combobox', { name: /Strategy Type/i })
+      expect(strategySelector).toBeVisible()
+    })
+
     const strategySelector = screen.getByRole('combobox', { name: /Strategy Type/i })
-    expect(strategySelector).toBeVisible()
     expect(strategySelector).toHaveValue('Long Stock')
   })
 
