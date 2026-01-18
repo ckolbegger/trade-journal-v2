@@ -4,6 +4,7 @@ import App from '../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 import {
   fillPositionForm,

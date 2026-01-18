@@ -1,4 +1,4 @@
-import type { Position, Trade } from '@/types/position'
+import type { Position, Trade } from '@/lib/position'
 
 /**
  * Test Data Factories for Position Entities
@@ -216,11 +216,6 @@ export const createIntegrationTestData = () => {
   }
 }
 
-/**
- * Create a trade with optional overrides
- * @param overrides - Trade properties to override defaults
- * @returns A complete trade object
- */
 export function createTrade(overrides: Partial<Trade> = {}): Trade {
   return {
     id: `trade-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,

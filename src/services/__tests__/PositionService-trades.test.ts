@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
 import { SchemaManager } from '@/services/SchemaManager'
+import { setupTestServices, teardownTestServices, deleteDatabase } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('PositionService - Trades Array Integration', () => {
@@ -10,13 +11,7 @@ describe('PositionService - Trades Array Integration', () => {
   const dbName = 'TestDB'
 
   beforeEach(async () => {
-    // Delete database to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase(dbName)
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await deleteDatabase(dbName)
 
     // Create test database with schema
     db = await new Promise((resolve, reject) => {
@@ -35,7 +30,7 @@ describe('PositionService - Trades Array Integration', () => {
 
   afterEach(() => {
     db?.close()
-    indexedDB.deleteDatabase(dbName)
+    deleteDatabase(dbName)
   })
 
   describe('Persistence with trades array', () => {

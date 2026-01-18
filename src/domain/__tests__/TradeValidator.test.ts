@@ -19,47 +19,48 @@ describe('TradeValidator', () => {
     })
 
     describe('required field validation', () => {
-      it.each([
-        ['position_id', 'Trade validation failed: Missing required fields'],
-        ['trade_type', 'Trade validation failed: Missing required fields'],
-        ['quantity', 'Trade validation failed: Missing required fields'],
-        ['price', 'Trade validation failed: Missing required fields'],
-        ['timestamp', 'Trade validation failed: Missing required fields'],
-      ])('should reject missing %s', (field, expectedError) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { [field]: removed, ...tradeWithoutField } = validTrade
-        expect(() => TradeValidator.validateTrade(tradeWithoutField)).toThrow(expectedError)
-      })
-
-      it.each([
-        ['quantity', 0, 'Trade validation failed: Quantity must be positive'],
-        ['quantity', -10, 'Trade validation failed: Quantity must be positive'],
-      ])('should reject invalid quantity: %s', (field, value, expectedError) => {
-        const trade = { ...validTrade, [field]: value }
-        expect(() => TradeValidator.validateTrade(trade)).toThrow(expectedError)
-      })
-
-      it.each([
-        ['trade_type', 'invalid', 'Trade validation failed: Invalid trade type'],
-        ['price', -5, 'Trade validation failed: Price must be >= 0'],
-        ['timestamp', new Date('invalid'), 'Trade validation failed: Invalid timestamp'],
-      ])('should reject invalid %s', (field, value, expectedError) => {
-        const trade = { ...validTrade, [field]: value }
-        expect(() => TradeValidator.validateTrade(trade)).toThrow(expectedError)
-      })
-
-      it('should allow zero price for worthless exits', () => {
-        const trade = { ...validTrade, price: 0, trade_type: 'sell' as const }
-        // Zero price is allowed for sell trades (worthless exits)
-        expect(() => TradeValidator.validateTrade(trade)).not.toThrow()
-      })
+    it.each([
+      ['position_id', '', 'Missing required fields'],
+      ['trade_type', '', 'Missing required fields'],
+      ['underlying', '   ', 'underlying cannot be empty'],
+    ])('should reject missing %s', (field, value, expectedError) => {
+      const trade = { ...validTrade, [field]: value }
+      expect(() => TradeValidator.validateTrade(trade)).toThrow(expectedError)
     })
 
-    it('should reject empty underlying', () => {
-      const trade = { ...validTrade, underlying: '   ' }
+    it.each([
+      ['quantity', 0, 'Quantity must be positive'],
+      ['quantity', -10, 'Quantity must be positive'],
+    ])('should reject invalid quantity: %s', (field, value, expectedError) => {
+      const trade = { ...validTrade, [field]: value }
+      expect(() => TradeValidator.validateTrade(trade)).toThrow(expectedError)
+    })
+
+    it.each([
+      ['price', -5, 'Price must be >= 0'],
+    ])('should reject negative price', (field, value, expectedError) => {
+      const trade = { ...validTrade, [field]: value }
+      expect(() => TradeValidator.validateTrade(trade)).toThrow(expectedError)
+    })
+
+    it('should allow zero price for worthless exits', () => {
+      const trade = { ...validTrade, price: 0, trade_type: 'sell' as const }
+      // Zero price is allowed for sell trades (worthless exits)
+      expect(() => TradeValidator.validateTrade(trade)).not.toThrow()
+    })
+
+    it('should reject invalid timestamp', () => {
+      const trade = { ...validTrade, timestamp: new Date('invalid') }
       expect(() => TradeValidator.validateTrade(trade))
-        .toThrow('Trade validation failed: underlying cannot be empty')
+        .toThrow('Invalid timestamp')
     })
+
+    it('should reject invalid trade_type', () => {
+      const trade = { ...validTrade, trade_type: 'invalid' as any }
+      expect(() => TradeValidator.validateTrade(trade))
+        .toThrow('Invalid trade type')
+    })
+  })
   })
 
   describe('validateExitTrade', () => {

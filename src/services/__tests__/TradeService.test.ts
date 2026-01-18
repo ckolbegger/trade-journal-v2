@@ -30,12 +30,15 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
       // Assert
       expect(result).toHaveLength(1)
-      expect(result[0].trade_type).toBe('buy')
-      expect(result[0].position_id).toBe('pos-123')
-      expect(result[0].quantity).toBe(100)
-      expect(result[0].price).toBe(150.25)
-      expect(result[0].notes).toBe('Test trade execution')
-      expect(result[0].id).toBeDefined() // ID should be generated
+      expect(result[0]).toMatchObject({
+        trade_type: buyTrade.trade_type,
+        position_id: buyTrade.position_id,
+        quantity: buyTrade.quantity,
+        price: buyTrade.price,
+        notes: buyTrade.notes
+      })
+      expect(result[0].id).toBeDefined()
+      expect(result[0].timestamp).toBeInstanceOf(Date)
       expect(mockPositionService.getById).toHaveBeenCalledWith('pos-123')
     })
 
@@ -99,7 +102,6 @@ describe('Batch 2: TradeService Core Functionality', () => {
       const result = await tradeService.addTrade(buyTrade)
 
       // Assert
-      expect(Array.isArray(result)).toBe(true)
       expect(result).toHaveLength(1)
       expect(result[0]).toMatchObject({
         trade_type: buyTrade.trade_type,
@@ -108,7 +110,8 @@ describe('Batch 2: TradeService Core Functionality', () => {
         price: buyTrade.price,
         notes: buyTrade.notes
       })
-      expect(result[0].id).toBeDefined() // Generated ID
+      expect(result[0].id).toBeDefined()
+      expect(result[0].timestamp).toBeInstanceOf(Date)
     })
 
     it('[Unit] should allow multiple trades per position', async () => {
@@ -150,7 +153,8 @@ describe('Batch 2: TradeService Core Functionality', () => {
         price: firstTrade.price,
         notes: firstTrade.notes
       })
-      expect(result[0].id).toBeDefined() // Generated ID
+      expect(result[0].id).toBeDefined()
+      expect(result[0].timestamp).toBeInstanceOf(Date)
       expect(mockPositionService.update).toHaveBeenCalled()
     })
 

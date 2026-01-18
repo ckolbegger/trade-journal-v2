@@ -15,9 +15,10 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { ServiceContainer } from '@/services/ServiceContainer'
 import type { Position } from '@/lib/position'
-import 'fake-indexeddb/auto'
 import { createPosition } from '@/test/data-factories'
 import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
+import 'fake-indexeddb/auto'
+
 
 describe('Position Lifecycle Integration', () => {
   let positionService: PositionService

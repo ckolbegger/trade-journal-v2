@@ -4,6 +4,7 @@ import { TradeExecutionForm } from '../TradeExecutionForm'
 import type { Position, Trade } from '@/lib/position'
 import { createPosition } from '@/test/data-factories'
 
+
 describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', () => {
   let mockOnTradeAdded: ReturnType<typeof vi.fn>
   let mockOnError: ReturnType<typeof vi.fn>
@@ -151,7 +152,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should accept valid trade data and call onTradeAdded', async () => {
       // Arrange
-      const position = createPosition({ id: 'pos-123', symbol: 'AMZN' })
+      const position = createPosition({ symbol: 'AMZN' })
       render(
         <TradeExecutionForm
           position={position}
@@ -173,7 +174,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
       // Assert - Should call onTradeAdded with correct data
       await waitFor(() => {
         expect(mockOnTradeAdded).toHaveBeenCalledWith(expect.objectContaining({
-          position_id: 'pos-123',
+          position_id: position.id,
           trade_type: 'buy',
           quantity: 25,
           price: 3200.50,
