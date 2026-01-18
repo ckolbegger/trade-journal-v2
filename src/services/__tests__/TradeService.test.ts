@@ -3,34 +3,8 @@ import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
 import { TradeValidator } from '@/domain/validators/TradeValidator'
-
-// Test data factories
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.25,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  notes: 'Test trade execution',
-  ...overrides
-})
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition, createTrade } from '@/test/data-factories'
+import { createMockPositionService } from '@/test/mocks/service-mocks'
 
 describe('Batch 2: TradeService Core Functionality', () => {
   let tradeService: TradeService
@@ -38,26 +12,16 @@ describe('Batch 2: TradeService Core Functionality', () => {
   let testPosition: Position
 
   beforeEach(() => {
-    // Create mock PositionService for dependency injection
-    mockPositionService = {
-      getById: vi.fn(),
-      update: vi.fn(),
-      create: vi.fn(),
-      getAll: vi.fn(),
-      delete: vi.fn(),
-      clearAll: vi.fn(),
-      close: vi.fn(),
-    } as any
-
+    mockPositionService = createMockPositionService()
     tradeService = new TradeService(mockPositionService)
-    testPosition = createTestPosition()
+    testPosition = createPosition()
   })
 
   describe('TradeService addTrade() Method', () => {
 
     it('[Unit] should add buy trade to empty position', async () => {
       // Arrange
-      const buyTrade = createTestTrade({ trade_type: 'buy' })
+      const buyTrade = createTrade({ trade_type: 'buy' })
       mockPositionService.getById.mockResolvedValue(testPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -77,11 +41,11 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
     it('[Unit] should add sell trade to open position', async () => {
       // Arrange - Position must be 'open' with existing buy trade
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         status: 'open',
-        trades: [createTestTrade({ id: 'buy-trade-1', trade_type: 'buy', quantity: 100, price: 150 })]
+        trades: [createTrade({ id: 'buy-trade-1', trade_type: 'buy', quantity: 100, price: 150 })]
       })
-      const sellTrade = createTestTrade({ trade_type: 'sell', quantity: 100, price: 155 })
+      const sellTrade = createTrade({ trade_type: 'sell', quantity: 100, price: 155 })
       mockPositionService.getById.mockResolvedValue(openPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -98,7 +62,7 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
     it('[Unit] should generate unique ID for each trade', async () => {
       // Arrange
-      const tradeWithoutId = { ...createTestTrade(), id: '' }
+      const tradeWithoutId = { ...createTrade(), id: '' }
       mockPositionService.getById.mockResolvedValue(testPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -114,7 +78,7 @@ describe('Batch 2: TradeService Core Functionality', () => {
     it('[Unit] should set/preserve timestamps correctly', async () => {
       // Arrange
       const testTimestamp = new Date('2024-01-15T10:30:00.000Z')
-      const tradeWithTimestamp = createTestTrade({ timestamp: testTimestamp })
+      const tradeWithTimestamp = createTrade({ timestamp: testTimestamp })
       mockPositionService.getById.mockResolvedValue(testPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -127,7 +91,7 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
     it('[Unit] should return updated Position after trade addition', async () => {
       // Arrange
-      const buyTrade = createTestTrade()
+      const buyTrade = createTrade()
       mockPositionService.getById.mockResolvedValue(testPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -137,21 +101,23 @@ describe('Batch 2: TradeService Core Functionality', () => {
       // Assert
       expect(Array.isArray(result)).toBe(true)
       expect(result).toHaveLength(1)
-      expect(result[0].trade_type).toBe(buyTrade.trade_type)
-      expect(result[0].position_id).toBe(buyTrade.position_id)
-      expect(result[0].quantity).toBe(buyTrade.quantity)
-      expect(result[0].price).toBe(buyTrade.price)
-      expect(result[0].notes).toBe(buyTrade.notes)
+      expect(result[0]).toMatchObject({
+        trade_type: buyTrade.trade_type,
+        position_id: buyTrade.position_id,
+        quantity: buyTrade.quantity,
+        price: buyTrade.price,
+        notes: buyTrade.notes
+      })
       expect(result[0].id).toBeDefined() // Generated ID
     })
 
     it('[Unit] should allow multiple trades per position', async () => {
       // Arrange - Position with one buy trade
-      const positionWithTrade = createTestPosition({
+      const positionWithTrade = createPosition({
         status: 'open',
-        trades: [createTestTrade({ id: 'existing-trade', trade_type: 'buy', quantity: 100, price: 150 })]
+        trades: [createTrade({ id: 'existing-trade', trade_type: 'buy', quantity: 100, price: 150 })]
       })
-      const secondBuyTrade = createTestTrade({ id: 'new-trade', trade_type: 'buy', quantity: 50, price: 152 })
+      const secondBuyTrade = createTrade({ id: 'new-trade', trade_type: 'buy', quantity: 50, price: 152 })
       mockPositionService.getById.mockResolvedValue(positionWithTrade)
       mockPositionService.update.mockResolvedValue()
 
@@ -167,8 +133,8 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
     it('[Unit] should allow first trade on empty position', async () => {
       // Arrange
-      const emptyPosition = createTestPosition({ trades: [] })
-      const firstTrade = createTestTrade()
+      const emptyPosition = createPosition({ trades: [] })
+      const firstTrade = createTrade()
       mockPositionService.getById.mockResolvedValue(emptyPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -177,18 +143,20 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
       // Assert
       expect(result).toHaveLength(1)
-      expect(result[0].trade_type).toBe(firstTrade.trade_type)
-      expect(result[0].position_id).toBe(firstTrade.position_id)
-      expect(result[0].quantity).toBe(firstTrade.quantity)
-      expect(result[0].price).toBe(firstTrade.price)
-      expect(result[0].notes).toBe(firstTrade.notes)
+      expect(result[0]).toMatchObject({
+        trade_type: firstTrade.trade_type,
+        position_id: firstTrade.position_id,
+        quantity: firstTrade.quantity,
+        price: firstTrade.price,
+        notes: firstTrade.notes
+      })
       expect(result[0].id).toBeDefined() // Generated ID
       expect(mockPositionService.update).toHaveBeenCalled()
     })
 
     it('[Service] should validate trade data before adding', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ quantity: -10 })
+      const invalidTrade = createTrade({ quantity: -10 })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -203,7 +171,7 @@ describe('Batch 2: TradeService Core Functionality', () => {
   describe('Delegation to TradeValidator', () => {
     it('[Unit] should delegate validation to TradeValidator', async () => {
       // Arrange
-      const validTrade = createTestTrade()
+      const validTrade = createTrade()
       mockPositionService.getById.mockResolvedValue(testPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -226,7 +194,7 @@ describe('Batch 2: TradeService Core Functionality', () => {
 
     it('[Unit] should throw when TradeValidator rejects invalid trade', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ quantity: -10 })
+      const invalidTrade = createTrade({ quantity: -10 })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Spy on TradeValidator to let it execute normally

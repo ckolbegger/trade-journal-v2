@@ -1,4 +1,4 @@
-import type { Position } from '@/lib/position'
+import type { Position, Trade } from '@/types/position'
 
 /**
  * Test Data Factories for Position Entities
@@ -30,7 +30,9 @@ export const createPosition = (overrides: Partial<Position> = {}): Position => {
     id = `pos-${Date.now()}`,
     strategy_type,
     status,
-    created_date
+    created_date,
+    trades = [],
+    journal_entry_ids = []
   } = overrides
 
   return {
@@ -44,8 +46,8 @@ export const createPosition = (overrides: Partial<Position> = {}): Position => {
     position_thesis,
     status: status || DEFAULT_POSITION_DATA.status,
     created_date: created_date || DEFAULT_POSITION_DATA.created_date,
-    journal_entry_ids: [],
-    trades: []
+    journal_entry_ids,
+    trades
   }
 }
 
@@ -211,5 +213,24 @@ export const createIntegrationTestData = () => {
       stop_loss: 180,
       position_thesis: 'Test navigation thesis'
     })
+  }
+}
+
+/**
+ * Create a trade with optional overrides
+ * @param overrides - Trade properties to override defaults
+ * @returns A complete trade object
+ */
+export function createTrade(overrides: Partial<Trade> = {}): Trade {
+  return {
+    id: `trade-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    position_id: 'pos-123',
+    trade_type: 'buy',
+    quantity: 100,
+    price: 150.25,
+    timestamp: new Date('2024-01-15T10:30:00.000Z'),
+    underlying: 'AAPL',
+    notes: 'Test trade execution',
+    ...overrides
   }
 }

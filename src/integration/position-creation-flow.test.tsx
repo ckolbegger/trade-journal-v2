@@ -13,29 +13,16 @@ import {
   proceedToConfirmation,
   completePositionCreationFlow
 } from '@/test/integration-helpers'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 describe('Integration: Position Creation Flow', () => {
   let positionService: PositionService
   let journalService: JournalService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    journalService = services.getJournalService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    journalService = services.journalService
   })
 
   afterEach(async () => {
@@ -44,15 +31,7 @@ describe('Integration: Position Creation Flow', () => {
       await positionService.clearAll()
     }
 
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should complete full user journey: Empty State → Position Creation → Save to IndexedDB', async () => {

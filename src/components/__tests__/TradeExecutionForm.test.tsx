@@ -2,22 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { TradeExecutionForm } from '../TradeExecutionForm'
 import type { Position, Trade } from '@/lib/position'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', () => {
   let mockOnTradeAdded: ReturnType<typeof vi.fn>
@@ -31,7 +16,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
   describe('[Integration] Trade execution form functionality', () => {
     it('[Integration] should render trade execution form with position context', () => {
       // Arrange - Create a planned position
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'trade-form-pos-123',
         symbol: 'TSLA',
         target_entry_price: 200,
@@ -61,7 +46,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should show position target values as reference', () => {
       // Arrange
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'reference-pos-123',
         symbol: 'NVDA',
         target_entry_price: 450,
@@ -84,7 +69,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should validate trade data before submission', async () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'MSFT' })
+      const position = createPosition({ symbol: 'MSFT' })
       render(
         <TradeExecutionForm
           position={position}
@@ -110,7 +95,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should reject negative quantity', async () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'AAPL' })
+      const position = createPosition({ symbol: 'AAPL' })
       render(
         <TradeExecutionForm
           position={position}
@@ -138,7 +123,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should reject zero price', async () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'GOOGL' })
+      const position = createPosition({ symbol: 'GOOGL' })
       render(
         <TradeExecutionForm
           position={position}
@@ -166,7 +151,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should accept valid trade data and call onTradeAdded', async () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'AMZN' })
+      const position = createPosition({ id: 'pos-123', symbol: 'AMZN' })
       render(
         <TradeExecutionForm
           position={position}
@@ -201,7 +186,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should generate unique trade ID', async () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'META' })
+      const position = createPosition({ symbol: 'META' })
       render(
         <TradeExecutionForm
           position={position}
@@ -229,7 +214,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should handle form cancellation', () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'NFLX' })
+      const position = createPosition({ symbol: 'NFLX' })
       const onCancel = vi.fn()
 
       render(
@@ -254,7 +239,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
       // Arrange - Mock async operation
       mockOnTradeAdded.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)))
 
-      const position = createTestPosition({ symbol: 'PYPL' })
+      const position = createPosition({ symbol: 'PYPL' })
       render(
         <TradeExecutionForm
           position={position}
@@ -287,7 +272,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
       const errorMessage = 'Failed to execute trade'
       mockOnTradeAdded.mockRejectedValue(new Error(errorMessage))
 
-      const position = createTestPosition({ symbol: 'INTC' })
+      const position = createPosition({ symbol: 'INTC' })
       render(
         <TradeExecutionForm
           position={position}
@@ -319,7 +304,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
   describe('[Integration] Phase 1A constraint enforcement', () => {
     it('[Integration] should prevent second trade on position with existing trade', () => {
       // Arrange - Position already has a trade
-      const positionWithTrade = createTestPosition({
+      const positionWithTrade = createPosition({
         id: 'already-traded-pos-123',
         symbol: 'CSCO',
         trades: [{
@@ -349,7 +334,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should show planned positions as eligible for trading', () => {
       // Arrange - Position with no trades
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'planned-for-trade-123',
         symbol: 'AMD',
         trades: []
@@ -373,7 +358,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
   describe('[Integration] Form accessibility and UX', () => {
     it('[Integration] should be accessible with proper labels and ARIA attributes', () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'UBER' })
+      const position = createPosition({ symbol: 'UBER' })
       render(
         <TradeExecutionForm
           position={position}
@@ -396,7 +381,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should allow keyboard navigation', () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'ZOOM' })
+      const position = createPosition({ symbol: 'ZOOM' })
       render(
         <TradeExecutionForm
           position={position}
@@ -421,7 +406,7 @@ describe('Batch 2: Trade Execution Integration - TradeExecutionForm Component', 
 
     it('[Integration] should show help text for validation rules', () => {
       // Arrange
-      const position = createTestPosition({ symbol: 'SHOP' })
+      const position = createPosition({ symbol: 'SHOP' })
       render(
         <TradeExecutionForm
           position={position}
