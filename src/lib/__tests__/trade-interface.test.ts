@@ -1,25 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { Trade, Position } from '@/lib/position'
-import { createPosition } from '@/test/data-factories'
-
-// Test data factory for creating test trades
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.25,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  notes: 'Test trade execution',
-  ...overrides
-})
-
+import { createPosition, createTrade } from '@/test/data-factories'
 describe('Batch 1: Trade Interface & Position Integration', () => {
 
   describe('Trade Interface Structure', () => {
 
     it('[Unit] should validate Trade interface has all required fields', () => {
-      const trade: Trade = createTestTrade()
+      const trade: Trade = createTrade()
 
       // Verify all required fields exist and have correct types
       expect(typeof trade.id).toBe('string')
@@ -33,27 +20,27 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
 
     it('[Unit] should enforce trade_type as literal union', () => {
       // Valid trade types
-      const buyTrade: Trade = createTestTrade({ trade_type: 'buy' })
-      const sellTrade: Trade = createTestTrade({ trade_type: 'sell' })
+      const buyTrade: Trade = createTrade({ trade_type: 'buy' })
+      const sellTrade: Trade = createTrade({ trade_type: 'sell' })
 
       expect(buyTrade.trade_type).toBe('buy')
       expect(sellTrade.trade_type).toBe('sell')
 
       // TypeScript should prevent invalid trade types at compile time
       // @ts-expect-error - invalid trade type
-      const invalidTrade = createTestTrade({ trade_type: 'hold' })
+      const invalidTrade = createTrade({ trade_type: 'hold' })
     })
 
     it('[Unit] should handle optional notes field', () => {
-      const tradeWithNotes: Trade = createTestTrade({ notes: 'Execution details' })
-      const tradeWithoutNotes: Trade = createTestTrade({ notes: undefined })
+      const tradeWithNotes: Trade = createTrade({ notes: 'Execution details' })
+      const tradeWithoutNotes: Trade = createTrade({ notes: undefined })
 
       expect(tradeWithNotes.notes).toBe('Execution details')
       expect(tradeWithoutNotes.notes).toBeUndefined()
     })
 
     it('[Unit] should enforce type safety for numeric fields', () => {
-      const trade: Trade = createTestTrade({
+      const trade: Trade = createTrade({
         quantity: 100.5, // fractional quantity allowed
         price: 150.1234, // precise pricing allowed
       })
@@ -63,13 +50,13 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
 
       // Negative values should be rejected by validation (implemented in TradeService)
       // For now, TypeScript allows them but validation will catch them
-      const negativeQuantityTrade = createTestTrade({ quantity: -10 })
+      const negativeQuantityTrade = createTrade({ quantity: -10 })
       expect(negativeQuantityTrade.quantity).toBe(-10) // Interface allows it
     })
 
     it('[Unit] should handle timestamp as Date object', () => {
       const testDate = new Date('2024-01-15T10:30:00.000Z')
-      const trade: Trade = createTestTrade({ timestamp: testDate })
+      const trade: Trade = createTrade({ timestamp: testDate })
 
       expect(trade.timestamp).toBeInstanceOf(Date)
       expect(trade.timestamp.toISOString()).toBe('2024-01-15T10:30:00.000Z')
@@ -99,8 +86,8 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
     it('[Unit] should allow multiple Trade objects in array', () => {
       const position: Position = createPosition({
         trades: [
-          createTestTrade({ id: 'trade-1' }),
-          createTestTrade({ id: 'trade-2', trade_type: 'sell' }),
+          createTrade({ id: 'trade-1' }),
+          createTrade({ id: 'trade-2', trade_type: 'sell' }),
         ]
       })
 
@@ -113,8 +100,8 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
     it('[Unit] should maintain type safety for array elements', () => {
       const position: Position = createPosition({
         trades: [
-          createTestTrade({ id: 'trade-1' }),
-          createTestTrade({ id: 'trade-2' }),
+          createTrade({ id: 'trade-1' }),
+          createTrade({ id: 'trade-2' }),
         ]
       })
 

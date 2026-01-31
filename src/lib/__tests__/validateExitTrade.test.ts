@@ -11,19 +11,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Position, Trade } from '@/lib/position'
 import { validateExitTrade, ValidationError } from '@/lib/position'
-import { createPosition } from '@/test/data-factories'
-
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150,
-  timestamp: new Date('2024-01-16T00:00:00.000Z'),
-  underlying: 'AAPL',
-  ...overrides
-})
-
+import { createPosition, createTrade } from '@/test/data-factories'
 describe('validateExitTrade', () => {
   describe('Planned Position Validation', () => {
     it('should reject exit from planned position (no trades yet)', () => {
@@ -45,7 +33,7 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
@@ -66,13 +54,13 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'closed',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
             price: 150
           }),
-          createTestTrade({
+          createTrade({
             id: 'trade-2',
             trade_type: 'sell',
             quantity: 100,
@@ -94,7 +82,7 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
@@ -112,7 +100,7 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
@@ -134,7 +122,7 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
@@ -151,7 +139,7 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
@@ -168,13 +156,13 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 50,
             price: 150
           }),
-          createTestTrade({
+          createTrade({
             id: 'trade-2',
             trade_type: 'buy',
             quantity: 50,
@@ -195,13 +183,13 @@ describe('validateExitTrade', () => {
       const position = createPosition({
         status: 'open',
         trades: [
-          createTestTrade({
+          createTrade({
             id: 'trade-1',
             trade_type: 'buy',
             quantity: 100,
             price: 150
           }),
-          createTestTrade({
+          createTrade({
             id: 'trade-2',
             trade_type: 'sell',
             quantity: 30,

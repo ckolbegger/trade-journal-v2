@@ -4,20 +4,7 @@ import type { Position, Trade } from '@/lib/position'
 import type { PriceHistory } from '@/types/priceHistory'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
-import { createPosition } from '@/test/data-factories'
-
-// Test data factories
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.00,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  underlying: 'AAPL',
-  ...overrides
-})
-
+import { createPosition, createTrade } from '@/test/data-factories'
 const createTestPriceHistory = (overrides?: Partial<PriceHistory>): PriceHistory => ({
   id: 'price-123',
   underlying: 'AAPL',
@@ -80,7 +67,7 @@ describe('PositionService calculatePositionMetrics', () => {
   describe('metrics calculation', () => {
     it('should return complete metrics object', () => {
       const position = createPosition({
-        trades: [createTestTrade({ price: 150, quantity: 100 })]
+        trades: [createTrade({ price: 150, quantity: 100 })]
       })
       const priceMap = new Map<string, PriceHistory>()
       priceMap.set('AAPL', createTestPriceHistory({ close: 160 }))
@@ -110,7 +97,7 @@ describe('PositionService calculatePositionMetrics', () => {
 
     it('should handle positions with no price data', () => {
       const position = createPosition({
-        trades: [createTestTrade({ price: 150, quantity: 100 })]
+        trades: [createTrade({ price: 150, quantity: 100 })]
       })
       const priceMap = new Map<string, PriceHistory>() // Empty - no price data
 
@@ -125,7 +112,7 @@ describe('PositionService calculatePositionMetrics', () => {
 
     it('should calculate correct pnlPercentage', () => {
       const position = createPosition({
-        trades: [createTestTrade({ price: 100, quantity: 100 })] // Cost basis = 10,000
+        trades: [createTrade({ price: 100, quantity: 100 })] // Cost basis = 10,000
       })
       const priceMap = new Map<string, PriceHistory>()
       priceMap.set('AAPL', createTestPriceHistory({ close: 120 })) // Current value = 12,000

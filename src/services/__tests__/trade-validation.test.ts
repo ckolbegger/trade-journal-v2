@@ -2,21 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
 import type { Trade, Position } from '@/lib/position'
-import { createPosition } from '@/test/data-factories'
-
-// Test data factories
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.25,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  underlying: 'AAPL', // Added for Trade interface requirement
-  notes: 'Test trade execution',
-  ...overrides
-})
-
+import { createPosition, createTrade } from '@/test/data-factories'
 describe('Batch 5: Data Validation & Error Handling', () => {
   let tradeService: TradeService
   let mockPositionService: PositionService
@@ -57,7 +43,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with invalid trade_type', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ trade_type: 'invalid' as any })
+      const invalidTrade = createTrade({ trade_type: 'invalid' as any })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -67,7 +53,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with zero quantity', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ quantity: 0 })
+      const invalidTrade = createTrade({ quantity: 0 })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -77,7 +63,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with negative quantity', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ quantity: -100 })
+      const invalidTrade = createTrade({ quantity: -100 })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -87,9 +73,9 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should allow trade with zero price (worthless exit)', async () => {
       // Arrange - Zero price allowed for worthless exits (sell trades only)
-      const zeroPriceTrade = createTestTrade({ price: 0, trade_type: 'sell' })
+      const zeroPriceTrade = createTrade({ price: 0, trade_type: 'sell' })
       // Need an open position to sell from
-      const openPosition = createPosition({ status: 'open', trades: [createTestTrade()] })
+      const openPosition = createPosition({ status: 'open', trades: [createTrade()] })
       mockPositionService.getById.mockResolvedValue(openPosition)
       mockPositionService.update.mockResolvedValue()
 
@@ -102,7 +88,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with negative price', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ price: -150.25 })
+      const invalidTrade = createTrade({ price: -150.25 })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -112,7 +98,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with invalid timestamp', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ timestamp: new Date('invalid') as any })
+      const invalidTrade = createTrade({ timestamp: new Date('invalid') as any })
       mockPositionService.getById.mockResolvedValue(testPosition)
 
       // Act & Assert
@@ -122,7 +108,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Unit] should reject trade with empty position_id', async () => {
       // Arrange
-      const invalidTrade = createTestTrade({ position_id: '' })
+      const invalidTrade = createTrade({ position_id: '' })
       // Don't mock position - empty position_id should fail before position lookup
 
       // Act & Assert
@@ -132,7 +118,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Service] should handle non-existent position gracefully', async () => {
       // Arrange
-      const trade = createTestTrade()
+      const trade = createTrade()
       mockPositionService.getById.mockResolvedValue(null)
 
       // Act & Assert
@@ -142,7 +128,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
 
     it('[Service] should handle PositionService errors gracefully', async () => {
       // Arrange
-      const trade = createTestTrade()
+      const trade = createTrade()
       const dbError = new Error('Database connection failed')
       mockPositionService.getById.mockRejectedValue(dbError)
 
