@@ -10,33 +10,7 @@ import { PositionCard } from '@/components/PositionCard'
 import { Dashboard } from '@/components/Dashboard'
 import type { Position, Trade } from '@/lib/position'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
-
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.25,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  notes: 'Test trade execution',
-  ...overrides
-})
+import { createPosition, createTrade } from '@/test/data-factories'
 
 // Helper to calculate metrics for PositionCard
 const calculateMetrics = (position: Position) => {
@@ -99,7 +73,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
   describe('[Integration] Status badge display across components', () => {
     it('[Integration] should show correct status in PositionCard header', async () => {
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'card-header-pos-123',
         symbol: 'MSFT',
         status: 'planned',
@@ -125,7 +99,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should make entire card clickable to view details', async () => {
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'button-pos-123',
         symbol: 'TSLA',
         status: 'planned',
@@ -153,7 +127,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should show open status for positions with trades', async () => {
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         id: 'open-button-pos-123',
         symbol: 'NVDA',
         status: 'open',
@@ -186,7 +160,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should update status across all views after trade execution', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'multi-view-pos-123',
         symbol: 'AMZN',
         status: 'planned',
@@ -194,7 +168,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       })
       await positionService.create(position)
 
-      const trade = createTestTrade({
+      const trade = createTrade({
         position_id: 'multi-view-pos-123',
         quantity: 30,
         price: 3200.25
@@ -231,7 +205,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should persist status across refresh', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'persist-pos-123',
         symbol: 'META',
         status: 'planned',
@@ -239,7 +213,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       })
       await positionService.create(position)
 
-      const trade = createTestTrade({
+      const trade = createTrade({
         position_id: 'persist-pos-123',
         quantity: 40,
         price: 300.50
@@ -268,7 +242,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should handle status computation for edge cases', async () => {
-      const edgeCasePosition = createTestPosition({
+      const edgeCasePosition = createPosition({
         id: 'edge-case-pos-123',
         symbol: 'GOOGL',
         status: 'planned',
@@ -299,12 +273,12 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   describe('[Integration] Status-based filtering functionality', () => {
     it('[Integration] should filter by planned status', async () => {
       const plannedPositions = [
-        createTestPosition({ id: 'planned-1', symbol: 'AAPL', status: 'planned', trades: [] }),
-        createTestPosition({ id: 'planned-2', symbol: 'MSFT', status: 'planned', trades: [] })
+        createPosition({ id: 'planned-1', symbol: 'AAPL', status: 'planned', trades: [] }),
+        createPosition({ id: 'planned-2', symbol: 'MSFT', status: 'planned', trades: [] })
       ]
 
       const openPositions = [
-        createTestPosition({
+        createPosition({
           id: 'open-1',
           symbol: 'TSLA',
           status: 'open',
@@ -340,8 +314,8 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
     it('[Integration] should filter by open status', async () => {
       const positions = [
-        createTestPosition({ id: 'planned-filter', symbol: 'AAPL', status: 'planned', trades: [] }),
-        createTestPosition({
+        createPosition({ id: 'planned-filter', symbol: 'AAPL', status: 'planned', trades: [] }),
+        createPosition({
           id: 'open-filter',
           symbol: 'NVDA',
           status: 'open',
@@ -373,9 +347,9 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
     it('[Integration] should show all positions in All filter', async () => {
       const positions = [
-        createTestPosition({ id: 'all-1', symbol: 'AAPL', status: 'planned', trades: [] }),
-        createTestPosition({ id: 'all-2', symbol: 'MSFT', status: 'planned', trades: [] }),
-        createTestPosition({
+        createPosition({ id: 'all-1', symbol: 'AAPL', status: 'planned', trades: [] }),
+        createPosition({ id: 'all-2', symbol: 'MSFT', status: 'planned', trades: [] }),
+        createPosition({
           id: 'all-3',
           symbol: 'TSLA',
           status: 'open',
@@ -408,7 +382,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
     })
 
     it('[Integration] should update filter when status changes', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'filter-update-pos-123',
         symbol: 'AMZN',
         status: 'planned',
@@ -437,7 +411,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
       expect(positionCard).toBeVisible()
       expect(positionCard).toHaveAttribute('data-position-id', 'filter-update-pos-123')
 
-      const trade = createTestTrade({
+      const trade = createTrade({
         position_id: 'filter-update-pos-123',
         quantity: 25,
         price: 3200.25
@@ -477,7 +451,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
   describe('[Integration] Status UI performance and error handling', () => {
     it('[Integration] should handle status display errors gracefully', async () => {
-      const corruptedPosition = createTestPosition({
+      const corruptedPosition = createPosition({
         id: 'corrupted-pos-123',
         symbol: 'NFLX',
         status: 'invalid-status' as any,
@@ -504,7 +478,7 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
 
     it('[Integration] should maintain performance with status computation', async () => {
       const positions = Array.from({ length: 50 }, (_, i) =>
-        createTestPosition({
+        createPosition({
           id: `perf-pos-${i}`,
           symbol: `STK${i}`,
           status: i % 2 === 0 ? 'planned' : 'open',

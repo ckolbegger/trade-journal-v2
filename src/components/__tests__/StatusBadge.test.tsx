@@ -2,28 +2,13 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { StatusBadge } from '../StatusBadge'
 import type { Position } from '@/lib/position'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
   describe('[Integration] Display status badges correctly', () => {
     it('[Integration] should display "planned" badge for positions with no trades', () => {
       // Arrange - Create planned position (no trades)
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'planned-pos-123',
         status: 'planned',
         trades: []
@@ -41,7 +26,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should display "open" badge for positions with trades', () => {
       // Arrange - Create open position (has trades)
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         id: 'open-pos-123',
         status: 'open',
         trades: [{
@@ -66,7 +51,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should update badge after trade execution', () => {
       // Arrange - Create planned position
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'update-pos-123',
         status: 'planned',
         trades: []
@@ -80,7 +65,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
       expect(badge).toHaveClass('bg-gray-100', 'text-gray-800')
 
       // Act - Position gets a trade (status changes to open)
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         id: 'update-pos-123',
         status: 'open',
         trades: [{
@@ -103,7 +88,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should apply correct CSS classes by status', () => {
       // Arrange & Act - Test planned status with small size
-      const plannedPosition = createTestPosition({ status: 'planned', trades: [] })
+      const plannedPosition = createPosition({ status: 'planned', trades: [] })
       const { unmount } = render(<StatusBadge position={plannedPosition} size="small" />)
 
       const plannedBadge = screen.getByTestId('status-badge')
@@ -111,7 +96,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
       // Cleanup and re-render for open status
       unmount()
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         status: 'open',
         trades: [{
           id: 'trade-123',
@@ -130,7 +115,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should support different badge sizes', () => {
       // Arrange - Test different sizes
-      const position = createTestPosition({ status: 'planned', trades: [] })
+      const position = createPosition({ status: 'planned', trades: [] })
 
       // Act - Small size
       const { rerender } = render(<StatusBadge position={position} size="small" />)
@@ -150,7 +135,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should be accessible with proper aria attributes', () => {
       // Arrange
-      const position = createTestPosition({ status: 'planned', trades: [] })
+      const position = createPosition({ status: 'planned', trades: [] })
 
       // Act
       render(<StatusBadge position={position} />)
@@ -163,7 +148,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should handle position status changes gracefully', () => {
       // Arrange - Test edge case where status might be undefined
-      const positionWithUndefinedStatus = createTestPosition({
+      const positionWithUndefinedStatus = createPosition({
         status: undefined as any,
         trades: []
       })
@@ -179,8 +164,8 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should show consistent styling across different positions', () => {
       // Arrange - Multiple positions with same status
-      const position1 = createTestPosition({ id: 'pos-1', status: 'open', trades: [] })
-      const position2 = createTestPosition({ id: 'pos-2', status: 'open', trades: [] })
+      const position1 = createPosition({ id: 'pos-1', status: 'open', trades: [] })
+      const position2 = createPosition({ id: 'pos-2', status: 'open', trades: [] })
 
       // Act
       const { rerender } = render(<StatusBadge position={position1} />)
@@ -208,7 +193,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
 
     it('[Integration] should handle position with null trades', () => {
       // Arrange - Position with null trades array
-      const positionWithNullTrades = createTestPosition({
+      const positionWithNullTrades = createPosition({
         trades: null as any
       })
 
@@ -224,7 +209,7 @@ describe('Batch 1: Status UI Integration - StatusBadge Component', () => {
     it('[Integration] should maintain performance with many badges', () => {
       // Arrange - Create many positions (performance test)
       const positions = Array.from({ length: 100 }, (_, i) =>
-        createTestPosition({
+        createPosition({
           id: `pos-${i}`,
           status: i % 2 === 0 ? 'planned' : 'open',
           trades: i % 2 === 0 ? [] : [{

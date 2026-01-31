@@ -11,22 +11,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Position, Trade } from '@/lib/position'
 import { validateExitTrade, ValidationError } from '@/lib/position'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   id: 'trade-123',
@@ -42,7 +27,7 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
 describe('validateExitTrade', () => {
   describe('Planned Position Validation', () => {
     it('should reject exit from planned position (no trades yet)', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'planned',
         trades: []
       })
@@ -57,7 +42,7 @@ describe('validateExitTrade', () => {
 
   describe('Overselling Prevention', () => {
     it('should reject exit quantity exceeding open quantity', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -78,7 +63,7 @@ describe('validateExitTrade', () => {
     })
 
     it('should reject exit from closed position (net quantity is 0)', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'closed',
         trades: [
           createTestTrade({
@@ -106,7 +91,7 @@ describe('validateExitTrade', () => {
 
   describe('Price Validation', () => {
     it('should allow zero price (worthless exit)', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -124,7 +109,7 @@ describe('validateExitTrade', () => {
     })
 
     it('should reject negative price', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -146,7 +131,7 @@ describe('validateExitTrade', () => {
 
   describe('Valid Exit Scenarios', () => {
     it('should allow valid full exit', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -163,7 +148,7 @@ describe('validateExitTrade', () => {
     })
 
     it('should allow valid partial exit', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -180,7 +165,7 @@ describe('validateExitTrade', () => {
     })
 
     it('should allow exit from position with multiple entries', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({
@@ -207,7 +192,7 @@ describe('validateExitTrade', () => {
     })
 
     it('should correctly calculate open quantity after partial exits', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         status: 'open',
         trades: [
           createTestTrade({

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
 import type { Trade, Position } from '@/lib/position'
+import { createPosition } from '@/test/data-factories'
 
 // Test data factories
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
@@ -13,22 +14,6 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   timestamp: new Date('2024-01-15T10:30:00.000Z'),
   underlying: 'AAPL', // Added for Trade interface requirement
   notes: 'Test trade execution',
-  ...overrides
-})
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
   ...overrides
 })
 
@@ -50,7 +35,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
     } as any
 
     tradeService = new TradeService(mockPositionService)
-    testPosition = createTestPosition()
+    testPosition = createPosition()
   })
 
   describe('Comprehensive Trade Validation', () => {
@@ -104,7 +89,7 @@ describe('Batch 5: Data Validation & Error Handling', () => {
       // Arrange - Zero price allowed for worthless exits (sell trades only)
       const zeroPriceTrade = createTestTrade({ price: 0, trade_type: 'sell' })
       // Need an open position to sell from
-      const openPosition = createTestPosition({ status: 'open', trades: [createTestTrade()] })
+      const openPosition = createPosition({ status: 'open', trades: [createTestTrade()] })
       mockPositionService.getById.mockResolvedValue(openPosition)
       mockPositionService.update.mockResolvedValue()
 

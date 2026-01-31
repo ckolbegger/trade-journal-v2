@@ -3,22 +3,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
 import { ServiceContainer } from '@/services/ServiceContainer'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 describe('Batch 6: Backward Compatibility & Migration v2', () => {
   let positionService: PositionService
@@ -161,7 +146,7 @@ describe('Batch 6: Backward Compatibility & Migration v2', () => {
       status: 'planned' as const,
     }
 
-    const modernPosition = createTestPosition({
+    const modernPosition = createPosition({
       id: 'modern-mixed-123',
       symbol: 'AMZN',
     })
@@ -205,7 +190,7 @@ describe('Batch 6: Backward Compatibility & Migration v2', () => {
       status: 'planned' as const,
     }
 
-    const v2Position = createTestPosition({
+    const v2Position = createPosition({
       id: 'v2-schema-123',
       symbol: 'AMD',
     })

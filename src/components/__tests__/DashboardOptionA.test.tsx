@@ -5,26 +5,8 @@ import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
+import { createPosition } from '@/test/data-factories'
 import 'fake-indexeddb/auto'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'long_stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  target_entry_date: '2024-01-15',
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: '2024-01-15',
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  ...overrides
-})
 
 describe('Dashboard Option A: PositionService Integration', () => {
   let container: ServiceContainer
@@ -66,8 +48,8 @@ describe('Dashboard Option A: PositionService Integration', () => {
   describe('[Integration] Dashboard data management with PositionService', () => {
     it('[Integration] should fetch positions on mount when given PositionService', async () => {
       // Arrange - Create test positions
-      const testPosition1 = createTestPosition({ id: 'pos-1', symbol: 'AAPL', underlying: 'AAPL' })
-      const testPosition2 = createTestPosition({ id: 'pos-2', symbol: 'MSFT', underlying: 'MSFT' })
+      const testPosition1 = createPosition({ id: 'pos-1', symbol: 'AAPL', underlying: 'AAPL' })
+      const testPosition2 = createPosition({ id: 'pos-2', symbol: 'MSFT', underlying: 'MSFT' })
 
       await positionService.create(testPosition1)
       await positionService.create(testPosition2)
@@ -150,7 +132,7 @@ describe('Dashboard Option A: PositionService Integration', () => {
   describe('[Integration] Position card navigation', () => {
     it('[Integration] should make entire position card clickable', async () => {
       // Arrange
-      const testPosition = createTestPosition({ id: 'trade-pos-123', symbol: 'TSLA', underlying: 'TSLA' })
+      const testPosition = createPosition({ id: 'trade-pos-123', symbol: 'TSLA', underlying: 'TSLA' })
       await positionService.create(testPosition)
 
       render(
@@ -171,7 +153,7 @@ describe('Dashboard Option A: PositionService Integration', () => {
 
     it('[Integration] should show open status for positions with trades', async () => {
       // Arrange - Position with a trade
-      const positionWithTrade = createTestPosition({
+      const positionWithTrade = createPosition({
         id: 'already-traded-pos-123',
         symbol: 'CSCO',
         underlying: 'CSCO',
@@ -205,14 +187,14 @@ describe('Dashboard Option A: PositionService Integration', () => {
   describe('[Integration] Filtering functionality with live data', () => {
     it('[Integration] should update filter counts when positions change', async () => {
       // Arrange - Create mixed positions
-      const plannedPosition = createTestPosition({
+      const plannedPosition = createPosition({
         id: 'planned-1',
         symbol: 'AAPL',
         underlying: 'AAPL',
         status: 'planned'
       })
 
-      const openPosition = createTestPosition({
+      const openPosition = createPosition({
         id: 'open-1',
         symbol: 'MSFT',
         underlying: 'MSFT',

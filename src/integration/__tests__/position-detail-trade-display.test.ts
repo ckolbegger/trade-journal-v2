@@ -9,22 +9,7 @@ import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position, Trade } from '@/lib/position'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 describe('PositionDetail Trade Data Integration', () => {
   let positionService: PositionService
@@ -64,7 +49,7 @@ describe('PositionDetail Trade Data Integration', () => {
 
   it('[Integration] should display trade data in position detail when position has trades', async () => {
     // Arrange - Create position with trade already added
-    const positionWithTrade = createTestPosition({
+    const positionWithTrade = createPosition({
       id: 'detail-test-pos-123',
       symbol: 'TSLA',
       trades: [] // Start with empty trades
@@ -130,7 +115,7 @@ describe('PositionDetail Trade Data Integration', () => {
 
   it('[Integration] should show empty trade history for position without trades', async () => {
     // Arrange - Create position without trades
-    const positionWithoutTrades = createTestPosition({
+    const positionWithoutTrades = createPosition({
       id: 'detail-test-no-trades-123',
       symbol: 'MSFT',
       trades: []
@@ -178,7 +163,7 @@ describe('PositionDetail Trade Data Integration', () => {
 
   it('[Integration] should display correct status badge based on trades', async () => {
     // Arrange - Create position first, then add trade
-    const positionWithTrade = createTestPosition({
+    const positionWithTrade = createPosition({
       id: 'detail-status-test-123',
       symbol: 'NVDA',
       trades: [] // Start with empty trades

@@ -2,25 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '../position'
 import type { Position } from '../position'
 import { SchemaManager } from '@/services/SchemaManager'
+import { createPosition } from '@/test/data-factories'
 import 'fake-indexeddb/auto'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: `pos-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  ...overrides
-})
 
 describe('PositionService with IDBDatabase injection', () => {
   let db: IDBDatabase
@@ -61,7 +44,7 @@ describe('PositionService with IDBDatabase injection', () => {
   })
 
   it('should use injected database for create operations', async () => {
-    const position = createTestPosition({ id: 'test-create' })
+    const position = createPosition({ id: 'test-create' })
 
     const created = await positionService.create(position)
 
@@ -70,7 +53,7 @@ describe('PositionService with IDBDatabase injection', () => {
   })
 
   it('should use injected database for read operations', async () => {
-    const position = createTestPosition({ id: 'test-read' })
+    const position = createPosition({ id: 'test-read' })
     await positionService.create(position)
 
     const retrieved = await positionService.getById('test-read')
@@ -81,7 +64,7 @@ describe('PositionService with IDBDatabase injection', () => {
   })
 
   it('should use injected database for update operations', async () => {
-    const position = createTestPosition({ id: 'test-update' })
+    const position = createPosition({ id: 'test-update' })
     await positionService.create(position)
 
     const updated = { ...position, symbol: 'MSFT' }
@@ -92,7 +75,7 @@ describe('PositionService with IDBDatabase injection', () => {
   })
 
   it('should use injected database for delete operations', async () => {
-    const position = createTestPosition({ id: 'test-delete' })
+    const position = createPosition({ id: 'test-delete' })
     await positionService.create(position)
 
     await positionService.delete('test-delete')
@@ -102,8 +85,8 @@ describe('PositionService with IDBDatabase injection', () => {
   })
 
   it('should use injected database for getAll operations', async () => {
-    const position1 = createTestPosition({ id: 'test-1' })
-    const position2 = createTestPosition({ id: 'test-2' })
+    const position1 = createPosition({ id: 'test-1' })
+    const position2 = createPosition({ id: 'test-2' })
 
     await positionService.create(position1)
     await positionService.create(position2)

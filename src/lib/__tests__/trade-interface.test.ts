@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import type { Trade, Position } from '@/lib/position'
+import { createPosition } from '@/test/data-factories'
 
 // Test data factory for creating test trades
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
@@ -10,22 +11,6 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   price: 150.25,
   timestamp: new Date('2024-01-15T10:30:00.000Z'),
   notes: 'Test trade execution',
-  ...overrides
-})
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
   ...overrides
 })
 
@@ -95,7 +80,7 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
   describe('Position.trades Array Integration', () => {
 
     it('[Unit] should add trades array to Position interface', () => {
-      const position: Position = createTestPosition()
+      const position: Position = createPosition()
 
       // Verify trades field exists
       expect('trades' in position).toBe(true)
@@ -104,7 +89,7 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
     })
 
     it('[Unit] should initialize trades as empty array for new positions', () => {
-      const position: Position = createTestPosition()
+      const position: Position = createPosition()
 
       // New positions should have empty trades array by default
       expect(position.trades).toEqual([])
@@ -112,7 +97,7 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
     })
 
     it('[Unit] should allow multiple Trade objects in array', () => {
-      const position: Position = createTestPosition({
+      const position: Position = createPosition({
         trades: [
           createTestTrade({ id: 'trade-1' }),
           createTestTrade({ id: 'trade-2', trade_type: 'sell' }),
@@ -126,7 +111,7 @@ describe('Batch 1: Trade Interface & Position Integration', () => {
     })
 
     it('[Unit] should maintain type safety for array elements', () => {
-      const position: Position = createTestPosition({
+      const position: Position = createPosition({
         trades: [
           createTestTrade({ id: 'trade-1' }),
           createTestTrade({ id: 'trade-2' }),

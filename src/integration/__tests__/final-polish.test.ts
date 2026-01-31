@@ -4,33 +4,7 @@ import { PositionService } from '@/lib/position'
 import { TradeService } from '@/services/TradeService'
 import { ServiceContainer } from '@/services/ServiceContainer'
 import type { Position, Trade } from '@/lib/position'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
-
-const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
-  id: 'trade-123',
-  position_id: 'pos-123',
-  trade_type: 'buy',
-  quantity: 100,
-  price: 150.25,
-  timestamp: new Date('2024-01-15T10:30:00.000Z'),
-  notes: 'Test trade execution',
-  ...overrides
-})
+import { createPosition, createTrade } from '@/test/data-factories'
 
 describe('Batch 8: Final Integration & Polish', () => {
   let positionService: PositionService
@@ -70,7 +44,7 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should handle complete trading workflow from planning to execution', async () => {
     // Phase 1: Position Planning
-    const positionPlan = createTestPosition({
+    const positionPlan = createPosition({
       id: 'workflow-pos-123',
       symbol: 'MSFT',
       target_entry_price: 300,
@@ -90,7 +64,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(position!.journal_entry_ids).toEqual(['plan-journal-1'])
 
     // Phase 2: Trade Execution
-    const tradeExecution = createTestTrade({
+    const tradeExecution = createTrade({
       position_id: 'workflow-pos-123',
       quantity: 50,
       price: 299.50,
@@ -134,7 +108,7 @@ describe('Batch 8: Final Integration & Polish', () => {
       status: 'planned' as const,
     }
 
-    const modernPosition = createTestPosition({
+    const modernPosition = createPosition({
       id: 'mixed-modern-123',
       symbol: 'NVDA',
       journal_entry_ids: ['modern-journal-1'],
@@ -144,7 +118,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     await positionService.create(modernPosition)
 
     // Add trade only to modern position
-    const trade = createTestTrade({
+    const trade = createTrade({
       position_id: 'mixed-modern-123',
       quantity: 25,
       price: 450.25,
@@ -180,14 +154,14 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should maintain data consistency under error conditions', async () => {
     // Create position
-    const position = createTestPosition({
+    const position = createPosition({
       id: 'consistency-pos-123',
       symbol: 'AMZN',
     })
     await positionService.create(position)
 
     // Add valid trade
-    const validTrade = createTestTrade({
+    const validTrade = createTrade({
       position_id: 'consistency-pos-123',
       quantity: 30,
       price: 3200.25,
@@ -200,7 +174,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(positionState!.status).toBe('open')
 
     // Attempt to add invalid trade (should fail)
-    const invalidTrade = createTestTrade({
+    const invalidTrade = createTrade({
       position_id: 'consistency-pos-123',
       quantity: -10,
     })
@@ -224,14 +198,14 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should handle comprehensive edge cases and boundary conditions', async () => {
     // Edge case 1: Position with maximum quantity
-    const maxQuantityPosition = createTestPosition({
+    const maxQuantityPosition = createPosition({
       id: 'max-qty-pos-123',
       symbol: 'GOOGL',
       target_quantity: Number.MAX_SAFE_INTEGER,
     })
     await positionService.create(maxQuantityPosition)
 
-    const maxTrade = createTestTrade({
+    const maxTrade = createTrade({
       position_id: 'max-qty-pos-123',
       quantity: Number.MAX_SAFE_INTEGER,
       price: 2500.25,
@@ -242,14 +216,14 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(retrievedPosition!.trades[0].quantity).toBe(Number.MAX_SAFE_INTEGER)
 
     // Edge case 2: Position with minimum price
-    const minPricePosition = createTestPosition({
+    const minPricePosition = createPosition({
       id: 'min-price-pos-123',
       symbol: 'META',
       target_entry_price: 0.01,
     })
     await positionService.create(minPricePosition)
 
-    const minTrade = createTestTrade({
+    const minTrade = createTrade({
       position_id: 'min-price-pos-123',
       quantity: 1,
       price: 0.01,
@@ -260,13 +234,13 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(retrievedPosition!.trades[0].price).toBe(0.01)
 
     // Edge case 3: Very long notes
-    const longNotesPosition = createTestPosition({
+    const longNotesPosition = createPosition({
       id: 'long-notes-pos-123',
       symbol: 'NFLX',
     })
     await positionService.create(longNotesPosition)
 
-    const longTrade = createTestTrade({
+    const longTrade = createTrade({
       position_id: 'long-notes-pos-123',
       quantity: 100,
       price: 400.25,
@@ -306,7 +280,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(trades).toEqual([])
 
     // Add trade to migrated position
-    const trade = createTestTrade({
+    const trade = createTrade({
       position_id: 'migration-test-123',
       quantity: 25,
       price: 69.50,
@@ -326,7 +300,7 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should handle concurrent access and race conditions', async () => {
     // Create position
-    const position = createTestPosition({
+    const position = createPosition({
       id: 'concurrent-test-123',
       symbol: 'INTC',
     })
@@ -364,7 +338,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     })
 
     // Now test with concurrent write
-    const trade = createTestTrade({
+    const trade = createTrade({
       position_id: 'concurrent-test-123',
       quantity: 100,
       price: 35.25,
@@ -381,9 +355,9 @@ describe('Batch 8: Final Integration & Polish', () => {
   it('[Integration] should validate comprehensive data integrity across all operations', async () => {
     // Create multiple positions with different configurations
     const positions = [
-      createTestPosition({ id: 'integrity-1', symbol: 'AAPL' }),
-      createTestPosition({ id: 'integrity-2', symbol: 'MSFT' }),
-      createTestPosition({ id: 'integrity-3', symbol: 'GOOGL' }),
+      createPosition({ id: 'integrity-1', symbol: 'AAPL' }),
+      createPosition({ id: 'integrity-2', symbol: 'MSFT' }),
+      createPosition({ id: 'integrity-3', symbol: 'GOOGL' }),
     ]
 
     for (const pos of positions) {
@@ -392,8 +366,8 @@ describe('Batch 8: Final Integration & Polish', () => {
 
     // Add trades to some positions
     const trades = [
-      createTestTrade({ position_id: 'integrity-1', quantity: 100, price: 150.25 }),
-      createTestTrade({ position_id: 'integrity-3', quantity: 10, price: 2500.75 }),
+      createTrade({ position_id: 'integrity-1', quantity: 100, price: 150.25 }),
+      createTrade({ position_id: 'integrity-3', quantity: 10, price: 2500.75 }),
     ]
 
     for (const trade of trades) {
@@ -442,14 +416,14 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should test multiple trades and position lifecycle comprehensively', async () => {
     // Create position
-    const position = createTestPosition({
+    const position = createPosition({
       id: 'multi-trade-test-123',
       symbol: 'CSCO',
     })
     await positionService.create(position)
 
     // Test 1: First buy trade
-    const trade1 = createTestTrade({
+    const trade1 = createTrade({
       position_id: 'multi-trade-test-123',
       trade_type: 'buy',
       quantity: 80,
@@ -458,7 +432,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     await tradeService.addTrade(trade1)
 
     // Test 2: Second buy trade should succeed
-    const trade2 = createTestTrade({
+    const trade2 = createTrade({
       position_id: 'multi-trade-test-123',
       trade_type: 'buy',
       quantity: 20,
@@ -473,7 +447,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     expect(retrievedPosition!.status).toBe('open')
 
     // Test 4: Add exit trade to close position
-    const exitTrade = createTestTrade({
+    const exitTrade = createTrade({
       position_id: 'multi-trade-test-123',
       trade_type: 'sell',
       quantity: 100, // Closing entire position (80 + 20)
@@ -527,7 +501,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     }
 
     // Create modern position for comparison
-    const modernPosition = createTestPosition({
+    const modernPosition = createPosition({
       id: 'modern-1',
       symbol: 'ZOOM',
       journal_entry_ids: ['modern-journal'],
@@ -535,7 +509,7 @@ describe('Batch 8: Final Integration & Polish', () => {
     await positionService.create(modernPosition)
 
     // Add trade to modern position
-    const trade = createTestTrade({
+    const trade = createTrade({
       position_id: 'modern-1',
       quantity: 40,
       price: 75.25,
@@ -567,7 +541,7 @@ describe('Batch 8: Final Integration & Polish', () => {
 
   it('[Integration] should perform comprehensive error handling and recovery', async () => {
     // Test 1: Invalid trade data
-    const position = createTestPosition({
+    const position = createPosition({
       id: 'error-test-123',
       symbol: 'UBER',
     })
@@ -575,12 +549,12 @@ describe('Batch 8: Final Integration & Polish', () => {
 
     // Various invalid trade scenarios
     const invalidTrades = [
-      createTestTrade({ position_id: 'error-test-123', quantity: 0 }),
-      createTestTrade({ position_id: 'error-test-123', quantity: -100 }),
+      createTrade({ position_id: 'error-test-123', quantity: 0 }),
+      createTrade({ position_id: 'error-test-123', quantity: -100 }),
       // price: 0 is now valid (worthless exits), so removed from invalid list
-      createTestTrade({ position_id: 'error-test-123', price: -50 }),
-      createTestTrade({ position_id: 'error-test-123', trade_type: 'invalid' as any }),
-      createTestTrade({ position_id: 'non-existent', quantity: 100 }),
+      createTrade({ position_id: 'error-test-123', price: -50 }),
+      createTrade({ position_id: 'error-test-123', trade_type: 'invalid' as any }),
+      createTrade({ position_id: 'non-existent', quantity: 100 }),
     ]
 
     for (const invalidTrade of invalidTrades) {
@@ -604,7 +578,7 @@ describe('Batch 8: Final Integration & Polish', () => {
       .rejects.toThrow('Position not found: non-existent')
 
     // Test 3: Recovery - verify normal operations still work
-    const validTrade = createTestTrade({
+    const validTrade = createTrade({
       position_id: 'error-test-123',
       quantity: 50,
       price: 80.25,

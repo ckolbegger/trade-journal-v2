@@ -4,6 +4,7 @@ import type { Position, Trade } from '@/lib/position'
 import type { PriceHistory } from '@/types/priceHistory'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { PnLCalculator } from '@/domain/calculators/PnLCalculator'
+import { createPosition } from '@/test/data-factories'
 
 // Test data factories
 const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
@@ -14,22 +15,6 @@ const createTestTrade = (overrides?: Partial<Trade>): Trade => ({
   price: 150.00,
   timestamp: new Date('2024-01-15T10:30:00.000Z'),
   underlying: 'AAPL',
-  ...overrides
-})
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'open',
-  journal_entry_ids: [],
-  trades: [createTestTrade()],
   ...overrides
 })
 
@@ -58,7 +43,7 @@ describe('PositionService calculatePositionMetrics', () => {
 
   describe('delegation to domain calculators', () => {
     it('should delegate to CostBasisCalculator for cost metrics', () => {
-      const position = createTestPosition()
+      const position = createPosition()
       const priceMap = new Map<string, PriceHistory>()
       priceMap.set('AAPL', createTestPriceHistory())
 
@@ -78,7 +63,7 @@ describe('PositionService calculatePositionMetrics', () => {
     })
 
     it('should delegate to PnLCalculator for P&L metrics', () => {
-      const position = createTestPosition()
+      const position = createPosition()
       const priceMap = new Map<string, PriceHistory>()
       priceMap.set('AAPL', createTestPriceHistory())
 
@@ -94,7 +79,7 @@ describe('PositionService calculatePositionMetrics', () => {
 
   describe('metrics calculation', () => {
     it('should return complete metrics object', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         trades: [createTestTrade({ price: 150, quantity: 100 })]
       })
       const priceMap = new Map<string, PriceHistory>()
@@ -110,7 +95,7 @@ describe('PositionService calculatePositionMetrics', () => {
     })
 
     it('should handle positions with no trades', () => {
-      const position = createTestPosition({ trades: [], status: 'planned' })
+      const position = createPosition({ trades: [], status: 'planned' })
       const priceMap = new Map<string, PriceHistory>()
 
       const metrics = positionService.calculatePositionMetrics(position, priceMap)
@@ -124,7 +109,9 @@ describe('PositionService calculatePositionMetrics', () => {
     })
 
     it('should handle positions with no price data', () => {
-      const position = createTestPosition()
+      const position = createPosition({
+        trades: [createTestTrade({ price: 150, quantity: 100 })]
+      })
       const priceMap = new Map<string, PriceHistory>() // Empty - no price data
 
       const metrics = positionService.calculatePositionMetrics(position, priceMap)
@@ -137,7 +124,7 @@ describe('PositionService calculatePositionMetrics', () => {
     })
 
     it('should calculate correct pnlPercentage', () => {
-      const position = createTestPosition({
+      const position = createPosition({
         trades: [createTestTrade({ price: 100, quantity: 100 })] // Cost basis = 10,000
       })
       const priceMap = new Map<string, PriceHistory>()
@@ -152,7 +139,7 @@ describe('PositionService calculatePositionMetrics', () => {
     })
 
     it('should return undefined pnlPercentage when costBasis is 0', () => {
-      const position = createTestPosition({ trades: [] })
+      const position = createPosition({ trades: [] })
       const priceMap = new Map<string, PriceHistory>()
 
       const metrics = positionService.calculatePositionMetrics(position, priceMap)

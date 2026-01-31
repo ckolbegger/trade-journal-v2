@@ -2,23 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { SchemaManager } from '@/services/SchemaManager'
+import { createPosition } from '@/test/data-factories'
 import 'fake-indexeddb/auto'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: `pos-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
 
 describe('PositionService - Option Plan Creation', () => {
   let db: IDBDatabase
@@ -55,7 +40,7 @@ describe('PositionService - Option Plan Creation', () => {
 
   describe('Long Stock positions (without option fields)', () => {
     it('should create Long Stock position without option fields', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'long-stock-1',
         strategy_type: 'Long Stock',
         trade_kind: 'stock'
@@ -80,7 +65,7 @@ describe('PositionService - Option Plan Creation', () => {
     it('should create Short Put position with all option fields', async () => {
       // Use a date far in the future to avoid test failures
       const expirationDate = new Date('2026-06-20T00:00:00.000Z')
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'short-put-1',
         strategy_type: 'Short Put',
         trade_kind: 'option',
@@ -107,7 +92,7 @@ describe('PositionService - Option Plan Creation', () => {
     })
 
     it('should validate option fields before saving', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         strategy_type: 'Short Put',
         trade_kind: 'option',
         option_type: 'put',
@@ -124,7 +109,7 @@ describe('PositionService - Option Plan Creation', () => {
     })
 
     it('should reject invalid Short Put plan (missing required fields)', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         strategy_type: 'Short Put',
         trade_kind: 'option'
         // Missing: option_type, strike_price, expiration_date, profit_target_basis, stop_loss_basis
@@ -134,7 +119,7 @@ describe('PositionService - Option Plan Creation', () => {
     })
 
     it('should reject Short Put with invalid strike price', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         strategy_type: 'Short Put',
         trade_kind: 'option',
         option_type: 'put',
@@ -149,7 +134,7 @@ describe('PositionService - Option Plan Creation', () => {
 
     it('should reject Short Put with past expiration date', async () => {
       const pastDate = new Date('2020-01-01T00:00:00.000Z')
-      const position = createTestPosition({
+      const position = createPosition({
         strategy_type: 'Short Put',
         trade_kind: 'option',
         option_type: 'put',
@@ -163,7 +148,7 @@ describe('PositionService - Option Plan Creation', () => {
     })
 
     it('should reject Short Put with negative premium', async () => {
-      const position = createTestPosition({
+      const position = createPosition({
         strategy_type: 'Short Put',
         trade_kind: 'option',
         option_type: 'put',
@@ -179,7 +164,7 @@ describe('PositionService - Option Plan Creation', () => {
 
     it('should persist option fields to database', async () => {
       const expirationDate = new Date('2026-06-20T00:00:00.000Z')
-      const position = createTestPosition({
+      const position = createPosition({
         id: 'short-put-persist',
         strategy_type: 'Short Put',
         trade_kind: 'option',

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { TradeService } from '@/services/TradeService'
 import { PositionService } from '@/lib/position'
 import type { Position, Trade } from '@/lib/position'
+import { createPosition } from '@/test/data-factories'
 
 /**
  * Tests for TradeService underlying field auto-population
@@ -9,23 +10,6 @@ import type { Position, Trade } from '@/lib/position'
  * Verifies that TradeService automatically populates the `underlying` field
  * from position.symbol when creating trades, enabling price lookups and P&L.
  */
-
-// Test data factories
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
 
 const createTestTradeInput = (overrides?: Partial<Omit<Trade, 'id'>>): Omit<Trade, 'id'> => ({
   position_id: 'pos-123',
@@ -56,7 +40,7 @@ describe('TradeService - Underlying Field Auto-Population', () => {
     } as any
 
     tradeService = new TradeService(mockPositionService)
-    testPosition = createTestPosition()
+    testPosition = createPosition()
   })
 
   describe('Auto-populate underlying from position.symbol', () => {
@@ -95,7 +79,7 @@ describe('TradeService - Underlying Field Auto-Population', () => {
 
     it('[Unit] should auto-populate underlying for different symbols', async () => {
       // Arrange
-      const tslaPosition = createTestPosition({ id: 'pos-456', symbol: 'TSLA' })
+      const tslaPosition = createPosition({ id: 'pos-456', symbol: 'TSLA' })
       const tradeInput = createTestTradeInput({ position_id: 'pos-456' })
       delete (tradeInput as any).underlying
 
@@ -152,7 +136,7 @@ describe('TradeService - Underlying Field Auto-Population', () => {
         // No underlying field (backward compatibility)
       }
 
-      const positionWithLegacyTrade = createTestPosition({
+      const positionWithLegacyTrade = createPosition({
         trades: [legacyTrade as Trade]
       })
 
@@ -179,7 +163,7 @@ describe('TradeService - Underlying Field Auto-Population', () => {
         timestamp: new Date('2024-01-10T10:00:00.000Z')
       }
 
-      const position = createTestPosition()
+      const position = createPosition()
 
       // Act - Helper function to compute underlying on read
       const computedUnderlying = legacyTrade.underlying || position.symbol

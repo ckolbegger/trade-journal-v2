@@ -32,10 +32,18 @@ export const createPosition = (overrides: Partial<Position> = {}): Position => {
     status,
     created_date,
     trades = [],
-    journal_entry_ids = []
+    journal_entry_ids = [],
+    // Option-specific fields (optional)
+    trade_kind,
+    option_type,
+    strike_price,
+    expiration_date,
+    premium_per_contract,
+    profit_target_basis,
+    stop_loss_basis
   } = overrides
 
-  return {
+  const position: Position = {
     id,
     symbol,
     strategy_type: strategy_type || DEFAULT_POSITION_DATA.strategy_type,
@@ -49,6 +57,17 @@ export const createPosition = (overrides: Partial<Position> = {}): Position => {
     journal_entry_ids,
     trades
   }
+
+  // Add optional option-specific fields only if provided
+  if (trade_kind !== undefined) position.trade_kind = trade_kind
+  if (option_type !== undefined) position.option_type = option_type
+  if (strike_price !== undefined) position.strike_price = strike_price
+  if (expiration_date !== undefined) position.expiration_date = expiration_date
+  if (premium_per_contract !== undefined) position.premium_per_contract = premium_per_contract
+  if (profit_target_basis !== undefined) position.profit_target_basis = profit_target_basis
+  if (stop_loss_basis !== undefined) position.stop_loss_basis = stop_loss_basis
+
+  return position
 }
 
 /**

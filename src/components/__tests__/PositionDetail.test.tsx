@@ -6,22 +6,7 @@ import { PositionDetail } from '@/pages/PositionDetail'
 import type { Position } from '@/lib/position'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
-
-const createTestPosition = (overrides?: Partial<Position>): Position => ({
-  id: 'test-pos-123',
-  symbol: 'AAPL',
-  strategy_type: 'Long Stock',
-  target_entry_price: 150,
-  target_quantity: 100,
-  profit_target: 165,
-  stop_loss: 135,
-  position_thesis: 'Test position thesis',
-  created_date: new Date('2024-01-15T00:00:00.000Z'),
-  status: 'planned',
-  journal_entry_ids: [],
-  trades: [],
-  ...overrides
-})
+import { createPosition } from '@/test/data-factories'
 
 describe('PositionDetail Component', () => {
   beforeEach(() => {
@@ -34,7 +19,7 @@ describe('PositionDetail Component', () => {
 
   it('[Component] should display trade data when position has trades', async () => {
     // Arrange - Create position with trade
-    const positionWithTrade = createTestPosition({
+    const positionWithTrade = createPosition({
       id: 'test-pos-123',
       symbol: 'TSLA',
       trades: [{
@@ -84,7 +69,7 @@ describe('PositionDetail Component', () => {
 
   it('[Component] should show empty trade history for position without trades', async () => {
     // Arrange - Create position without trades
-    const positionWithoutTrades = createTestPosition({
+    const positionWithoutTrades = createPosition({
       id: 'test-no-trades-123',
       symbol: 'MSFT',
       trades: []
@@ -123,7 +108,7 @@ describe('PositionDetail Component', () => {
 
   it('[Component] should calculate correct metrics from trade data', () => {
     // This test verifies that the metrics calculation logic works correctly
-    const positionWithTrade = createTestPosition({
+    const positionWithTrade = createPosition({
       id: 'test-metrics-123',
       symbol: 'NVDA',
       trades: [
