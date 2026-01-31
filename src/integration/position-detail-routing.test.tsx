@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from '../App'
 import { PositionService } from '@/lib/position'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 import {
   fillPositionForm,
@@ -16,39 +17,13 @@ describe('Integration: Position Detail Routing', () => {
   let positionService: PositionService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
+    const services = await setupTestServices()
+    positionService = services.positionService
   })
 
   afterEach(async () => {
-    // Clear all positions before closing
-    if (positionService) {
-      await positionService.clearAll()
-    }
-
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await positionService.clearAll()
+    await teardownTestServices()
   })
 
   it('should navigate from Dashboard to Position Detail when position is clicked', async () => {

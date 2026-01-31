@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PriceService } from '@/services/PriceService'
 import type { PriceHistory, SimplePriceInput, PriceHistoryInput } from '@/types/priceHistory'
 import { SchemaManager } from '@/services/SchemaManager'
+import { deleteDatabase } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 // Test data factories
@@ -41,13 +42,7 @@ describe('PriceService Core Functionality', () => {
   let priceService: PriceService
 
   beforeEach(async () => {
-    // Delete database to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase('TestDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await deleteDatabase('TestDB')
 
     // Create test database with schema
     db = await new Promise((resolve, reject) => {
@@ -65,9 +60,8 @@ describe('PriceService Core Functionality', () => {
   })
 
   afterEach(async () => {
-    // Clean up database after each test
     db?.close()
-    indexedDB.deleteDatabase('TestDB')
+    await deleteDatabase('TestDB')
   })
 
   describe('PriceService createOrUpdate() Method', () => {

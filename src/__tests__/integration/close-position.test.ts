@@ -17,41 +17,20 @@ import { ServiceContainer } from '@/services/ServiceContainer'
 import { processFIFO } from '@/lib/utils/fifo'
 import { calculatePlanVsExecution } from '@/lib/utils/planVsExecution'
 import { PositionStatusCalculator } from '@/domain/calculators/PositionStatusCalculator'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 describe('Position Closing Integration Tests', () => {
   let positionService: PositionService
   let tradeService: TradeService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   describe('User Story 1: Complete Position Exit', () => {

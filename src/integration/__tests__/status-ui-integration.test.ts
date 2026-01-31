@@ -11,6 +11,7 @@ import { Dashboard } from '@/components/Dashboard'
 import type { Position, Trade } from '@/lib/position'
 import { CostBasisCalculator } from '@/domain/calculators/CostBasisCalculator'
 import { createPosition, createTrade } from '@/test/data-factories'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 // Helper to calculate metrics for PositionCard
 const calculateMetrics = (position: Position) => {
@@ -40,35 +41,13 @@ describe('Batch 1: Status UI Integration - Full Stack Tests', () => {
   }
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   describe('[Integration] Status badge display across components', () => {

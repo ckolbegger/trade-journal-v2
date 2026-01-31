@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { SchemaManager } from '../SchemaManager'
+import { deleteDatabase } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('SchemaManager', () => {
@@ -7,18 +8,14 @@ describe('SchemaManager', () => {
   let db: IDBDatabase
 
   beforeEach(async () => {
-    // Clean up any existing database
-    const deleteRequest = indexedDB.deleteDatabase(dbName)
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-    })
+    await deleteDatabase(dbName)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     if (db) {
       db.close()
     }
+    await deleteDatabase(dbName)
   })
 
   it('should create positions store with correct indexes', async () => {

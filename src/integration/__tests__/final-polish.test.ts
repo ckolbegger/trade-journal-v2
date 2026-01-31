@@ -5,41 +5,20 @@ import { TradeService } from '@/services/TradeService'
 import { ServiceContainer } from '@/services/ServiceContainer'
 import type { Position, Trade } from '@/lib/position'
 import { createPosition, createTrade } from '@/test/data-factories'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 describe('Batch 8: Final Integration & Polish', () => {
   let positionService: PositionService
   let tradeService: TradeService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('[Integration] should handle complete trading workflow from planning to execution', async () => {

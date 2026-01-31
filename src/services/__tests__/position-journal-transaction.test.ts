@@ -5,44 +5,24 @@ import { PositionJournalTransaction } from '@/services/PositionJournalTransactio
 import { generatePositionId, generateJournalId } from '@/lib/uuid'
 import type { Position } from '@/lib/position'
 import type { JournalField } from '@/types/journal'
-import { SchemaManager } from '@/services/SchemaManager'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('Position-Journal Transaction Flow', () => {
   let positionService: PositionService
   let journalService: JournalService
   let transactionService: PositionJournalTransaction
-  let db: IDBDatabase
 
   beforeEach(async () => {
-    // Delete database to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase('TestDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Create test database with schema
-    db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open('TestDB', 1)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const database = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(database, 1)
-      }
-    })
-
-    // Create service with injected database
-    positionService = new PositionService(db)
-    journalService = new JournalService(db)
+    const services = await setupTestServices()
+    positionService = services.positionService
+    journalService = services.journalService
     transactionService = new PositionJournalTransaction(positionService, journalService)
   })
 
-  afterEach(() => {
-    db?.close()
-    indexedDB.deleteDatabase('TestDB')
+  afterEach(async () => {
+    await teardownTestServices()
   })
 
   describe('UUID Generation', () => {

@@ -8,7 +8,7 @@ import { JournalService } from '@/services/JournalService'
 import type { JournalEntry } from '@/types/journal'
 import { TradeService } from '@/services/TradeService'
 import { ServiceProvider } from '@/contexts/ServiceContext'
-import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 describe('PositionDetail - Add Journal Entry', () => {
   let positionService: PositionService
@@ -41,24 +41,10 @@ describe('PositionDetail - Add Journal Entry', () => {
   }
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    journalService = services.getJournalService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    journalService = services.journalService
+    tradeService = services.tradeService
   })
 
   afterEach(async () => {
@@ -66,16 +52,7 @@ describe('PositionDetail - Add Journal Entry', () => {
     if (positionService) {
       await positionService.clearAll()
     }
-
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   // Helper function to render PositionDetail with proper routing

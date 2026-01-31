@@ -1,40 +1,25 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
-import { SchemaManager } from '@/services/SchemaManager'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
+import { ServiceContainer } from '@/services/ServiceContainer'
 import 'fake-indexeddb/auto'
 
 describe('PositionService - Lazy Migration', () => {
-  let db: IDBDatabase
   let positionService: PositionService
+  let db: IDBDatabase
 
   beforeEach(async () => {
-    // Delete database to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase('TestDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Create test database with schema
-    db = await new Promise((resolve, reject) => {
-      const request = indexedDB.open('TestDB', 1)
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => resolve(request.result)
-      request.onupgradeneeded = (event) => {
-        const database = (event.target as IDBOpenDBRequest).result
-        SchemaManager.initializeSchema(database, 1)
-      }
-    })
-
-    // Create service with injected database
-    positionService = new PositionService(db)
+    const services = await setupTestServices()
+    positionService = services.positionService
+    // Get database from container for manual data insertion
+    const container = ServiceContainer.getInstance()
+    // @ts-expect-error - accessing private field for testing
+    db = container.db
   })
 
-  afterEach(() => {
-    db?.close()
-    indexedDB.deleteDatabase('TestDB')
+  afterEach(async () => {
+    await teardownTestServices()
   })
 
   describe('strategy_type migration', () => {

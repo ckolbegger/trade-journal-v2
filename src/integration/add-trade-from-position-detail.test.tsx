@@ -8,6 +8,7 @@ import type { Position } from '@/lib/position'
 import { createIntegrationTestData } from '@/test/data-factories'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Add Trade from Position Detail', () => {
@@ -16,24 +17,9 @@ describe('Integration: Add Trade from Position Detail', () => {
   let testPosition: Position
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    // Create fresh service instances with database injection
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
 
     // Create a test position using data factory
     const testData = createIntegrationTestData()
@@ -41,15 +27,7 @@ describe('Integration: Add Trade from Position Detail', () => {
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should complete Add Trade flow: Click button → Fill form → Save trade', async () => {

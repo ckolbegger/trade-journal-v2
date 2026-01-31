@@ -4,6 +4,7 @@ import App from '../App'
 import { PositionService } from '@/lib/position'
 import { JournalService } from '@/services/JournalService'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 import {
   fillPositionForm,
@@ -26,42 +27,14 @@ describe('Integration: Position Dashboard Display Flow', () => {
   let journalService: JournalService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-
-    // Initialize JournalService
-    journalService = services.getJournalService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    journalService = services.journalService
   })
 
   afterEach(async () => {
-    // Clear all positions before closing
-    if (positionService) {
-      await positionService.clearAll()
-    }
-
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await positionService.clearAll()
+    await teardownTestServices()
   })
 
   it('should complete full user journey: Empty State → Position Creation → Dashboard Display', async () => {

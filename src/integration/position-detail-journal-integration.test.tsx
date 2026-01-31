@@ -9,6 +9,7 @@ import type { Position, Trade } from '@/lib/position'
 import type { JournalEntry } from '@/types/journal'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Position Detail Trade Journal Workflow', () => {
@@ -16,31 +17,12 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
   let tradeService: TradeService
   let journalService: JournalService
   let testPosition: Position
-  let db: IDBDatabase
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    // Get database reference
-    db = (services as any).db
-
-    // Create fresh service instances with database injection
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
-    journalService = services.getJournalService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
+    journalService = services.journalService
 
     // Create a test position
     testPosition = await positionService.create({
@@ -60,15 +42,7 @@ describe('Integration: Position Detail Trade Journal Workflow', () => {
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should complete full trade journal workflow: Add trade → Add journal → Verify status', async () => {

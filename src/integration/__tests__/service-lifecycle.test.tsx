@@ -8,6 +8,7 @@ import { Home } from '@/pages/Home'
 import { Dashboard } from '@/pages/Dashboard'
 import { MemoryRouter } from 'react-router-dom'
 import type { Position } from '@/lib/position'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 /**
@@ -21,23 +22,11 @@ import 'fake-indexeddb/auto'
  */
 describe('Service Lifecycle Integration', () => {
   beforeEach(async () => {
-    ServiceContainer.resetInstance()
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await setupTestServices()
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should provide the same service instance to multiple components', async () => {

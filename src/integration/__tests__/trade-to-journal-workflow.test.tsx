@@ -8,6 +8,7 @@ import { JournalService } from '@/services/JournalService'
 import { TradeService } from '@/services/TradeService'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 /**
  * Integration Test: Trade Execution → Journal Entry Workflow
@@ -17,7 +18,6 @@ import { ServiceContainer } from '@/services/ServiceContainer'
  * ensures traders can document their execution decisions immediately.
  */
 describe('Integration: Trade Execution → Journal Entry Workflow', () => {
-  let db: IDBDatabase
   let positionService: PositionService
   let journalService: JournalService
   let tradeService: TradeService
@@ -38,41 +38,15 @@ describe('Integration: Trade Execution → Journal Entry Workflow', () => {
   }
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    positionService = services.getPositionService()
-    journalService = services.getJournalService()
-    tradeService = services.getTradeService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    journalService = services.journalService
+    tradeService = services.tradeService
   })
 
   afterEach(async () => {
-    // Clear all positions before closing
-    if (positionService) {
-      await positionService.clearAll()
-    }
-
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await positionService.clearAll()
+    await teardownTestServices()
   })
 
   const renderPositionDetail = () => {

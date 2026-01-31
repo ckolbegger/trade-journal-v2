@@ -11,6 +11,7 @@ import {
 import type { Position } from '@/lib/position'
 import type { JournalEntry } from '@/types/journal'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 // Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
@@ -88,27 +89,15 @@ describe('PositionDetail', () => {
   ]
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
     vi.clearAllMocks()
-    ServiceContainer.resetInstance() // Reset singleton for clean test state
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
 
     mockPosition = TEST_POSITIONS.single
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
 
-    // Inject mock service into ServiceContainer
-    services.setPositionService(mockPositionService)
+    const services = await setupTestServices()
+    services.positionService = mockPositionService
+    ServiceContainer.getInstance().setPositionService(mockPositionService)
 
     // Reset JournalService mock with default return values
     mockJournalService.getByPositionId.mockReset().mockResolvedValue([])
@@ -121,15 +110,7 @@ describe('PositionDetail', () => {
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance() // Clean up singleton after each test
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should display position not found when position does not exist', async () => {

@@ -8,6 +8,7 @@ import { JournalService } from '@/services/JournalService'
 import type { Position } from '@/lib/position'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Simple Trade Execution Test', () => {
@@ -15,31 +16,12 @@ describe('Integration: Simple Trade Execution Test', () => {
   let tradeService: TradeService
   let journalService: JournalService
   let testPosition: Position
-  let db: IDBDatabase
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    // Get database reference
-    db = (services as any).db
-
-    // Create fresh service instances with database injection
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
-    journalService = services.getJournalService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
+    journalService = services.journalService
 
     // Create a test position
     testPosition = await positionService.create({
@@ -59,15 +41,7 @@ describe('Integration: Simple Trade Execution Test', () => {
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should open trade execution modal and save trade without TradeService errors', async () => {

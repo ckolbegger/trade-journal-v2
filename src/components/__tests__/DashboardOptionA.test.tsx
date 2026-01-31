@@ -2,47 +2,23 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import { Dashboard } from '@/components/Dashboard'
 import { ServiceProvider } from '@/contexts/ServiceContext'
-import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import { PositionService } from '@/lib/position'
 import type { Position } from '@/lib/position'
 import { createPosition } from '@/test/data-factories'
 import 'fake-indexeddb/auto'
 
 describe('Dashboard Option A: PositionService Integration', () => {
-  let container: ServiceContainer
   let positionService: PositionService
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    container = ServiceContainer.getInstance()
-    await container.initialize()
-
-    // Get and clear PositionService
-    positionService = container.getPositionService()
+    const services = await setupTestServices()
+    positionService = services.positionService
     await positionService.clearAll()
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   describe('[Integration] Dashboard data management with PositionService', () => {

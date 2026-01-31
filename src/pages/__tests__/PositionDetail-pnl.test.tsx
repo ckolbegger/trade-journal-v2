@@ -8,6 +8,7 @@ import { PriceService } from '@/services/PriceService'
 import type { PriceHistory } from '@/types/priceHistory'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 /**
@@ -57,20 +58,7 @@ describe('PositionDetail - P&L Integration', () => {
   }
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
+    const services = await setupTestServices()
 
     mockPositionService = {
       getById: vi.fn(),
@@ -87,22 +75,16 @@ describe('PositionDetail - P&L Integration', () => {
     }
 
     // Inject mock services into ServiceContainer
-    services.setPositionService(mockPositionService as any)
-    services.setPriceService(mockPriceService as any)
+    services.positionService = mockPositionService
+    services.priceService = mockPriceService
+    ServiceContainer.getInstance().setPositionService(mockPositionService as any)
+    ServiceContainer.getInstance().setPriceService(mockPriceService as any)
 
     vi.clearAllMocks()
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   const renderPositionDetail = (position: Position, priceHistory: PriceHistory | null = null) => {

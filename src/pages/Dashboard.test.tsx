@@ -13,6 +13,7 @@ import {
 } from '@/test/assertion-helpers'
 import type { Position } from '@/lib/position'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 
 // Mock the PositionService using centralized factory
 vi.mock('@/lib/position', async () => {
@@ -29,39 +30,17 @@ describe('Dashboard', () => {
   let mockPositions: Position[]
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
     mockPositions = TEST_POSITIONS.multiple
     mockPositionService = mockPositionServiceModule
     resetMockService(mockPositionService)
 
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    // Inject mock service into ServiceContainer
-    services.setPositionService(mockPositionService)
+    const services = await setupTestServices()
+    services.positionService = mockPositionService
+    ServiceContainer.getInstance().setPositionService(mockPositionService)
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
 

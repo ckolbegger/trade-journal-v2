@@ -2,45 +2,20 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { Dashboard } from '../Dashboard'
 import { ServiceProvider } from '@/contexts/ServiceContext'
-import { ServiceContainer } from '@/services/ServiceContainer'
-import { PositionService } from '@/lib/position'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import type { Position } from '@/lib/position'
 import 'fake-indexeddb/auto'
 
 describe('Dashboard Component with ServiceContext', () => {
-  let mockPositionService: PositionService
-  let container: ServiceContainer
+  let positionService: any
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    container = ServiceContainer.getInstance()
-    await container.initialize()
-
-    // Get PositionService
-    mockPositionService = container.getPositionService()
+    const services = await setupTestServices()
+    positionService = services.positionService
   })
 
   afterEach(async () => {
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await teardownTestServices()
   })
 
   it('should use ServiceContext instead of receiving positionService as prop', async () => {
@@ -65,7 +40,7 @@ describe('Dashboard Component with ServiceContext', () => {
     }
 
     // Add position to the service
-    await mockPositionService.create(testPosition)
+    await positionService.create(testPosition)
 
     // Render Dashboard WITHOUT passing positionService prop
     // This test should pass after refactoring

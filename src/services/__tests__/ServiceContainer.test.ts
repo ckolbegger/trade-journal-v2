@@ -2,41 +2,23 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { ServiceContainer } from '../ServiceContainer'
 import { PositionService } from '@/lib/position'
 import { TradeService } from '../TradeService'
+import { deleteDatabase } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('ServiceContainer', () => {
   let container: ServiceContainer
 
   beforeEach(async () => {
-    // Delete database first to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset singleton
-    // @ts-expect-error - accessing private static for testing
-    ServiceContainer.instance = null
-
+    await deleteDatabase()
+    ServiceContainer.resetInstance()
     container = ServiceContainer.getInstance()
   })
 
   afterEach(async () => {
-    // Cleanup services first
     if (container) {
       container.cleanup()
     }
-
-    // Then delete database (after connections are closed)
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      // Also resolve on blocked to prevent hanging
-      deleteRequest.onblocked = () => resolve()
-    })
+    await deleteDatabase()
   })
 
   it('should return singleton instance', () => {

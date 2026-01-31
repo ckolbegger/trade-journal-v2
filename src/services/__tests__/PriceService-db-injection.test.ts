@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { PriceService } from '../PriceService'
 import type { SimplePriceInput } from '@/types/priceHistory'
 import { SchemaManager } from '@/services/SchemaManager'
+import { deleteDatabase } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 const createTestPrice = (overrides?: Partial<SimplePriceInput>): SimplePriceInput => ({
@@ -16,13 +17,7 @@ describe('PriceService with IDBDatabase injection', () => {
   let priceService: PriceService
 
   beforeEach(async () => {
-    // Delete database to ensure clean state
-    const deleteRequest = indexedDB.deleteDatabase('TestDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await deleteDatabase('TestDB')
 
     // Create test database with schema
     db = await new Promise((resolve, reject) => {
@@ -39,9 +34,9 @@ describe('PriceService with IDBDatabase injection', () => {
     priceService = new PriceService(db)
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     db?.close()
-    indexedDB.deleteDatabase('TestDB')
+    await deleteDatabase('TestDB')
   })
 
   it('should accept IDBDatabase in constructor', () => {

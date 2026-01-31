@@ -8,6 +8,7 @@ import { JournalService } from '@/services/JournalService'
 import type { Position } from '@/lib/position'
 import { ServiceProvider } from '@/contexts/ServiceContext'
 import { ServiceContainer } from '@/services/ServiceContainer'
+import { setupTestServices, teardownTestServices } from '@/test/db-helpers'
 import 'fake-indexeddb/auto'
 
 describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
@@ -17,25 +18,10 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
   let testPosition: Position
 
   beforeEach(async () => {
-    // Delete database for clean state
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
-
-    // Reset ServiceContainer
-    ServiceContainer.resetInstance()
-
-    // Initialize ServiceContainer with database
-    const services = ServiceContainer.getInstance()
-    await services.initialize()
-
-    // Create fresh service instances with database injection
-    positionService = services.getPositionService()
-    tradeService = services.getTradeService()
-    journalService = services.getJournalService()
+    const services = await setupTestServices()
+    positionService = services.positionService
+    tradeService = services.tradeService
+    journalService = services.journalService
 
     // Create a test position
     testPosition = await positionService.create({
@@ -55,20 +41,8 @@ describe('Integration: Trade Then Journal Flow (Separate Modals)', () => {
   })
 
   afterEach(async () => {
-    // Clear all positions before closing
-    if (positionService) {
-      await positionService.clearAll()
-    }
-
-    ServiceContainer.resetInstance()
-
-    // Clean up database
-    const deleteRequest = indexedDB.deleteDatabase('TradingJournalDB')
-    await new Promise<void>((resolve) => {
-      deleteRequest.onsuccess = () => resolve()
-      deleteRequest.onerror = () => resolve()
-      deleteRequest.onblocked = () => resolve()
-    })
+    await positionService.clearAll()
+    await teardownTestServices()
   })
 
   it('should complete separate modal flow: Trade modal closes → Journal modal opens → Skip journal', async () => {
